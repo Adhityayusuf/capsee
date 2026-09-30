@@ -12,6 +12,7 @@ import 'package:google_fonts/google_fonts.dart';
 import 'notifikasi_screen.dart' show C;
 import 'edit_profil_screen.dart';
 import 'login_screen.dart';
+import 'bantuan_faq_screen.dart';
 import 'ubah_sandi.dart';
 
 const String _kLogoUrl =
@@ -84,33 +85,40 @@ class AkunScreen extends StatelessWidget {
     ),
   ];
 
-  static const _helpItems = <_MenuItem>[
-    _MenuItem(
-      icon: Icons.menu_book,
-      iconColor: C.tertiary,
-      title: 'Panduan & FAQ Petani',
-      subtitle: 'Solusi penyakit cabai, dosis pupuk, & tutorial',
-    ),
-    _MenuItem(
-      icon: Icons.support_agent,
-      iconColor: C.primary,
-      title: 'Konsultasi Tim Ahli PPL',
-      subtitle: 'Hubungi penyuluh pertanian lapangan resmi',
-      badge: 'Tersedia',
-    ),
-    _MenuItem(
-      icon: Icons.verified_user_outlined,
-      iconColor: C.onSurfaceVariant,
-      title: 'Syarat dan Ketentuan',
-      subtitle: 'Ketentuan layanan & privasi data agrikultur',
-    ),
-    _MenuItem(
-      icon: Icons.info_outline,
-      iconColor: C.onSurfaceVariant,
-      title: 'Tentang Aplikasi',
-      subtitle: 'Capsee v2.4.0 • AI-Powered Precision Agriculture',
-    ),
-  ];
+  List<_MenuItem> _getHelpItems(BuildContext context) {
+    return [
+      _MenuItem(
+        icon: Icons.menu_book,
+        iconColor: C.tertiary,
+        title: 'Panduan & FAQ Petani',
+        subtitle: 'Solusi penyakit cabai, dosis pupuk, & tutorial',
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const BantuanFaqScreen()),
+          );
+        },
+      ),
+      const _MenuItem(
+        icon: Icons.support_agent,
+        iconColor: C.primary,
+        title: 'Konsultasi Tim Ahli PPL',
+        subtitle: 'Hubungi penyuluh pertanian lapangan resmi',
+        badge: 'Tersedia',
+      ),
+      const _MenuItem(
+        icon: Icons.verified_user_outlined,
+        iconColor: C.onSurfaceVariant,
+        title: 'Syarat dan Ketentuan',
+        subtitle: 'Ketentuan layanan & privasi data agrikultur',
+      ),
+      const _MenuItem(
+        icon: Icons.info_outline,
+        iconColor: C.onSurfaceVariant,
+        title: 'Tentang Aplikasi',
+        subtitle: 'Capsee v2.4.0 • AI-Powered Precision Agriculture',
+      ),
+    ];
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -130,7 +138,7 @@ class AkunScreen extends StatelessWidget {
               _getAccountItems(context)),
           const SizedBox(height: 24),
           _buildSection(
-              'Bantuan & Informasi', 'Dukungan Lapangan', C.primary, _helpItems),
+              'Bantuan & Informasi', 'Dukungan Lapangan', C.primary, _getHelpItems(context)),
           const SizedBox(height: 24),
           _buildLogout(context),
           const SizedBox(height: 24),

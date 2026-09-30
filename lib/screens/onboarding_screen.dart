@@ -7,8 +7,9 @@ import '../core/app_colors.dart';
 import '../models/land_data.dart';
 import '../widgets/auth_widgets.dart';
 import 'dashboard_screen.dart';
-import 'tambah_lahan_page.dart';
 import 'detail_lahan_screen.dart';
+import 'panduan_screen.dart';
+import 'tambah_lahan_page.dart';
 
 /// Data satu kartu fitur di onboarding.
 class _Feature {
@@ -207,8 +208,9 @@ class OnboardingScreen extends StatelessWidget {
   Widget _buildLearnMore(BuildContext context) {
     return TextButton.icon(
       onPressed: () {
-        // TODO: buka halaman panduan / cara kerja
-        _showTodo(context, 'Halaman panduan belum dibuat');
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => PanduanScreen()),
+        );
       },
       icon: const Icon(
         Icons.menu_book_outlined,
