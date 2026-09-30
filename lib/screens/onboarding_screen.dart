@@ -57,9 +57,9 @@ class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
 
   void _showTodo(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -208,8 +208,11 @@ class OnboardingScreen extends StatelessWidget {
         // TODO: buka halaman panduan / cara kerja
         _showTodo(context, 'Halaman panduan belum dibuat');
       },
-      icon: const Icon(Icons.menu_book_outlined,
-          size: 20, color: AppColors.primaryDark),
+      icon: const Icon(
+        Icons.menu_book_outlined,
+        size: 20,
+        color: AppColors.primaryDark,
+      ),
       label: Text(
         'Pelajari cara kerja Capsee',
         style: GoogleFonts.plusJakartaSans(
@@ -288,8 +291,11 @@ class _HeroCard extends StatelessWidget {
             top: 26,
             right: 64,
             child: _Pill(
-              leading: Icon(Icons.center_focus_strong_rounded,
-                  size: 14, color: AppColors.primaryDark),
+              leading: Icon(
+                Icons.center_focus_strong_rounded,
+                size: 14,
+                color: AppColors.primaryDark,
+              ),
               text: 'AI Ready',
               textColor: AppColors.primaryDark,
             ),
@@ -315,8 +321,11 @@ class _HeroCard extends StatelessWidget {
           const Positioned(
             bottom: 18,
             child: _Pill(
-              leading: Icon(Icons.bolt_rounded,
-                  size: 14, color: AppColors.primaryDark),
+              leading: Icon(
+                Icons.bolt_rounded,
+                size: 14,
+                color: AppColors.primaryDark,
+              ),
               text: 'Capsee Smart Agronomy',
               textColor: AppColors.primaryDark,
               background: AppColors.chipBg,

@@ -1,30 +1,54 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:capsee/main.dart';
+import 'package:capsee/models/land_data.dart';
+import 'package:capsee/screens/land_detail_screen.dart';
+import 'package:capsee/screens/tambah_lahan_page.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('Capsee membuka halaman register', (tester) async {
+    await tester.pumpWidget(const CapseeApp());
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+    expect(find.text('Daftar Akun Capsee'), findsOneWidget);
+  });
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
+  testWidgets('Dashboard membuka tambah lahan dan tab jadwal', (tester) async {
+    await tester.pumpWidget(const MaterialApp(home: TambahLahanPage()));
+    expect(find.text('Tambah Data Lahan'), findsOneWidget);
+
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LandDetailScreen(
+          land: LandData(
+            name: 'Petak Cabai Rawit Blok A',
+            province: 'Jawa Barat',
+            city: 'Bandung Barat',
+            district: 'Lembang',
+            plantAgeMonths: 3,
+            lastWatered: DateTime(2024, 10, 26),
+            lastFertilized: DateTime(2024, 10, 24),
+            fertilizeIntervalWeeks: 1,
+          ),
+        ),
+      ),
+    );
+    expect(find.text('Kronologi Aktivitas'), findsOneWidget);
+    expect(
+      find.text('Penyakit Terdeteksi: Bercak Daun Cercospora'),
+      findsOneWidget,
+    );
+    expect(find.text('Lihat Rekomendasi Penanganan'), findsOneWidget);
+
+    await tester.tap(find.text('Jadwal'));
     await tester.pump();
+    expect(find.text('Jadwal Penyiraman Mingguan'), findsOneWidget);
+    expect(find.text('Jadwal Nutrisi & Pemupukan'), findsOneWidget);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.tap(find.text('Scan'));
+    await tester.pump();
+    expect(find.text('Hasil Scan Terakhir'), findsOneWidget);
+    expect(find.text('Tanaman Sehat & Bebas Hama'), findsOneWidget);
+    expect(find.text('Sensor Realtime'), findsOneWidget);
   });
 }

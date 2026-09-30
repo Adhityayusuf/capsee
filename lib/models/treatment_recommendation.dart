@@ -95,7 +95,7 @@ const sampleDiagnosisSummary = DiagnosisSummary(
   dateTime: '16 Okt 2024 • 08:42 WIB',
   severityLabel: 'Sedang (Bercak 18%)',
   severityProgress: 0.45,
-  aiAccuracyPercent: 68,
+  aiAccuracyPercent: 96,
 );
 
 const sampleActionSteps = [
@@ -161,6 +161,24 @@ const sampleTreatmentOptions = [
         'penyemprotan minimal 7 hari sebelum masa panen (pre-harvest '
         'interval).',
   ),
+  TreatmentOption(
+    tabLabel: 'Hayati',
+    recommended: false,
+    title: 'Trichoderma harzianum + Pseudomonas fluorescens',
+    badge: 'Agen Hayati',
+    badgeColor: Color(0xFFE0F2FE),
+    badgeTextColor: Color(0xFF0369A1),
+    description:
+        'Kombinasi mikroba antagonis untuk menekan perkembangan jamur dan '
+        'mendukung ketahanan alami tanaman secara bertahap.',
+    dosis: '2–3 gram / 1L Air',
+    waktuAplikasi: 'Pagi Hari (06:30–08:30)',
+    frekuensi: '4–5 Hari Sekali',
+    applicationNote:
+        'Aplikasikan pada permukaan atas dan bawah daun. Hindari mencampur '
+        'dengan fungisida kimia dalam satu tangki dan evaluasi setelah dua '
+        'kali aplikasi.',
+  ),
 ];
 
 const samplePreventionTips = [
@@ -179,5 +197,13 @@ const samplePreventionTips = [
         'Singkirkan sisa guguran daun kering di atas tanah. Pasang '
         'mulsa plastik hitam-perak untuk memantulkan sinar UV yang '
         'membasmi spora di bawah daun.',
+  ),
+  PreventionTip(
+    icon: Icons.water_drop_outlined,
+    title: 'Jaga Daun Tetap Kering',
+    description:
+        'Gunakan irigasi tetes pada pagi hari dan hindari penyiraman tajuk. '
+        'Pastikan daun memiliki waktu kering sebelum malam untuk mengurangi '
+        'risiko perkecambahan spora.',
   ),
 ];

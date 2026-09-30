@@ -3,7 +3,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../core/app_colors.dart';
 import '../widgets/auth_widgets.dart';
-import 'onboarding_screen.dart';
+import 'dashboard_screen.dart';
 import 'register_screen.dart';
 
 class LoginScreen extends StatefulWidget {
@@ -40,9 +40,9 @@ class _LoginScreenState extends State<LoginScreen> {
     if (!mounted) return;
     setState(() => _isLoading = false);
 
-    // Untuk sementara: setelah login selalu ke onboarding
+    // Setelah login, tampilkan dashboard utama.
     Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+      MaterialPageRoute(builder: (_) => const DashboardScreen()),
     );
   }
 
@@ -246,8 +246,7 @@ class _LoginScreenState extends State<LoginScreen> {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.view_agenda_outlined,
-            size: 18, color: AppColors.icon),
+        const Icon(Icons.view_agenda_outlined, size: 18, color: AppColors.icon),
         const SizedBox(width: 8),
         Flexible(
           child: Text(
