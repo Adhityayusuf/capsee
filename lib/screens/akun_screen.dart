@@ -11,6 +11,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import 'notifikasi_screen.dart' show C;
 import 'edit_profil_screen.dart';
+import 'login_screen.dart';
 import 'ubah_sandi.dart';
 
 const String _kLogoUrl =
@@ -618,7 +619,10 @@ class AkunScreen extends StatelessWidget {
           TextButton(
             onPressed: () {
               Navigator.pop(ctx);
-              // TODO: panggil proses logout & arahkan ke halaman login
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
             },
             child: Text('Keluar', style: _ts(14, 20, FontWeight.w700, C.error)),
           ),
