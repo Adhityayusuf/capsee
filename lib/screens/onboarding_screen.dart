@@ -5,6 +5,7 @@ import 'package:google_fonts/google_fonts.dart';
 
 import '../core/app_colors.dart';
 import '../widgets/auth_widgets.dart';
+import 'tambah_lahan_page.dart';
 
 /// Data satu kartu fitur di onboarding.
 class _Feature {
@@ -54,9 +55,9 @@ class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
 
   void _showTodo(BuildContext context, String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -86,8 +87,11 @@ class OnboardingScreen extends StatelessWidget {
                     label: 'Tambah Lahan Sekarang',
                     icon: Icons.add_circle_outline_rounded,
                     onPressed: () {
-                      // TODO: buka halaman tambah lahan / petak
-                      _showTodo(context, 'Halaman Tambah Lahan belum dibuat');
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => const TambahLahanPage(),
+                        ),
+                      );
                     },
                   ),
                   const SizedBox(height: 14),
@@ -195,8 +199,11 @@ class OnboardingScreen extends StatelessWidget {
         // TODO: buka halaman panduan / cara kerja
         _showTodo(context, 'Halaman panduan belum dibuat');
       },
-      icon: const Icon(Icons.menu_book_outlined,
-          size: 20, color: AppColors.primaryDark),
+      icon: const Icon(
+        Icons.menu_book_outlined,
+        size: 20,
+        color: AppColors.primaryDark,
+      ),
       label: Text(
         'Pelajari cara kerja Capsee',
         style: GoogleFonts.plusJakartaSans(
@@ -275,8 +282,11 @@ class _HeroCard extends StatelessWidget {
             top: 26,
             right: 64,
             child: _Pill(
-              leading: Icon(Icons.center_focus_strong_rounded,
-                  size: 14, color: AppColors.primaryDark),
+              leading: Icon(
+                Icons.center_focus_strong_rounded,
+                size: 14,
+                color: AppColors.primaryDark,
+              ),
               text: 'AI Ready',
               textColor: AppColors.primaryDark,
             ),
@@ -302,8 +312,11 @@ class _HeroCard extends StatelessWidget {
           const Positioned(
             bottom: 18,
             child: _Pill(
-              leading: Icon(Icons.bolt_rounded,
-                  size: 14, color: AppColors.primaryDark),
+              leading: Icon(
+                Icons.bolt_rounded,
+                size: 14,
+                color: AppColors.primaryDark,
+              ),
               text: 'Capsee Smart Agronomy',
               textColor: AppColors.primaryDark,
               background: AppColors.chipBg,

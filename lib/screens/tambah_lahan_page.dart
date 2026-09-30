@@ -9,12 +9,15 @@ class TambahLahanPage extends StatefulWidget {
 
 class _TambahLahanPageState extends State<TambahLahanPage> {
   // Controller input
-  final TextEditingController _namaLahanController =
-      TextEditingController(text: 'Petak Cabai Rawit Blok A');
-  final TextEditingController _siramController =
-      TextEditingController(text: '24 Okt 2024');
-  final TextEditingController _pupukController =
-      TextEditingController(text: '18 Okt 2024');
+  final TextEditingController _namaLahanController = TextEditingController(
+    text: 'Petak Cabai Rawit Blok A',
+  );
+  final TextEditingController _siramController = TextEditingController(
+    text: '24 Okt 2024',
+  );
+  final TextEditingController _pupukController = TextEditingController(
+    text: '18 Okt 2024',
+  );
 
   // State Dropdown
   String _selectedProvince = 'jabar';
@@ -62,7 +65,10 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
             SizedBox(width: 8),
             Text(
               'Data kebun berhasil diperbarui!',
-              style: TextStyle(color: Colors.white, fontWeight: FontWeight.w600),
+              style: TextStyle(
+                color: Colors.white,
+                fontWeight: FontWeight.w600,
+              ),
             ),
           ],
         ),
@@ -137,7 +143,11 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                           color: const Color(0xFFE8F5E9),
                           borderRadius: BorderRadius.circular(12),
                         ),
-                        child: const Icon(Icons.eco, color: primaryGreen, size: 26),
+                        child: const Icon(
+                          Icons.eco,
+                          color: primaryGreen,
+                          size: 26,
+                        ),
                       ),
                       const SizedBox(width: 12),
                       Expanded(
@@ -197,7 +207,11 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
               tagColor: lightGreenBg,
               tagTextColor: primaryGreen,
               children: [
-                _buildFieldLabel(icon: Icons.grass, label: 'Nama Lahan', isRequired: true),
+                _buildFieldLabel(
+                  icon: Icons.grass,
+                  label: 'Nama Lahan',
+                  isRequired: true,
+                ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _namaLahanController,
@@ -213,25 +227,38 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                   value: _selectedProvince,
                   items: const [
                     DropdownMenuItem(value: 'jabar', child: Text('Jawa Barat')),
-                    DropdownMenuItem(value: 'jateng', child: Text('Jawa Tengah')),
+                    DropdownMenuItem(
+                      value: 'jateng',
+                      child: Text('Jawa Tengah'),
+                    ),
                     DropdownMenuItem(value: 'jatim', child: Text('Jawa Timur')),
-                    DropdownMenuItem(value: 'sumut', child: Text('Sumatera Utara')),
+                    DropdownMenuItem(
+                      value: 'sumut',
+                      child: Text('Sumatera Utara'),
+                    ),
                   ],
                   onChanged: (val) => setState(() => _selectedProvince = val!),
                 ),
                 const SizedBox(height: 16),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildFieldLabel(icon: Icons.location_city, label: 'Kota / Kabupaten'),
-                    _buildSubTag('(menyesuaikan provinsi)'),
+                    Expanded(
+                      child: _buildFieldLabel(
+                        icon: Icons.location_city,
+                        label: 'Kota / Kabupaten',
+                      ),
+                    ),
+                    Flexible(child: _buildSubTag('(menyesuaikan provinsi)')),
                   ],
                 ),
                 const SizedBox(height: 8),
                 _buildDropdown(
                   value: _selectedCity,
                   items: const [
-                    DropdownMenuItem(value: 'kbb', child: Text('Kab. Bandung Barat')),
+                    DropdownMenuItem(
+                      value: 'kbb',
+                      child: Text('Kab. Bandung Barat'),
+                    ),
                     DropdownMenuItem(value: 'bdg', child: Text('Kab. Bandung')),
                     DropdownMenuItem(value: 'grt', child: Text('Kab. Garut')),
                     DropdownMenuItem(value: 'cjr', child: Text('Kab. Cianjur')),
@@ -242,7 +269,10 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildFieldLabel(icon: Icons.pin_drop_outlined, label: 'Kecamatan'),
+                    _buildFieldLabel(
+                      icon: Icons.pin_drop_outlined,
+                      label: 'Kecamatan',
+                    ),
                     _buildSubTag('(menyesuaikan kota)'),
                   ],
                 ),
@@ -251,9 +281,15 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                   value: _selectedDistrict,
                   items: const [
                     DropdownMenuItem(value: 'lembang', child: Text('Lembang')),
-                    DropdownMenuItem(value: 'parongpong', child: Text('Parongpong')),
+                    DropdownMenuItem(
+                      value: 'parongpong',
+                      child: Text('Parongpong'),
+                    ),
                     DropdownMenuItem(value: 'cisarua', child: Text('Cisarua')),
-                    DropdownMenuItem(value: 'ngamprah', child: Text('Ngamprah')),
+                    DropdownMenuItem(
+                      value: 'ngamprah',
+                      child: Text('Ngamprah'),
+                    ),
                   ],
                   onChanged: (val) => setState(() => _selectedDistrict = val!),
                 ),
@@ -271,9 +307,15 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildFieldLabel(icon: Icons.hourglass_top, label: 'Umur Tanaman'),
+                    _buildFieldLabel(
+                      icon: Icons.hourglass_top,
+                      label: 'Umur Tanaman',
+                    ),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 8,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: lightGreenBg,
                         borderRadius: BorderRadius.circular(6),
@@ -302,12 +344,15 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                       final isSelected = _selectedAgeMonth == month;
                       return Expanded(
                         child: GestureDetector(
-                          onTap: () => setState(() => _selectedAgeMonth = month),
+                          onTap: () =>
+                              setState(() => _selectedAgeMonth = month),
                           child: AnimatedContainer(
                             duration: const Duration(milliseconds: 200),
                             padding: const EdgeInsets.symmetric(vertical: 10),
                             decoration: BoxDecoration(
-                              color: isSelected ? primaryGreen : Colors.transparent,
+                              color: isSelected
+                                  ? primaryGreen
+                                  : Colors.transparent,
                               borderRadius: BorderRadius.circular(8),
                             ),
                             alignment: Alignment.center,
@@ -315,7 +360,9 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                               '$month Bln',
                               style: TextStyle(
                                 fontSize: 13,
-                                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
+                                fontWeight: isSelected
+                                    ? FontWeight.bold
+                                    : FontWeight.w500,
                                 color: isSelected ? Colors.white : textDark,
                               ),
                             ),
@@ -326,7 +373,10 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildFieldLabel(icon: Icons.water_drop_outlined, label: 'Tanggal Terakhir Siram'),
+                _buildFieldLabel(
+                  icon: Icons.water_drop_outlined,
+                  label: 'Tanggal Terakhir Siram',
+                ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _siramController,
@@ -336,7 +386,10 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildFieldLabel(icon: Icons.science_outlined, label: 'Tanggal Terakhir Pemupukan'),
+                _buildFieldLabel(
+                  icon: Icons.science_outlined,
+                  label: 'Tanggal Terakhir Pemupukan',
+                ),
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _pupukController,
@@ -348,7 +401,10 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildFieldLabel(icon: Icons.repeat, label: 'Interval Pemupukan'),
+                _buildFieldLabel(
+                  icon: Icons.repeat,
+                  label: 'Interval Pemupukan',
+                ),
                 const SizedBox(height: 10),
                 Row(
                   children: [
@@ -384,11 +440,17 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                 icon: const Icon(Icons.task_alt, color: Colors.white),
                 label: const Text(
                   'Simpan Data Lahan',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.bold, color: Colors.white),
+                  style: TextStyle(
+                    fontSize: 16,
+                    fontWeight: FontWeight.bold,
+                    color: Colors.white,
+                  ),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: primaryGreen,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                   elevation: 2,
                 ),
               ),
@@ -401,11 +463,16 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                 onPressed: () => Navigator.maybePop(context),
                 style: TextButton.styleFrom(
                   backgroundColor: cardFieldBg,
-                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
                 ),
                 child: const Text(
                   'Batal & Kembali',
-                  style: TextStyle(color: textMuted, fontWeight: FontWeight.w600),
+                  style: TextStyle(
+                    color: textMuted,
+                    fontWeight: FontWeight.w600,
+                  ),
                 ),
               ),
             ),
@@ -458,38 +525,51 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Row(
-                children: [
-                  Container(
-                    width: 5,
-                    height: 18,
-                    decoration: BoxDecoration(
-                      color: primaryGreen,
-                      borderRadius: BorderRadius.circular(4),
+              Expanded(
+                child: Row(
+                  children: [
+                    Container(
+                      width: 5,
+                      height: 18,
+                      decoration: BoxDecoration(
+                        color: primaryGreen,
+                        borderRadius: BorderRadius.circular(4),
+                      ),
                     ),
-                  ),
-                  const SizedBox(width: 8),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontWeight: FontWeight.bold,
-                      fontSize: 16,
-                      color: textDark,
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Text(
+                        title,
+                        overflow: TextOverflow.ellipsis,
+                        style: const TextStyle(
+                          fontWeight: FontWeight.bold,
+                          fontSize: 16,
+                          color: textDark,
+                        ),
+                      ),
                     ),
-                  ),
-                ],
-              ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: tagColor,
-                  borderRadius: BorderRadius.circular(20),
+                  ],
                 ),
-                child: Text(
-                  sectionTag,
-                  style: TextStyle(fontSize: 11, fontWeight: FontWeight.bold, color: tagTextColor),
+              ),
+              Flexible(
+                child: Container(
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 10,
+                    vertical: 4,
+                  ),
+                  decoration: BoxDecoration(
+                    color: tagColor,
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Text(
+                    sectionTag,
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      color: tagTextColor,
+                    ),
+                  ),
                 ),
               ),
             ],
@@ -501,7 +581,11 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
     );
   }
 
-  Widget _buildFieldLabel({required IconData icon, required String label, bool isRequired = false}) {
+  Widget _buildFieldLabel({
+    required IconData icon,
+    required String label,
+    bool isRequired = false,
+  }) {
     return Row(
       children: [
         Icon(icon, size: 16, color: primaryGreen),
@@ -518,7 +602,10 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
               if (isRequired)
                 const TextSpan(
                   text: ' *',
-                  style: TextStyle(color: Colors.red, fontWeight: FontWeight.bold),
+                  style: TextStyle(
+                    color: Colors.red,
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
             ],
           ),
@@ -557,7 +644,10 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                 widthFactor: 1.0,
                 alignment: Alignment.centerRight,
                 child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 8,
+                    vertical: 4,
+                  ),
                   decoration: BoxDecoration(
                     color: badgeBg,
                     borderRadius: BorderRadius.circular(6),
@@ -599,7 +689,10 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
       decoration: InputDecoration(
         filled: true,
         fillColor: cardFieldBg,
-        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 16,
+          vertical: 14,
+        ),
         border: OutlineInputBorder(
           borderRadius: BorderRadius.circular(12),
           borderSide: BorderSide.none,
@@ -623,7 +716,13 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
           color: isSelected ? primaryGreen : cardFieldBg,
           borderRadius: BorderRadius.circular(12),
           boxShadow: isSelected
-              ? [BoxShadow(color: primaryGreen.withOpacity(0.3), blurRadius: 6, offset: const Offset(0, 3))]
+              ? [
+                  BoxShadow(
+                    color: primaryGreen.withOpacity(0.3),
+                    blurRadius: 6,
+                    offset: const Offset(0, 3),
+                  ),
+                ]
               : [],
         ),
         child: Row(
