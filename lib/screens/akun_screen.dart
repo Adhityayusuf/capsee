@@ -10,6 +10,8 @@ import 'dart:ui' show ImageFilter;
 import 'package:google_fonts/google_fonts.dart';
 
 import 'notifikasi_screen.dart' show C;
+import 'edit_profil_screen.dart';
+import 'ubah_sandi.dart';
 
 const String _kLogoUrl =
     'https://lh3.googleusercontent.com/aida/AEtjO1Xr_77lDlwa3ZADA-1HeBJZ-Tn0VWtE6n-7pOHm4d2azQUim5BjoLf575UzLtz0ODNUzEVcV30y0Qygv7t04JxHmpUwopBEQ96lDQ7I0bpin4-N1IS1l-FoVePayedbE5_okishN0kcXmjse5fCF-NG5aQpKrjWoygNzg2Vb2Qvga9t5r_iZu7cGKe9q8GulMspHO6C3lCzeGHgRcSPog9XdXtsBfBZsWTWU4MeoT564Ej-_JzkDExBIpo';
@@ -50,20 +52,30 @@ class _MenuItem {
 class AkunScreen extends StatelessWidget {
   const AkunScreen({super.key});
 
-  static const _accountItems = <_MenuItem>[
+  List<_MenuItem> _getAccountItems(BuildContext context) => [
     _MenuItem(
       icon: Icons.badge_outlined,
       iconColor: C.primary,
       title: 'Edit Profil',
       subtitle: 'Ubah identitas, foto profil, dan kontak lahan',
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+        );
+      },
     ),
     _MenuItem(
       icon: Icons.lock_reset,
       iconColor: C.primary,
       title: 'Ubah Kata Sandi',
       subtitle: 'Kelola keamanan dan pembaruan sandi akun',
+      onTap: () {
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => const UbahKataSandiScreen()),
+        );
+      },
     ),
-    _MenuItem(
+    const _MenuItem(
       icon: Icons.tune,
       iconColor: C.primary,
       title: 'Notifikasi & Sensor Lapangan',
@@ -114,7 +126,7 @@ class AkunScreen extends StatelessWidget {
           _buildSensorBanner(),
           const SizedBox(height: 24),
           _buildSection('Pengaturan Akun', 'Preferensi', C.onSurfaceVariant,
-              _accountItems),
+              _getAccountItems(context)),
           const SizedBox(height: 24),
           _buildSection(
               'Bantuan & Informasi', 'Dukungan Lapangan', C.primary, _helpItems),
@@ -124,7 +136,6 @@ class AkunScreen extends StatelessWidget {
           _buildBuildInfo(),
         ],
       ),
-      bottomNavigationBar: _buildBottomNav(),
     );
   }
 
@@ -640,52 +651,6 @@ class AkunScreen extends StatelessWidget {
     );
   }
 
-  // ───────── Navigasi bawah ─────────
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: BoxDecoration(
-        color: C.surfaceLowest.withOpacity(0.95),
-        boxShadow: const [
-          BoxShadow(
-              color: Color(0x0D000000), blurRadius: 12, offset: Offset(0, -2)),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _navItem(Icons.grid_view, 'Dashboard', false),
-              _navItem(Icons.notifications_outlined, 'Notifikasi', false),
-              _navItem(Icons.account_circle, 'Akun', true),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _navItem(IconData icon, String label, bool active) {
-    final color = active ? C.primary : C.onSurfaceVariant;
-    return InkWell(
-      onTap: () {},
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minWidth: 56, minHeight: 44),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 24, color: color),
-            const SizedBox(height: 2),
-            Text(label,
-                style: _ts(10, 14, active ? FontWeight.w800 : FontWeight.w700,
-                    color)),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 // ─────────────────────────── Item menu ───────────────────────────

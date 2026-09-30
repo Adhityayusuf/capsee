@@ -7,6 +7,7 @@ import '../core/app_colors.dart';
 import '../models/land_data.dart';
 import '../widgets/auth_widgets.dart';
 import 'add_land_screen.dart';
+import 'dashboard_screen.dart';
 import 'land_detail_screen.dart';
 
 /// Data satu kartu fitur di onboarding.
@@ -95,9 +96,9 @@ class OnboardingScreen extends StatelessWidget {
                         ),
                       );
                       if (land != null && context.mounted) {
-                        Navigator.of(context).push(
+                        Navigator.of(context).pushReplacement(
                           MaterialPageRoute(
-                            builder: (_) => LandDetailScreen(land: land),
+                            builder: (_) => const DashboardScreen(),
                           ),
                         );
                       }
@@ -153,8 +154,9 @@ class OnboardingScreen extends StatelessWidget {
         ),
         GestureDetector(
           onTap: () {
-            // TODO: arahkan ke halaman utama (home)
-            _showTodo(context, 'Halaman utama belum dibuat');
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const DashboardScreen()),
+            );
           },
           child: Text(
             'Lewati untuk nanti',
