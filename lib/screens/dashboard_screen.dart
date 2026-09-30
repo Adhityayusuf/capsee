@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../core/app_colors.dart';
 import '../models/land_data.dart';
 import 'akun_screen.dart';
-import 'land_detail_screen.dart';
+import 'detail_lahan_screen.dart';
 import 'tambah_lahan_page.dart';
 import 'notifikasi_screen.dart';
 

@@ -8,7 +8,7 @@ import '../models/land_data.dart';
 import '../widgets/auth_widgets.dart';
 import 'dashboard_screen.dart';
 import 'tambah_lahan_page.dart';
-import 'land_detail_screen.dart';
+import 'detail_lahan_screen.dart';
 
 /// Data satu kartu fitur di onboarding.
 class _Feature {
