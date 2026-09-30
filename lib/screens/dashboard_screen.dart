@@ -2,8 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../core/app_colors.dart';
+import '../models/land_data.dart';
 import 'akun_screen.dart';
-import 'detail_lahan_screen.dart';
+import 'land_detail_screen.dart';
 import 'tambah_lahan_page.dart';
 import 'notifikasi_screen.dart';
 
@@ -486,7 +487,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               children: [
                 Expanded(
                   child: OutlinedButton(
-                    onPressed: _openLandDetail,
+                    onPressed: () => _openLandDetail(land),
                     child: const Text('Lihat Detail'),
                   ),
                 ),
@@ -521,10 +522,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ).push(MaterialPageRoute(builder: (_) => const TambahLahanPage()));
   }
 
-  void _openLandDetail() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const DetailLahanScreen()));
+  void _openLandDetail(_Land land) {
+    Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LandDetailScreen(
+          land: LandData(
+            name: land.title,
+            province: 'Jawa Barat',
+            city: 'Bandung Barat',
+            district: land.warning ? 'Parongpong' : 'Lembang',
+            plantAgeMonths: land.warning ? 2 : 3,
+            lastWatered: DateTime(2024, 10, 26),
+            lastFertilized: DateTime(2024, 10, 24),
+            fertilizeIntervalWeeks: 1,
+          ),
+        ),
+      ),
+    );
   }
 
   void _message(String message) => ScaffoldMessenger.of(

@@ -134,9 +134,9 @@ final List<ActivityLog> sampleActivityLogs = [
         'Gejala bercak frogeye leaf spot ~18% area daun. Status: '
         'dilakukan pemangkasan daun bawah & isolasi 4 tanaman terdampak.',
     action: ActionResult(
-      title: 'Tindakan Selesai Dicatat',
-      subtitle: 'Pemangkasan & Isolasi',
-      linkLabel: 'Detail',
+      title: 'Lihat Rekomendasi Penanganan',
+      subtitle: 'Pemangkasan & isolasi 4 tanaman terdampak',
+      linkLabel: 'Buka',
     ),
   ),
   const ActivityLog(
@@ -167,6 +167,36 @@ final List<ActivityLog> sampleActivityLogs = [
       caption: 'Cluster Buah #12',
       subtitle: 'Daun A + Buah 6',
       linkLabel: 'Arsip',
+    ),
+  ),
+  const ActivityLog(
+    category: ActivityCategory.scan,
+    icon: Icons.spa_outlined,
+    badge: 'Diagnosa Scan Buah',
+    time: '20 Okt • 09:12 WIB',
+    title: 'Buah Cabai Berkembang Normal',
+    description:
+        'Ukuran buah seragam, warna hijau mengilap, dan tidak ditemukan '
+        'gejala antraknosa pada 12 sampel buah dari baris 2–4.',
+    stats: [
+      StatItem(Icons.thermostat_outlined, '26°C'),
+      StatItem(Icons.verified_outlined, '12 Sampel'),
+      StatItem(Icons.check_circle_outline, 'Grade A'),
+    ],
+  ),
+  const ActivityLog(
+    category: ActivityCategory.fertilizer,
+    icon: Icons.compost_outlined,
+    badge: 'Pemupukan Selesai',
+    time: '17 Okt • 07:15 WIB',
+    title: 'Aplikasi Kalsium-Boron Daun',
+    description:
+        'Penyemprotan nutrisi mikro dilakukan pada pagi hari saat angin '
+        'tenang. Daun merespons baik tanpa tanda terbakar atau keriting.',
+    action: ActionResult(
+      title: 'Perawatan Selesai',
+      subtitle: 'Kalsium-Boron • 2 ml/L',
+      linkLabel: 'Detail',
     ),
   ),
 ];

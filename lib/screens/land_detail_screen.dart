@@ -4,6 +4,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../core/app_colors.dart';
 import '../models/activity_log.dart';
 import '../models/land_data.dart';
+import 'lahan/tab_jadwal.dart';
+import 'scan/hasil_scan_tidak_sehat.dart';
 import 'treatment_recommendation_screen.dart';
 
 class LandDetailScreen extends StatefulWidget {
@@ -51,9 +53,9 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   }
 
   void _showTodo(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -65,23 +67,219 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         children: [
           _buildTabSelector(),
           Expanded(
-            child: _tabIndex == 2
-                ? _buildRiwayatTab()
-                : Center(
-                    child: Text(
-                      _tabIndex == 0
-                          ? 'Konten tab Scan belum dibuat'
-                          : 'Konten tab Jadwal belum dibuat',
-                      style: GoogleFonts.plusJakartaSans(
-                        color: AppColors.subtitle,
-                      ),
-                    ),
-                  ),
+            child: switch (_tabIndex) {
+              0 => _buildScanTab(),
+              1 => const TabJadwal(),
+              _ => _buildRiwayatTab(),
+            },
           ),
         ],
       ),
     );
   }
+
+  Widget _buildScanTab() {
+    return ListView(
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
+      children: [
+        _buildScanPlotCard(),
+        const SizedBox(height: 14),
+        _buildScanResultCard(),
+        const SizedBox(height: 14),
+        _buildScanTelemetryCard(),
+        const SizedBox(height: 14),
+        FilledButton.icon(
+          onPressed: () => Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const HasilScanTidakSehatPage()),
+          ),
+          icon: const Icon(Icons.auto_awesome_rounded),
+          label: const Text('Lihat Hasil Diagnosis Lengkap'),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildScanPlotCard() {
+    return Card(
+      elevation: 0,
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Row(
+          children: [
+            Container(
+              width: 52,
+              height: 52,
+              decoration: BoxDecoration(
+                color: AppColors.primarySoft,
+                borderRadius: BorderRadius.circular(12),
+              ),
+              child: const Icon(
+                Icons.local_florist_rounded,
+                color: AppColors.primary,
+                size: 28,
+              ),
+            ),
+            const SizedBox(width: 12),
+            const Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Petak Cabai Rawit Blok A',
+                    style: TextStyle(fontWeight: FontWeight.w800),
+                  ),
+                  SizedBox(height: 3),
+                  Text(
+                    'Umur 3 Bulan • Fase Berbuah Aktif',
+                    style: TextStyle(color: AppColors.subtitle, fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            _statusPill('Optimal'),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScanResultCard() {
+    return Card(
+      elevation: 0,
+      color: Colors.white,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                const Icon(
+                  Icons.verified_rounded,
+                  color: AppColors.primary,
+                  size: 22,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Hasil Scan Terakhir',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.title,
+                  ),
+                ),
+                const Spacer(),
+                Text(
+                  '09:41 WIB',
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 11,
+                    color: AppColors.subtitle,
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Container(
+              width: double.infinity,
+              padding: const EdgeInsets.all(12),
+              decoration: BoxDecoration(
+                color: AppColors.primarySoft,
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: const Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'Tanaman Sehat & Bebas Hama',
+                    style: TextStyle(
+                      color: AppColors.primaryDark,
+                      fontWeight: FontWeight.w800,
+                    ),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Akurasi AI 98,6% • SPAD klorofil 94%',
+                    style: TextStyle(fontSize: 12),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 12),
+            const Text(
+              '4 parameter normal terdeteksi',
+              style: TextStyle(fontSize: 12, color: AppColors.subtitle),
+            ),
+            const SizedBox(height: 8),
+            const Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                Chip(label: Text('Bebas jamur')),
+                Chip(label: Text('Bebas kutu')),
+                Chip(label: Text('Daun optimal')),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildScanTelemetryCard() {
+    return Card(
+      elevation: 0,
+      color: Colors.white,
+      child: const Padding(
+        padding: EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(
+              'Sensor Realtime',
+              style: TextStyle(fontWeight: FontWeight.w800),
+            ),
+            SizedBox(height: 12),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _ScanMetric(
+                  icon: Icons.thermostat,
+                  label: 'Suhu',
+                  value: '28.4°C',
+                ),
+                _ScanMetric(
+                  icon: Icons.water_drop,
+                  label: 'Kelembapan',
+                  value: '76% RH',
+                ),
+                _ScanMetric(
+                  icon: Icons.opacity,
+                  label: 'Kebasahan',
+                  value: 'Sedang',
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _statusPill(String label) => Container(
+    padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
+    decoration: BoxDecoration(
+      color: AppColors.primarySoft,
+      borderRadius: BorderRadius.circular(20),
+    ),
+    child: Text(
+      label,
+      style: const TextStyle(
+        color: AppColors.primaryDark,
+        fontSize: 11,
+        fontWeight: FontWeight.w700,
+      ),
+    ),
+  );
 
   // ---------------------------------------------------------------
   // App bar
@@ -122,8 +320,11 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                 color: AppColors.primaryDark,
                 shape: BoxShape.circle,
               ),
-              child: const Icon(Icons.person_rounded,
-                  size: 18, color: Colors.white),
+              child: const Icon(
+                Icons.person_rounded,
+                size: 18,
+                color: Colors.white,
+              ),
             ),
           ),
         ),
@@ -171,9 +372,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                         Icon(
                           tabs[i].$1,
                           size: 17,
-                          color: _tabIndex == i
-                              ? Colors.white
-                              : AppColors.icon,
+                          color: _tabIndex == i ? Colors.white : AppColors.icon,
                         ),
                         const SizedBox(width: 6),
                         Text(
@@ -259,8 +458,11 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
               color: AppColors.primarySoft,
               shape: BoxShape.circle,
             ),
-            child: const Icon(Icons.eco_rounded,
-                size: 24, color: AppColors.primary),
+            child: const Icon(
+              Icons.eco_rounded,
+              size: 24,
+              color: AppColors.primary,
+            ),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -284,7 +486,9 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                     const SizedBox(width: 8),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: AppColors.primarySoft,
                         borderRadius: BorderRadius.circular(20),
@@ -381,8 +585,11 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         children: [
           Row(
             children: [
-              const Icon(Icons.verified_rounded,
-                  size: 18, color: AppColors.primaryDark),
+              const Icon(
+                Icons.verified_rounded,
+                size: 18,
+                color: AppColors.primaryDark,
+              ),
               const SizedBox(width: 8),
               Expanded(
                 child: Text(
@@ -395,8 +602,10 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                 ),
               ),
               Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 10,
+                  vertical: 5,
+                ),
                 decoration: BoxDecoration(
                   color: AppColors.chipBg,
                   borderRadius: BorderRadius.circular(20),
@@ -417,18 +626,19 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
           const SizedBox(height: 14),
           Row(
             children: [
-              _buildStatColumn(
-                  '${counts[ActivityCategory.scan]}', 'Scan AI'),
+              _buildStatColumn('${counts[ActivityCategory.scan]}', 'Scan AI'),
               _buildStatDivider(),
               _buildStatColumn(
-                  '${(counts[ActivityCategory.irrigation] ?? 0) * 8}',
-                  'Irigasi'),
+                '${(counts[ActivityCategory.irrigation] ?? 0) * 8}',
+                'Irigasi',
+              ),
               _buildStatDivider(),
               _buildStatColumn(
-                  '${counts[ActivityCategory.fertilizer]}', 'Pupuk'),
+                '${counts[ActivityCategory.fertilizer]}',
+                'Pupuk',
+              ),
               _buildStatDivider(),
-              _buildStatColumn(
-                  '${counts[ActivityCategory.alert]}', 'Tindakan'),
+              _buildStatColumn('${counts[ActivityCategory.alert]}', 'Tindakan'),
             ],
           ),
         ],
@@ -692,11 +902,11 @@ class _ActivityCard extends StatelessWidget {
                     action: log.action!,
                     onTap: log.category == ActivityCategory.alert
                         ? () => Navigator.of(context).push(
-                              MaterialPageRoute(
-                                builder: (_) =>
-                                    const TreatmentRecommendationScreen(),
-                              ),
-                            )
+                            MaterialPageRoute(
+                              builder: (_) =>
+                                  const TreatmentRecommendationScreen(),
+                            ),
+                          )
                         : null,
                   ),
                 ],
@@ -722,8 +932,7 @@ class _StatsRow extends StatelessWidget {
       children: items
           .map(
             (item) => Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: AppColors.chipBg,
                 borderRadius: BorderRadius.circular(8),
@@ -750,6 +959,37 @@ class _StatsRow extends StatelessWidget {
   }
 }
 
+class _ScanMetric extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final String value;
+
+  const _ScanMetric({
+    required this.icon,
+    required this.label,
+    required this.value,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Icon(icon, color: AppColors.primary, size: 20),
+        const SizedBox(height: 4),
+        Text(
+          label,
+          style: const TextStyle(fontSize: 10, color: AppColors.subtitle),
+        ),
+        const SizedBox(height: 2),
+        Text(
+          value,
+          style: const TextStyle(fontWeight: FontWeight.w700, fontSize: 11),
+        ),
+      ],
+    );
+  }
+}
+
 /// Footer berupa foto sampel + keterangan + tautan.
 class _PhotoRow extends StatelessWidget {
   final PhotoResult photo;
@@ -772,8 +1012,11 @@ class _PhotoRow extends StatelessWidget {
               color: Colors.white,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.image_outlined,
-                size: 20, color: AppColors.icon),
+            child: const Icon(
+              Icons.image_outlined,
+              size: 20,
+              color: AppColors.icon,
+            ),
           ),
           const SizedBox(width: 10),
           Expanded(
@@ -824,48 +1067,51 @@ class _ActionRow extends StatelessWidget {
       borderRadius: BorderRadius.circular(12),
       onTap: onTap,
       child: Container(
-      padding: const EdgeInsets.all(10),
-      decoration: BoxDecoration(
-        color: AppColors.primarySoft,
-        borderRadius: BorderRadius.circular(12),
-      ),
-      child: Row(
-        children: [
-          const Icon(Icons.check_circle_rounded,
-              size: 20, color: AppColors.primaryDark),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  action.title,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.title,
-                  ),
-                ),
-                Text(
-                  action.subtitle,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    color: AppColors.subtitle,
-                  ),
-                ),
-              ],
-            ),
-          ),
-          Text(
-            '${action.linkLabel} →',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+        padding: const EdgeInsets.all(10),
+        decoration: BoxDecoration(
+          color: AppColors.primarySoft,
+          borderRadius: BorderRadius.circular(12),
+        ),
+        child: Row(
+          children: [
+            const Icon(
+              Icons.check_circle_rounded,
+              size: 20,
               color: AppColors.primaryDark,
             ),
-          ),
-        ],
-      ),
+            const SizedBox(width: 10),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    action.title,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 12.5,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.title,
+                    ),
+                  ),
+                  Text(
+                    action.subtitle,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 11,
+                      color: AppColors.subtitle,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            Text(
+              '${action.linkLabel} →',
+              style: GoogleFonts.plusJakartaSans(
+                fontSize: 12,
+                fontWeight: FontWeight.w700,
+                color: AppColors.primaryDark,
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }
