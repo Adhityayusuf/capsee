@@ -183,7 +183,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       dotColor: C.primaryContainer,
       title: 'Waktu Pindai Ulang: Petak Rawit Blok A',
       body:
-          'Sudah 7 hari sejak diagnosa sehat terakhir. Pindai kembali daun utama untuk deteksi dini spora jamur dan thrips.',
+          'Sudah 7 hari sejak diagnosa sehat terakhir. Pindai kembali daun utama untuk deteksi dini penyakit dan thrips.',
       footerLabel: 'Interval Rutin 7 Hari',
       actionLabel: 'Buka Kamera Scan',
       actionIcon: Icons.photo_camera,
@@ -280,7 +280,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
           ),
         ],
       ),
-      bottomNavigationBar: _buildBottomNav(),
     );
   }
 
@@ -693,71 +692,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
     );
   }
 
-  // ───────── Navigasi bawah ─────────
-  Widget _buildBottomNav() {
-    return Container(
-      decoration: BoxDecoration(
-        color: C.surface.withOpacity(0.95),
-        boxShadow: const [
-          BoxShadow(
-              color: Color(0x0D000000), blurRadius: 12, offset: Offset(0, -2)),
-        ],
-      ),
-      child: SafeArea(
-        top: false,
-        child: SizedBox(
-          height: 64,
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              _navItem(Icons.yard_outlined, 'Dashboard', false),
-              _navItem(Icons.notifications, 'Notifikasi', true, showBadge: true),
-              _navItem(Icons.manage_accounts_outlined, 'Akun', false),
-            ],
-          ),
-        ),
-      ),
-    );
-  }
-
-  Widget _navItem(IconData icon, String label, bool active,
-      {bool showBadge = false}) {
-    final color = active ? C.primaryContainer : C.onSurfaceVariant;
-    return InkWell(
-      onTap: () {},
-      child: ConstrainedBox(
-        constraints: const BoxConstraints(minWidth: 56, minHeight: 48),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Stack(
-              clipBehavior: Clip.none,
-              children: [
-                Icon(icon, size: 24, color: color),
-                if (showBadge && _unreadCount > 0)
-                  Positioned(
-                    top: -2,
-                    right: -4,
-                    child: Container(
-                      width: 8,
-                      height: 8,
-                      decoration: BoxDecoration(
-                        color: C.error,
-                        shape: BoxShape.circle,
-                        border: Border.all(color: C.surface, width: 2),
-                      ),
-                    ),
-                  ),
-              ],
-            ),
-            const SizedBox(height: 4),
-            Text(label,
-                style: _t(10, 14, active ? FontWeight.w800 : FontWeight.w700, color)),
-          ],
-        ),
-      ),
-    );
-  }
 }
 
 // ─────────────────────────── Titik berdenyut (animate-pulse) ───────────────────────────

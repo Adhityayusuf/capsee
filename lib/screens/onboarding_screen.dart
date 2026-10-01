@@ -6,8 +6,10 @@ import 'package:google_fonts/google_fonts.dart';
 import '../core/app_colors.dart';
 import '../models/land_data.dart';
 import '../widgets/auth_widgets.dart';
-import 'add_land_screen.dart';
-import 'land_detail_screen.dart';
+import 'dashboard_screen.dart';
+import 'detail_lahan_screen.dart';
+import 'panduan_screen.dart';
+import 'tambah_lahan_page.dart';
 
 /// Data satu kartu fitur di onboarding.
 class _Feature {
@@ -89,15 +91,15 @@ class OnboardingScreen extends StatelessWidget {
                     label: 'Tambah Lahan Sekarang',
                     icon: Icons.add_circle_outline_rounded,
                     onPressed: () async {
-                      final land = await Navigator.of(context).push<LandData>(
+                      final result = await Navigator.of(context).push(
                         MaterialPageRoute(
-                          builder: (_) => const AddLandScreen(),
+                          builder: (_) => const TambahLahanPage(),
                         ),
                       );
-                      if (land != null && context.mounted) {
-                        Navigator.of(context).push(
+                      if (result != null && context.mounted) {
+                        Navigator.of(context).pushReplacement(
                           MaterialPageRoute(
-                            builder: (_) => LandDetailScreen(land: land),
+                            builder: (_) => const DashboardScreen(),
                           ),
                         );
                       }
@@ -153,8 +155,9 @@ class OnboardingScreen extends StatelessWidget {
         ),
         GestureDetector(
           onTap: () {
-            // TODO: arahkan ke halaman utama (home)
-            _showTodo(context, 'Halaman utama belum dibuat');
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(builder: (_) => const DashboardScreen()),
+            );
           },
           child: Text(
             'Lewati untuk nanti',
@@ -205,8 +208,9 @@ class OnboardingScreen extends StatelessWidget {
   Widget _buildLearnMore(BuildContext context) {
     return TextButton.icon(
       onPressed: () {
-        // TODO: buka halaman panduan / cara kerja
-        _showTodo(context, 'Halaman panduan belum dibuat');
+        Navigator.of(context).push(
+          MaterialPageRoute(builder: (_) => PanduanScreen()),
+        );
       },
       icon: const Icon(
         Icons.menu_book_outlined,
