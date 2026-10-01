@@ -46,11 +46,10 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
-<<<<<<< HEAD
 .env
 venv/
 __pycache__/
-=======
+
 
 # Generated plugin registrants (Mac, Linux, Windows, iOS)
 linux/flutter/generated_plugin_registrant.cc
@@ -62,4 +61,3 @@ windows/flutter/generated_plugin_registrant.h
 windows/flutter/generated_plugins.cmake
 ios/Runner/GeneratedPluginRegistrant.h
 ios/Runner/GeneratedPluginRegistrant.m
->>>>>>> f4568720e94aaa73206586342c5edf41b2b32860
