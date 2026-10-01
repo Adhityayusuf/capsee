@@ -24,8 +24,7 @@ Versi saat ini masih menggunakan data dummy untuk mensimulasikan alur penggunaan
 - Ringkasan kondisi kebun
 - Sapaan dan status sistem diagnostik
 - Informasi lokasi dan kondisi cuaca
-- Data kelembapan dan curah hujan
-- Status risiko jamur
+- Data kelembapan dan kecepatan angin
 - Rekomendasi agronomi
 - Daftar lahan yang terdaftar
 - Status kesehatan setiap lahan
