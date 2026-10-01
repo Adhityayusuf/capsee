@@ -723,61 +723,30 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
 
   // Tombol aksi bawah: Tambah Catatan + Ekspor Log
   Widget _buildBottomActions() {
-    return Row(
-      children: [
-        Expanded(
-          child: SizedBox(
-            height: 50,
-            child: ElevatedButton.icon(
-              onPressed: () {
-                // TODO: buka form tambah catatan aktivitas
-                _showTodo('Form Tambah Catatan belum dibuat');
-              },
-              icon: const Icon(Icons.add_rounded, size: 20),
-              label: Text(
-                'Tambah Catatan',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14.5,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: AppColors.primary,
-                foregroundColor: Colors.white,
-                elevation: 0,
-                shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-              ),
-            ),
+    return SizedBox(
+      height: 50,
+      width: double.infinity,
+      child: OutlinedButton.icon(
+        onPressed: () {
+          // TODO: proses ekspor log ke PDF/Excel
+          _showTodo('Ekspor Log belum dibuat');
+        },
+        icon: const Icon(Icons.ios_share_rounded, size: 18),
+        label: Text(
+          'Ekspor Log',
+          style: GoogleFonts.plusJakartaSans(
+            fontSize: 14.5,
+            fontWeight: FontWeight.w700,
           ),
         ),
-        const SizedBox(width: 10),
-        SizedBox(
-          height: 50,
-          child: OutlinedButton.icon(
-            onPressed: () {
-              // TODO: proses ekspor log ke PDF/Excel
-              _showTodo('Ekspor Log belum dibuat');
-            },
-            icon: const Icon(Icons.ios_share_rounded, size: 18),
-            label: Text(
-              'Ekspor Log',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 13.5,
-                fontWeight: FontWeight.w700,
-              ),
-            ),
-            style: OutlinedButton.styleFrom(
-              foregroundColor: AppColors.title,
-              side: const BorderSide(color: AppColors.border),
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-            ),
+        style: OutlinedButton.styleFrom(
+          foregroundColor: AppColors.title,
+          side: const BorderSide(color: AppColors.border),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
           ),
         ),
-      ],
+      ),
     );
   }
 
