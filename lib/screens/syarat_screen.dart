@@ -15,9 +15,10 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../core/app_colors.dart';
 import 'notifikasi_screen.dart' show C;
 
-const _secondary = Color(0xFF006E2F);
+const _secondary = AppColors.secondary;
 
 const _kImgCabai =
     'https://lh3.googleusercontent.com/aida-public/AB6AXuACXKFh4uJJo_9LdD7gVIMkBulVs-nN_Lh8BrSPNR5yiexRNG2sMplxELObCVynXUHbWbFAneF85ql3sX4Iah7dUk-2saIkGskfjUxFwLsF2bTU-P6Qd2nDc-tXBS6K9HmwnnBVMuDCW-f9kSvCidnd3jYNZNxbjQ2NCtRxKTkZ7OvSn_-yvPmjRqPCTqLEJVJAtT-gPqI3VcAmNT1W_tdNkYFEi6JwYElFOwcA6JVYJYkQCeCCi6sQSQ';
@@ -36,7 +37,7 @@ TextStyle _ts(double size, double height, FontWeight w, Color color,
     );
 
 const _softShadow = [
-  BoxShadow(color: Color(0x0F000000), blurRadius: 3, offset: Offset(0, 1)),
+  BoxShadow(color: AppColors.shadow, blurRadius: 3, offset: Offset(0, 1)),
 ];
 
 /// Teks dengan potongan tebal. Gunakan `_b('...')` untuk bagian bold.
@@ -178,7 +179,7 @@ class _SyaratScreenState extends State<SyaratScreen> {
           color: C.surface.withOpacity(0.95),
           boxShadow: const [
             BoxShadow(
-                color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 1)),
+                color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 1)),
           ],
         ),
         child: SafeArea(

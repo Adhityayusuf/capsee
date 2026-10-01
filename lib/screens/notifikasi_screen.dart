@@ -11,32 +11,36 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../core/app_colors.dart';
+
 void main() => runApp(const CapseeApp());
 
-// ─────────────────────────── Warna (Material 3 token) ───────────────────────────
+// ─────────────────────────── Warna (alias ke AppColors) ───────────────────────────
+// Nama `C` dipertahankan agar layar yang mengimpornya tetap kompilasi, tetapi
+// seluruh nilai kini menunjuk ke palette kanonik di core/app_colors.dart.
 class C {
-  static const surface = Color(0xFFFAF8FF);
-  static const surfaceLowest = Color(0xFFFFFFFF);
-  static const surfaceLow = Color(0xFFF2F3FF);
-  static const surfaceContainer = Color(0xFFEAEDFF);
-  static const surfaceHigh = Color(0xFFE2E7FF);
-  static const surfaceHighest = Color(0xFFDAE2FD);
-  static const onSurface = Color(0xFF131B2E);
-  static const onSurfaceVariant = Color(0xFF3F493F);
-  static const outline = Color(0xFF6F7A6E);
-  static const primary = Color(0xFF00652C);
-  static const primaryContainer = Color(0xFF15803D);
-  static const onPrimary = Color(0xFFFFFFFF);
-  static const primaryFixed = Color(0xFF95F8A7);
-  static const primaryFixedDim = Color(0xFF79DB8D);
-  static const onPrimaryFixed = Color(0xFF00210A);
-  static const tertiary = Color(0xFF005B8C);
-  static const tertiaryContainer = Color(0xFF0075B1);
-  static const tertiaryFixed = Color(0xFFCCE5FF);
-  static const onTertiaryFixedVariant = Color(0xFF004B73);
-  static const error = Color(0xFFBA1A1A);
-  static const errorContainer = Color(0xFFFFDAD6);
-  static const onErrorContainer = Color(0xFF93000A);
+  static const surface = AppColors.surface;
+  static const surfaceLowest = AppColors.surfaceLowest;
+  static const surfaceLow = AppColors.surfaceLow;
+  static const surfaceContainer = AppColors.surfaceContainer;
+  static const surfaceHigh = AppColors.surfaceHigh;
+  static const surfaceHighest = AppColors.surfaceHighest;
+  static const onSurface = AppColors.onSurface;
+  static const onSurfaceVariant = AppColors.onSurfaceVariant;
+  static const outline = AppColors.outline;
+  static const primary = AppColors.primary;
+  static const primaryContainer = AppColors.primaryContainer;
+  static const onPrimary = AppColors.onPrimary;
+  static const primaryFixed = AppColors.primaryFixed;
+  static const primaryFixedDim = AppColors.primaryFixedDim;
+  static const onPrimaryFixed = AppColors.onPrimaryFixed;
+  static const tertiary = AppColors.tertiary;
+  static const tertiaryContainer = AppColors.tertiaryContainer;
+  static const tertiaryFixed = AppColors.tertiaryFixed;
+  static const onTertiaryFixedVariant = AppColors.onTertiaryFixedVariant;
+  static const error = AppColors.error;
+  static const errorContainer = AppColors.errorContainer;
+  static const onErrorContainer = AppColors.onErrorContainer;
 }
 
 // ─────────────────────────── Tipografi ───────────────────────────
@@ -285,7 +289,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
           color: C.surface.withOpacity(0.95),
           boxShadow: const [
             BoxShadow(
-                color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 1)),
+                color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 1)),
           ],
         ),
         child: SafeArea(
@@ -435,7 +439,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                 boxShadow: active
                     ? const [
                         BoxShadow(
-                            color: Color(0x1F000000),
+                            color: AppColors.shadow,
                             blurRadius: 2,
                             offset: Offset(0, 1))
                       ]
@@ -491,7 +495,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: const [
             BoxShadow(
-                color: Color(0x0F000000), blurRadius: 3, offset: Offset(0, 1)),
+                color: AppColors.shadow, blurRadius: 3, offset: Offset(0, 1)),
           ],
         ),
         child: Row(

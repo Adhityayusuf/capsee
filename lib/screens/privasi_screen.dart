@@ -15,11 +15,12 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../core/app_colors.dart';
 import 'notifikasi_screen.dart' show C;
 
-const _secondary = Color(0xFF006E2F);
-const _secondaryFixed = Color(0xFF6BFF8F);
-const _onSecondaryFixed = Color(0xFF002109);
+const _secondary = AppColors.secondary;
+const _secondaryFixed = AppColors.secondaryContainer;
+const _onSecondaryFixed = AppColors.onPrimaryFixed;
 
 TextStyle _ts(double size, double height, FontWeight w, Color color,
         {double? letterSpacing}) =>
@@ -32,7 +33,7 @@ TextStyle _ts(double size, double height, FontWeight w, Color color,
     );
 
 const _softShadow = [
-  BoxShadow(color: Color(0x0F000000), blurRadius: 3, offset: Offset(0, 1)),
+  BoxShadow(color: AppColors.shadow, blurRadius: 3, offset: Offset(0, 1)),
 ];
 
 class PrivasiScreen extends StatefulWidget {
@@ -148,7 +149,7 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
           color: C.surface.withOpacity(0.95),
           boxShadow: const [
             BoxShadow(
-                color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 1)),
+                color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 1)),
           ],
         ),
         child: SafeArea(
@@ -243,7 +244,7 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(Icons.verified_user,
-                size: 24, color: Color(0xFFD3FFD5)),
+                size: 24, color: AppColors.onPrimaryContainer),
           ),
           const SizedBox(width: 14),
           Expanded(

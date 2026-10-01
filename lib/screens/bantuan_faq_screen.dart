@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../core/app_colors.dart';
 import 'panduan_screen.dart';
 import 'notifikasi_screen.dart' show C;
 
@@ -313,10 +314,10 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                 width: 40,
                 height: 40,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF6BFF8F),
+                  color: AppColors.secondaryContainer,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.forum, color: Color(0xFF007432), size: 22),
+                child: const Icon(Icons.forum, color: AppColors.onSecondaryContainer, size: 22),
               ),
               const SizedBox(width: 12),
               Expanded(

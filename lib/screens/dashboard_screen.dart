@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../core/app_colors.dart';
 import '../models/land_data.dart';
 import 'akun_screen.dart';
 import 'detail_lahan_screen.dart';
-import 'tambah_lahan_page.dart';
 import 'notifikasi_screen.dart';
+import 'riwayat_scan_screen.dart';
+import 'scan/hasil_scan_tidak_sehat.dart';
+import 'tambah_lahan_page.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -17,6 +20,8 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _tab = 0;
+  final ImagePicker _picker = ImagePicker();
+  final List<ScanHistoryItem> _scanHistory = [];
 
   static const _lands = [
     _Land(
@@ -58,32 +63,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final pages = [
       _buildDashboard(),
+      RiwayatScanScreen(items: _scanHistory, onScan: _openScan),
       const NotifikasiScreen(),
       const AkunScreen(),
     ];
 
     return Scaffold(
       body: IndexedStack(index: _tab, children: pages),
-      bottomNavigationBar: NavigationBar(
+      bottomNavigationBar: _BottomNav(
         selectedIndex: _tab,
-        onDestinationSelected: (index) => setState(() => _tab = index),
-        destinations: const [
-          NavigationDestination(
-            icon: Icon(Icons.local_florist_outlined),
-            selectedIcon: Icon(Icons.local_florist),
-            label: 'Dashboard',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.notifications_none_rounded),
-            selectedIcon: Icon(Icons.notifications_rounded),
-            label: 'Notifikasi',
-          ),
-          NavigationDestination(
-            icon: Icon(Icons.manage_accounts_outlined),
-            selectedIcon: Icon(Icons.manage_accounts_rounded),
-            label: 'Akun',
-          ),
-        ],
+        onSelected: (index) => setState(() => _tab = index),
+        onScan: _openScan,
       ),
     );
   }
@@ -145,7 +135,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       color: AppColors.background,
       boxShadow: [
         BoxShadow(
-          color: Color(0x0A000000),
+          color: AppColors.shadow,
           blurRadius: 8,
           offset: Offset(0, 1),
         ),
@@ -258,7 +248,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ),
             FilledButton(
-              onPressed: () => _message('Fitur kamera siap dihubungkan'),
+              onPressed: _openScan,
               style: FilledButton.styleFrom(
                 backgroundColor: Colors.white,
                 foregroundColor: AppColors.primary,
@@ -423,7 +413,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               decoration: BoxDecoration(
                 color:
                     (land.warning
-                            ? const Color(0xFFFFDAD6)
+                            ? AppColors.errorContainer
                             : AppColors.primarySoft)
                         .withAlpha(130),
                 borderRadius: BorderRadius.circular(8),
@@ -489,7 +479,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: () => _message('Fitur scan siap dihubungkan'),
+                    onPressed: _openScan,
                     icon: const Icon(Icons.photo_camera_rounded, size: 17),
                     label: Text(land.warning ? 'Pindai Ulang' : 'Pindai Daun'),
                   ),
@@ -510,6 +500,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ),
     child: Text(label, style: _style(10, foreground, FontWeight.w700)),
   );
+
+  Future<void> _openScan() async {
+    try {
+      final picked = await _picker.pickImage(source: ImageSource.camera);
+      if (picked == null || !mounted) return;
+      setState(() {
+        _scanHistory.insert(
+          0,
+          ScanHistoryItem(imagePath: picked.path, scannedAt: DateTime.now()),
+        );
+      });
+      await Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const HasilScanTidakSehatPage()),
+      );
+    } catch (_) {
+      if (!mounted) return;
+      _message('Kamera tidak dapat dibuka. Periksa izin kamera aplikasi.');
+    }
+  }
 
   void _addLand() {
     Navigator.of(
@@ -575,7 +584,7 @@ class _Climate extends StatelessWidget {
       ),
       child: Column(
         children: [
-          Icon(icon, color: const Color(0xFF005B8C), size: 18),
+          Icon(icon, color: AppColors.tertiary, size: 18),
           const SizedBox(height: 3),
           Text(
             title,
@@ -605,4 +614,118 @@ class _Land {
     required this.icon,
     this.warning = false,
   });
+}
+
+class _BottomNav extends StatelessWidget {
+  final int selectedIndex;
+  final ValueChanged<int> onSelected;
+  final VoidCallback onScan;
+
+  const _BottomNav({
+    required this.selectedIndex,
+    required this.onSelected,
+    required this.onScan,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      decoration: const BoxDecoration(
+        color: Colors.white,
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.shadow,
+            blurRadius: 12,
+            offset: Offset(0, -2),
+          ),
+        ],
+      ),
+      child: SafeArea(
+        top: false,
+        child: SizedBox(
+          height: 64,
+          child: Stack(
+            clipBehavior: Clip.none,
+            children: [
+              Row(
+                children: [
+                  _tab(0, Icons.local_florist_outlined, Icons.local_florist, 'Dashboard'),
+                  _tab(1, Icons.history_outlined, Icons.history_rounded, 'Riwayat'),
+                  const SizedBox(width: 76),
+                  _tab(2, Icons.notifications_none_rounded, Icons.notifications_rounded, 'Notifikasi'),
+                  _tab(3, Icons.manage_accounts_outlined, Icons.manage_accounts_rounded, 'Akun'),
+                ],
+              ),
+              Positioned(
+                top: -20,
+                left: 0,
+                right: 0,
+                child: Center(child: _scanButton()),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
+  }
+
+  Widget _tab(int index, IconData icon, IconData activeIcon, String label) {
+    final selected = selectedIndex == index;
+    final color = selected ? AppColors.primary : AppColors.icon;
+    return Expanded(
+      child: InkWell(
+        onTap: () => onSelected(index),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(selected ? activeIcon : icon, color: color, size: 23),
+            const SizedBox(height: 3),
+            Text(
+              label,
+              style: _style(
+                10,
+                color,
+                selected ? FontWeight.w700 : FontWeight.w500,
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _scanButton() => Semantics(
+    button: true,
+    label: 'Scan daun dengan kamera',
+    child: GestureDetector(
+      behavior: HitTestBehavior.opaque,
+      onTap: onScan,
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Material(
+            color: AppColors.primary,
+            shape: const CircleBorder(),
+            elevation: 4,
+            shadowColor: AppColors.primaryShadow,
+            child: InkWell(
+              customBorder: const CircleBorder(),
+              onTap: onScan,
+              child: const SizedBox(
+                width: 58,
+                height: 58,
+                child: Icon(
+                  Icons.photo_camera_rounded,
+                  color: Colors.white,
+                  size: 28,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text('Scan', style: _style(10, AppColors.primary, FontWeight.w700)),
+        ],
+      ),
+    ),
+  );
 }

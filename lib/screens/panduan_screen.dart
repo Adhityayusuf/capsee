@@ -15,19 +15,20 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../core/app_colors.dart';
 import 'notifikasi_screen.dart' show C;
 
-// ─────────────────────────── Token tambahan ───────────────────────────
+// ─────────────────────────── Token tambahan (alias ke AppColors) ───────────────────────────
 class _P {
-  static const inverseSurface = Color(0xFF283044);
-  static const inverseOnSurface = Color(0xFFEEF0FF);
-  static const onPrimaryContainer = Color(0xFFD3FFD5);
-  static const secondaryContainer = Color(0xFF6BFF8F);
-  static const onSecondaryContainer = Color(0xFF007432);
-  static const secondary = Color(0xFF006E2F);
-  static const onSecondaryFixedVariant = Color(0xFF005321);
-  static const surfaceDim = Color(0xFFD2D9F4);
-  static const outlineVariant = Color(0xFFBECABC);
+  static const inverseSurface = AppColors.inverseSurface;
+  static const inverseOnSurface = AppColors.inverseOnSurface;
+  static const onPrimaryContainer = AppColors.onPrimaryContainer;
+  static const secondaryContainer = AppColors.secondaryContainer;
+  static const onSecondaryContainer = AppColors.onSecondaryContainer;
+  static const secondary = AppColors.secondary;
+  static const onSecondaryFixedVariant = AppColors.onSecondaryFixedVariant;
+  static const surfaceDim = AppColors.surfaceDim;
+  static const outlineVariant = AppColors.outlineVariant;
 }
 
 // ─────────────────────────── URL gambar ───────────────────────────
@@ -53,7 +54,7 @@ TextStyle _ts(double size, double height, FontWeight w, Color color,
     );
 
 const _softShadow = [
-  BoxShadow(color: Color(0x0F000000), blurRadius: 3, offset: Offset(0, 1)),
+  BoxShadow(color: AppColors.shadow, blurRadius: 3, offset: Offset(0, 1)),
 ];
 
 // ─────────────────────────── Data langkah ───────────────────────────
@@ -193,7 +194,7 @@ class _PanduanScreenState extends State<PanduanScreen> {
           color: C.surface.withOpacity(0.95),
           boxShadow: const [
             BoxShadow(
-                color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 1)),
+                color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 1)),
           ],
         ),
         child: SafeArea(
@@ -1728,7 +1729,7 @@ class _PingState extends State<_Ping> with SingleTickerProviderStateMixin {
               shape: BoxShape.circle,
               boxShadow: const [
                 BoxShadow(
-                    color: Color(0x33000000),
+                    color: AppColors.shadow,
                     blurRadius: 4,
                     offset: Offset(0, 2)),
               ],

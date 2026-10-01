@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'dart:ui' show ImageFilter;
 import 'package:google_fonts/google_fonts.dart';
 
+import '../core/app_colors.dart';
 import 'notifikasi_screen.dart' show C;
 import 'edit_profil_screen.dart';
 import 'login_screen.dart';
@@ -169,7 +170,7 @@ class AkunScreen extends StatelessWidget {
           color: C.surface.withOpacity(0.95),
           boxShadow: const [
             BoxShadow(
-                color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 1)),
+                color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 1)),
           ],
         ),
         child: SafeArea(
@@ -255,7 +256,7 @@ class AkunScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: const Color(0xFF6BFF8F).withOpacity(0.3),
+            color: AppColors.secondaryContainer.withOpacity(0.3),
             borderRadius: BorderRadius.circular(999),
           ),
           child: Row(
@@ -281,7 +282,7 @@ class AkunScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [
           BoxShadow(
-              color: Color(0x0F0F172A),
+              color: AppColors.shadow,
               blurRadius: 20,
               spreadRadius: -4,
               offset: Offset(0, 4)),
@@ -352,7 +353,7 @@ class AkunScreen extends StatelessWidget {
                                   width: 6,
                                   height: 6,
                                   decoration: const BoxDecoration(
-                                      color: Color(0xFF006E2F),
+                                      color: AppColors.secondary,
                                       shape: BoxShape.circle),
                                 ),
                                 const SizedBox(width: 4),
@@ -508,7 +509,7 @@ class AkunScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [
           BoxShadow(
-              color: Color(0x0F000000), blurRadius: 3, offset: Offset(0, 1)),
+              color: AppColors.shadow, blurRadius: 3, offset: Offset(0, 1)),
         ],
       ),
       child: Row(
@@ -521,7 +522,7 @@ class AkunScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               boxShadow: const [
                 BoxShadow(
-                    color: Color(0x0F000000),
+                    color: AppColors.shadow,
                     blurRadius: 3,
                     offset: Offset(0, 1)),
               ],
@@ -540,7 +541,7 @@ class AkunScreen extends StatelessWidget {
               ],
             ),
           ),
-          const _PulseDot(color: Color(0xFF6BFF8F), size: 10),
+          const _PulseDot(color: AppColors.secondaryContainer, size: 10),
         ],
       ),
     );
@@ -571,7 +572,7 @@ class AkunScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             boxShadow: const [
               BoxShadow(
-                  color: Color(0x08000000),
+                  color: AppColors.shadow,
                   blurRadius: 12,
                   offset: Offset(0, 2)),
             ],

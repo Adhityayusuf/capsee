@@ -16,10 +16,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../core/app_colors.dart';
 import 'notifikasi_screen.dart' show C;
 
-const _onSecondaryContainer = Color(0xFF007432);
-const _secondaryContainer = Color(0xFF6BFF8F);
+const _onSecondaryContainer = AppColors.onSecondaryContainer;
+const _secondaryContainer = AppColors.secondaryContainer;
 
 TextStyle _ts(double size, double height, FontWeight w, Color color,
         {double? letterSpacing}) =>
@@ -32,7 +33,7 @@ TextStyle _ts(double size, double height, FontWeight w, Color color,
     );
 
 const _softShadow = [
-  BoxShadow(color: Color(0x0F000000), blurRadius: 3, offset: Offset(0, 1)),
+  BoxShadow(color: AppColors.shadow, blurRadius: 3, offset: Offset(0, 1)),
 ];
 
 final _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
@@ -178,7 +179,7 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
           color: C.surface.withOpacity(0.95),
           boxShadow: const [
             BoxShadow(
-                color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 1)),
+                color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 1)),
           ],
         ),
         child: SafeArea(
@@ -292,7 +293,7 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
                     shape: BoxShape.circle,
                     boxShadow: [
                       BoxShadow(
-                          color: Color(0x33000000),
+                          color: AppColors.shadow,
                           blurRadius: 4,
                           offset: Offset(0, 2)),
                     ],
