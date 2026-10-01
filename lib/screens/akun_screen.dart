@@ -14,6 +14,8 @@ import 'edit_profil_screen.dart';
 import 'login_screen.dart';
 import 'bantuan_faq_screen.dart';
 import 'ubah_sandi.dart';
+import 'syarat_screen.dart';
+import 'privasi_screen.dart';
 
 const String _kLogoUrl =
     'https://lh3.googleusercontent.com/aida/AEtjO1Xr_77lDlwa3ZADA-1HeBJZ-Tn0VWtE6n-7pOHm4d2azQUim5BjoLf575UzLtz0ODNUzEVcV30y0Qygv7t04JxHmpUwopBEQ96lDQ7I0bpin4-N1IS1l-FoVePayedbE5_okishN0kcXmjse5fCF-NG5aQpKrjWoygNzg2Vb2Qvga9t5r_iZu7cGKe9q8GulMspHO6C3lCzeGHgRcSPog9XdXtsBfBZsWTWU4MeoT564Ej-_JzkDExBIpo';
@@ -98,18 +100,28 @@ class AkunScreen extends StatelessWidget {
           );
         },
       ),
-      const _MenuItem(
-        icon: Icons.support_agent,
-        iconColor: C.primary,
-        title: 'Konsultasi Tim Ahli PPL',
-        subtitle: 'Hubungi penyuluh pertanian lapangan resmi',
-        badge: 'Tersedia',
-      ),
-      const _MenuItem(
+
+      _MenuItem(
         icon: Icons.verified_user_outlined,
         iconColor: C.onSurfaceVariant,
         title: 'Syarat dan Ketentuan',
-        subtitle: 'Ketentuan layanan & privasi data agrikultur',
+        subtitle: 'Ketentuan layanan aplikasi',
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SyaratScreen()),
+          );
+        },
+      ),
+      _MenuItem(
+        icon: Icons.privacy_tip_outlined,
+        iconColor: C.onSurfaceVariant,
+        title: 'Kebijakan Privasi',
+        subtitle: 'Privasi data agrikultur Anda',
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const PrivasiScreen()),
+          );
+        },
       ),
       const _MenuItem(
         icon: Icons.info_outline,

@@ -39,7 +39,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
       'category': 'Jadwal & Cuaca',
       'icon': Icons.calendar_month,
       'question': 'Bagaimana cara mengatur dan mengubah jadwal penyiraman serta pemupukan?',
-      'answer': 'Masuk ke menu Jadwal Tani pada navigasi utama. Anda dapat menyesuaikan formulasi pupuk (NPK Mutiara, POC, atau Pupuk Kandang terfermentasi) serta menetapkan rotasi 7 hari atau 14 hari sekali.\n\nAlgoritma Capsee otomatis memundurkan pengingat penyiraman jika radar mikro BMKG mendeteksi curah hujan tinggi di koordinat kebun Anda.',
+      'answer': 'Masuk ke menu Jadwal Tani pada navigasi utama. Anda dapat menyesuaikan formulasi pupuk (NPK Mutiara, POC, atau Pupuk Kandang terfermentasi) serta menetapkan rotasi 7 hari atau 14 hari sekali.\n\nAlgoritma Capsee otomatis memundurkan pengingat penyiraman jika radar mikro BMKG mendeteksi anomali cuaca di koordinat kebun Anda.',
     },
     {
       'category': 'Pemindaian Daun',
@@ -53,12 +53,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
       'question': 'Apakah data lahan dan foto tanaman saya aman dan rahasia?',
       'answer': 'Sangat aman. Seluruh data koordinat geospasial blok lahan, foto daun, serta riwayat panen dienkripsi dengan standar TLS 1.3 saat transmisi dan AES-256 saat disimpan di server Cloud.\n\nKedaulatan kepemilikan data 100% berada di bawah kendali Anda sesuai Perjanjian Privasi Petani Capsee dan tidak diperjualbelikan kepada pihak ketiga.',
     },
-    {
-      'category': 'Hasil Diagnosis',
-      'icon': Icons.support_agent,
-      'question': 'Bagaimana cara berkonsultasi langsung dengan Petugas Penyuluh Lapangan (PPL)?',
-      'answer': 'Pada setiap lembar hasil pemindaian, ketuk tombol "Rujuk ke PPL Binaan" di bagian bawah rekomendasi tindakan.\n\nAplikasi akan mengemas ringkasan gejala klinis, foto resolusi tinggi, dan data microclimate menjadi format tiket konsultasi yang langsung terhubung ke nomor WhatsApp resmi PPL Kementan di kecamatan Anda.',
-    },
+
   ];
 
   List<Map<String, dynamic>> get _filteredFaqs {
@@ -349,13 +344,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
             ],
           ),
           const SizedBox(height: 16),
-          _buildContactCard(
-            icon: Icons.chat,
-            iconColor: C.primary,
-            title: 'Konsultasi WhatsApp',
-            subtitle: 'Senin - Sabtu (07.00 - 17.00 WIB)',
-          ),
-          const SizedBox(height: 8),
+
           _buildContactCard(
             icon: Icons.mail,
             iconColor: C.tertiary,

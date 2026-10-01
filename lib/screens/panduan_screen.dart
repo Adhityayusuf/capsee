@@ -914,7 +914,7 @@ class _Step3 extends StatelessWidget {
             iconColor: C.tertiary,
             title: 'Penyesuaian Cuaca Real-Time',
             body:
-                'Jadwal penyiraman otomatis ditunda jika sensor kelembaban mendeteksi curah hujan tinggi di koordinat kebun.',
+                'Jadwal penyiraman otomatis ditunda jika sensor mendeteksi anomali cuaca di koordinat kebun.',
           ),
         ],
       ),
@@ -1060,7 +1060,7 @@ class _Step4 extends StatelessWidget {
                     children: [
                       const TextSpan(
                           text:
-                              'Hujan deras & kelembaban 94% di Blok C-2. Risiko spora jamur '),
+                              'Angin kencang & kelembaban 94% di Blok C-2. Risiko penyakit '),
                       TextSpan(
                         text: 'Cercospora capsici',
                         style: _ts(12, 16, FontWeight.w500,
@@ -1182,7 +1182,7 @@ class _Step4 extends StatelessWidget {
           iconColor: C.onErrorContainer,
           title: 'Peringatan Dini Penyakit & Hama',
           body:
-              'Deteksi potensi wabah jamur dan bakteri berbahaya berdasarkan anomali kelembaban udara mikro dan tren fluktuasi suhu kanopi tanaman Anda.',
+              'Deteksi potensi wabah penyakit dan bakteri berbahaya berdasarkan anomali kelembaban udara mikro dan tren fluktuasi suhu kanopi tanaman Anda.',
         ),
         const SizedBox(height: 4),
         const _BigFeatureCard(
@@ -1191,7 +1191,7 @@ class _Step4 extends StatelessWidget {
           iconColor: C.tertiary,
           title: 'Sinkronisasi Cuaca Ekstrem',
           body:
-              'Rekomendasi taktis penundaan jadwal penyemprotan nutrisi saat curah hujan tinggi agar pupuk tidak terbasuh dan terbuang percuma.',
+              'Rekomendasi taktis penundaan jadwal penyemprotan nutrisi saat cuaca ekstrem agar pupuk tidak terbasuh dan terbuang percuma.',
         ),
         const SizedBox(height: 4),
         const _BigFeatureCard(

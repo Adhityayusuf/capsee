@@ -183,7 +183,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       dotColor: C.primaryContainer,
       title: 'Waktu Pindai Ulang: Petak Rawit Blok A',
       body:
-          'Sudah 7 hari sejak diagnosa sehat terakhir. Pindai kembali daun utama untuk deteksi dini spora jamur dan thrips.',
+          'Sudah 7 hari sejak diagnosa sehat terakhir. Pindai kembali daun utama untuk deteksi dini penyakit dan thrips.',
       footerLabel: 'Interval Rutin 7 Hari',
       actionLabel: 'Buka Kamera Scan',
       actionIcon: Icons.photo_camera,

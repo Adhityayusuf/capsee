@@ -297,8 +297,8 @@ class HasilScanTidakSehatPage extends StatelessWidget {
           const SizedBox(height: 10),
           _finding(Icons.lens, 'Bercak Mata Katak',
               'Titik nekrotik putih-abu di pusat lesi', 'Konfirmasi'),
-          _finding(Icons.water_drop, 'Kelembapan Malam Hari',
-              'Tercatat 82% (Zona rawan spora jamur)', 'Sensor IoT'),
+          _finding(Icons.water_drop, 'Kelembapan Udara',
+              'Tercatat 82% berdasar data cuaca', 'API BMKG'),
           _finding(Icons.forest, 'Kerapatan Kanopi',
               'Sirkulasi udara bawah terhambat', 'Perlu Pruning'),
         ],
@@ -337,25 +337,13 @@ class HasilScanTidakSehatPage extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 8),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.photo_camera,
-                    color: Color(0xFF00652C)),
-                label: const Text('Pindai Daun Lain'),
-              ),
-            ),
-            const SizedBox(width: 8),
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: () {},
-                icon: const Icon(Icons.share, color: Color(0xFF005B8C)),
-                label: const Text('Kirim ke PPL/Pakar'),
-              ),
-            ),
-          ],
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: () {},
+            icon: const Icon(Icons.photo_camera, color: Color(0xFF00652C)),
+            label: const Text('Pindai Daun Lain'),
+          ),
         ),
       ],
     );

@@ -122,21 +122,7 @@ class _TreatmentRecommendationScreenState
                       ),
                     ),
                   ),
-                  const SizedBox(height: 14),
-                  TextButton.icon(
-                    onPressed: () =>
-                        _showTodo('Halaman konsultasi ahli belum dibuat'),
-                    icon: const Icon(Icons.support_agent_rounded,
-                        size: 19, color: AppColors.primaryDark),
-                    label: Text(
-                      'Konsultasi Ahli Pertanian (Agronomi)',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13.5,
-                        fontWeight: FontWeight.w700,
-                        color: AppColors.primaryDark,
-                      ),
-                    ),
-                  ),
+
                 ],
               ),
             ),

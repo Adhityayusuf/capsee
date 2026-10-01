@@ -97,32 +97,14 @@ class _UbahKataSandiScreenState extends State<UbahKataSandiScreen> {
                 icon: const Icon(Icons.arrow_back, color: cTextTitle),
                 onPressed: () => Navigator.pop(context),
               ),
-              title: Row(
-                children: [
-                  Container(
-                    height: 30,
-                    width: 50,
-                    color: Colors.grey.shade300,
-                    alignment: Alignment.center,
-                    child: const Text(
-                      'img',
-                      style: TextStyle(fontSize: 12, color: Colors.black54),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text(
-                      'Tambah Data ...',
-                      style: TextStyle(
-                        color: cTextTitle,
-                        fontSize: 18,
-                        fontFamily: 'serif',
-                        fontWeight: FontWeight.w700,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
+              title: const Text(
+                'Ubah Kata Sandi',
+                style: TextStyle(
+                  color: cTextTitle,
+                  fontSize: 18,
+                  fontFamily: 'serif',
+                  fontWeight: FontWeight.w700,
+                ),
               ),
               actions: [
                 IconButton(

@@ -6,7 +6,8 @@ import 'package:google_fonts/google_fonts.dart';
 import '../core/app_colors.dart';
 import '../widgets/auth_widgets.dart';
 import 'login_screen.dart';
-
+import 'syarat_screen.dart';
+import 'privasi_screen.dart';
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -34,11 +35,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
     super.initState();
     _termsTap = TapGestureRecognizer()
       ..onTap = () {
-        // TODO: buka halaman Syarat & Ketentuan
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const SyaratScreen()),
+        );
       };
     _privacyTap = TapGestureRecognizer()
       ..onTap = () {
-        // TODO: buka halaman Kebijakan Privasi
+        Navigator.push(
+          context,
+          MaterialPageRoute(builder: (_) => const PrivasiScreen()),
+        );
       };
   }
 

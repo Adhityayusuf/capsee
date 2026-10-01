@@ -214,7 +214,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
               spacing: 8,
               runSpacing: 8,
               children: [
-                Chip(label: Text('Bebas jamur')),
+                Chip(label: Text('Bebas penyakit')),
                 Chip(label: Text('Bebas kutu')),
                 Chip(label: Text('Daun optimal')),
               ],
