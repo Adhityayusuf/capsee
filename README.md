@@ -1,5 +1,8 @@
 # Capsee
 
+## Link Design UI Figma
+[![Buka di Figma](https://img.shields.io/badge/Figma-Design-blue)](https://www.figma.com/design/l8uP3WlKO9h2eBlMCQ3nN0/PBL---Capsee?node-id=0-1&t=4mYiw0519STWqdEU-1)
+
 Capsee adalah aplikasi mobile untuk membantu petani memantau kondisi kebun cabai secara lebih teratur. Aplikasi ini menggabungkan pencatatan data lahan, pemantauan kondisi tanaman, riwayat aktivitas, jadwal perawatan, serta hasil analisis kesehatan tanaman.
 
 Project ini dikembangkan menggunakan Flutter sebagai bagian dari kegiatan PBL.
