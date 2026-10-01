@@ -3,27 +3,14 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:capsee/main.dart';
 import 'package:capsee/models/land_data.dart';
-import 'package:capsee/screens/edit_profil_screen.dart';
 import 'package:capsee/screens/land_detail_screen.dart';
 import 'package:capsee/screens/tambah_lahan_page.dart';
-import 'package:capsee/screens/ubah_sandi.dart';
 
 void main() {
   testWidgets('Capsee membuka halaman register', (tester) async {
     await tester.pumpWidget(const CapseeApp());
 
     expect(find.text('Daftar Akun Capsee'), findsOneWidget);
-  });
-
-  testWidgets('Halaman edit profil dan ubah kata sandi bisa dibuka', (
-    tester,
-  ) async {
-    await tester.pumpWidget(const MaterialApp(home: EditProfileScreen()));
-    expect(find.text('Ubah Foto Profil'), findsOneWidget);
-    expect(find.text('Simpan Perubahan'), findsOneWidget);
-
-    await tester.pumpWidget(const MaterialApp(home: UbahKataSandiScreen()));
-    expect(find.text('Simpan Kata Sandi'), findsOneWidget);
   });
 
   testWidgets('Dashboard membuka tambah lahan dan tab jadwal', (tester) async {

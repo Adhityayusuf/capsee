@@ -6,15 +6,242 @@ class HasilScanTidakSehatPage extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      appBar: AppBar(title: const Text('Hasil Scan')),
-      body: ListView(
-        padding: const EdgeInsets.all(16),
-        children: const [
-          Text('Hasil Scan Terakhir'),
-          SizedBox(height: 16),
-          Text('Tanaman Sehat & Bebas Hama'),
-          SizedBox(height: 16),
-          Text('Sensor Realtime'),
+      backgroundColor: const Color(0xFFFAF8FF),
+      appBar: AppBar(
+        backgroundColor: Colors.white.withValues(alpha: .92),
+        elevation: 1,
+        leading: IconButton(
+          icon: const Icon(Icons.arrow_back),
+          onPressed: () => Navigator.pop(context),
+        ),
+        title: const Text(
+          'Detail Lahan • Petak Cabai Rawit Blok A',
+          overflow: TextOverflow.ellipsis,
+          style: TextStyle(fontSize: 15, fontWeight: FontWeight.w700),
+        ),
+        actions: [
+          IconButton(onPressed: () {}, icon: const Icon(Icons.more_vert)),
+          Container(
+            width: 32,
+            height: 32,
+            margin: const EdgeInsets.only(right: 12),
+            decoration: const BoxDecoration(
+              color: Color(0xFF00652C),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(Icons.person, color: Colors.white, size: 18),
+          ),
+        ],
+      ),
+      body: SingleChildScrollView(
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+        child: Column(
+          children: [
+            _diagnosisHero(),
+            const SizedBox(height: 12),
+            _aboutDisease(),
+            const SizedBox(height: 12),
+            _visualFindings(),
+            const SizedBox(height: 12),
+            const Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                Text('Model: Capsee-Vision v2.4 (FP16)',
+                    style: TextStyle(fontSize: 10, color: Colors.grey)),
+                Text('ID Scan: #CPS-8849A',
+                    style: TextStyle(fontSize: 10, color: Colors.grey)),
+              ],
+            ),
+            const SizedBox(height: 12),
+            _actions(context),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _diagnosisHero() {
+    return Container(
+      decoration: _box(),
+      clipBehavior: Clip.antiAlias,
+      child: Column(
+        children: [
+          AspectRatio(
+            aspectRatio: 4 / 3,
+            child: Stack(
+              children: [
+                Container(
+                  color: const Color(0xFFDDE7DF),
+                  width: double.infinity,
+                  child: const Center(
+                    child: Icon(Icons.local_florist,
+                        size: 110, color: Color(0xFF6E9273)),
+                  ),
+                ),
+                Positioned.fill(
+                  child: DecoratedBox(
+                    decoration: BoxDecoration(
+                      gradient: LinearGradient(
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
+                        colors: [
+                          Colors.transparent,
+                          Colors.black.withValues(alpha: .65),
+                        ],
+                      ),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  top: 12,
+                  left: 12,
+                  right: 12,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      _pill(
+                        'PERLU TINDAKAN CEPAT',
+                        const Color(0xFFFFDAD6),
+                        const Color(0xFF93000A),
+                        icon: Icons.circle,
+                      ),
+                      _pill(
+                        'Capsee AI 96.4%',
+                        const Color(0xCC283044),
+                        Colors.white,
+                        icon: Icons.verified,
+                      ),
+                    ],
+                  ),
+                ),
+                Center(
+                  child: Container(
+                    width: 128,
+                    height: 128,
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                          color: const Color(0xFFBA1A1A), width: 2),
+                      borderRadius: BorderRadius.circular(9),
+                    ),
+                    child: const Center(
+                      child: Icon(Icons.warning_amber_rounded,
+                          color: Color(0xFFBA1A1A), size: 34),
+                    ),
+                  ),
+                ),
+                Positioned(
+                  bottom: 10,
+                  left: 12,
+                  right: 12,
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: const [
+                      Expanded(
+                        child: Text(
+                          'Petak Cabai Rawit Blok A • Daun Bawah & Tengah',
+                          style: TextStyle(color: Colors.white, fontSize: 10),
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ),
+                      SizedBox(width: 8),
+                      Text('10:15 WIB',
+                          style: TextStyle(
+                              color: Colors.white70, fontSize: 10)),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+          ),
+          Padding(
+            padding: const EdgeInsets.all(16),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Row(
+                  children: [
+                    Icon(Icons.coronavirus,
+                        size: 16, color: Color(0xFFBA1A1A)),
+                    SizedBox(width: 4),
+                    Text('Patologi Daun Terdeteksi',
+                        style: TextStyle(
+                            color: Color(0xFFBA1A1A),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w700)),
+                  ],
+                ),
+                const SizedBox(height: 3),
+                const Text('Bercak Daun Cercospora',
+                    style:
+                        TextStyle(fontSize: 22, fontWeight: FontWeight.w700)),
+                const Text('Cercospora capsici (Frogeye Leaf Spot)',
+                    style: TextStyle(
+                        fontSize: 12,
+                        color: Colors.grey,
+                        fontStyle: FontStyle.italic)),
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: _metric(
+                        'Tingkat Keparahan',
+                        'Sedang (Stage 2)',
+                        'Area daun terinfeksi ~18%',
+                        error: true,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: _metric(
+                        'Potensi Transmisi',
+                        'Tinggi',
+                        'Kelembapan kanopi 82%',
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 14),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Level Progresi Penyakit',
+                        style: TextStyle(fontSize: 10, color: Colors.grey)),
+                    Text('Tahap 2 dari 4',
+                        style: TextStyle(
+                            fontSize: 10,
+                            color: Color(0xFFBA1A1A),
+                            fontWeight: FontWeight.w700)),
+                  ],
+                ),
+                const SizedBox(height: 6),
+                Row(
+                  children: [
+                    Expanded(child: _severityBar(true, false)),
+                    const SizedBox(width: 5),
+                    Expanded(child: _severityBar(true, true)),
+                    const SizedBox(width: 5),
+                    Expanded(child: _severityBar(false, false)),
+                    const SizedBox(width: 5),
+                    Expanded(child: _severityBar(false, false)),
+                  ],
+                ),
+                const SizedBox(height: 5),
+                const Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                  children: [
+                    Text('Aman', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                    Text('Sedang',
+                        style: TextStyle(
+                            fontSize: 9,
+                            color: Color(0xFFBA1A1A),
+                            fontWeight: FontWeight.w600)),
+                    Text('Kritis', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                    Text('Defoliasi', style: TextStyle(fontSize: 9, color: Colors.grey)),
+                  ],
+                ),
+              ],
+            ),
+          ),
         ],
       ),
     );

@@ -68,15 +68,11 @@ class _TabJadwalState extends State<TabJadwal> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Petak Rawit Blok A • Umur 3 Bln',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-                ),
+                Text('Petak Rawit Blok A • Umur 3 Bln',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
                 SizedBox(height: 2),
-                Text(
-                  'Fase Berbuah Aktif (Generatif II)',
-                  style: TextStyle(fontSize: 12, color: Colors.grey),
-                ),
+                Text('Fase Berbuah Aktif (Generatif II)',
+                    style: TextStyle(fontSize: 12, color: Colors.grey)),
               ],
             ),
           ),
@@ -115,10 +111,9 @@ class _TabJadwalState extends State<TabJadwal> {
                       TextSpan(
                         text: 'SINKRONISASI BMKG AKTIF\n',
                         style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF005B8C),
-                        ),
+                            fontSize: 12,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF005B8C)),
                       ),
                       TextSpan(
                         text: 'Hujan lebat diprediksi terjadi ',
@@ -127,9 +122,7 @@ class _TabJadwalState extends State<TabJadwal> {
                       TextSpan(
                         text: 'Rabu & Sabtu',
                         style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                        ),
+                            fontSize: 12, fontWeight: FontWeight.w700),
                       ),
                       TextSpan(
                         text:
@@ -149,58 +142,21 @@ class _TabJadwalState extends State<TabJadwal> {
           decoration: _box(),
           child: Column(
             children: [
-              _scheduleRow(
-                'SEN',
-                '28',
-                '06:30 WIB • 1.2 L/m²',
-                'Lengas tanah: 68% (Stabil)',
-                'Selesai',
-              ),
-              _scheduleRow(
-                'SEL',
-                '29',
-                'Hari Ini: 2x Penyiraman',
-                '06:30 & 16:30 WIB (Total 1.5 L/m²)',
-                'Aktif',
-                active: true,
-              ),
-              _scheduleRow(
-                'RAB',
-                '30',
-                '06:30 WIB • 1.2 L/m²',
-                'Presipitasi Lebat 85%',
-                'Dilewati',
-                skipped: true,
-              ),
-              _scheduleRow(
-                'KAM',
-                '31',
-                '06:30 WIB • 1.2 L/m²',
-                'Sensor lengas tanah otomatis',
-                'Terjadwal',
-              ),
-              _scheduleRow(
-                'JUM',
-                '01',
-                '06:30 WIB • 1.2 L/m²',
-                'Irigasi mikro tetes',
-                'Terjadwal',
-              ),
-              _scheduleRow(
-                'SAB',
-                '02',
-                '06:30 WIB • 1.2 L/m²',
-                'Hujan Ringan BMKG 70%',
-                'Dilewati',
-                skipped: true,
-              ),
-              _scheduleRow(
-                'MIN',
-                '03',
-                '06:30 WIB • 1.2 L/m²',
-                'Evaluasi kelembapan tanah',
-                'Terjadwal',
-              ),
+              _scheduleRow('SEN', '28', '06:30 WIB • 1.2 L/m²',
+                  'Lengas tanah: 68% (Stabil)', 'Selesai'),
+              _scheduleRow('SEL', '29', 'Hari Ini: 2x Penyiraman',
+                  '06:30 & 16:30 WIB (Total 1.5 L/m²)', 'Aktif',
+                  active: true),
+              _scheduleRow('RAB', '30', '06:30 WIB • 1.2 L/m²',
+                  'Presipitasi Lebat 85%', 'Dilewati', skipped: true),
+              _scheduleRow('KAM', '31', '06:30 WIB • 1.2 L/m²',
+                  'Sensor lengas tanah otomatis', 'Terjadwal'),
+              _scheduleRow('JUM', '01', '06:30 WIB • 1.2 L/m²',
+                  'Irigasi mikro tetes', 'Terjadwal'),
+              _scheduleRow('SAB', '02', '06:30 WIB • 1.2 L/m²',
+                  'Hujan Ringan BMKG 70%', 'Dilewati', skipped: true),
+              _scheduleRow('MIN', '03', '06:30 WIB • 1.2 L/m²',
+                  'Evaluasi kelembapan tanah', 'Terjadwal'),
             ],
           ),
         ),
@@ -216,10 +172,8 @@ class _TabJadwalState extends State<TabJadwal> {
               const Icon(Icons.eco, color: Color(0xFF00652C), size: 20),
               const SizedBox(width: 8),
               const Expanded(
-                child: Text(
-                  'Mode Hemat Air (Adaptif Cuaca)',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-                ),
+                child: Text('Mode Hemat Air (Adaptif Cuaca)',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
               ),
               Switch(
                 value: hematAir,
@@ -248,8 +202,8 @@ class _TabJadwalState extends State<TabJadwal> {
         color: active
             ? const Color(0xFFE8F5E9)
             : skipped
-            ? const Color(0xFFF0F1F1)
-            : Colors.transparent,
+                ? const Color(0xFFF0F1F1)
+                : Colors.transparent,
         borderRadius: BorderRadius.circular(9),
       ),
       child: Row(
@@ -258,28 +212,24 @@ class _TabJadwalState extends State<TabJadwal> {
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: active ? const Color(0xFF15803D) : const Color(0xFFF0F3F0),
+              color: active
+                  ? const Color(0xFF15803D)
+                  : const Color(0xFFF0F3F0),
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                Text(
-                  day,
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w700,
-                    color: active ? Colors.white : Colors.grey,
-                  ),
-                ),
-                Text(
-                  date,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
-                    color: active ? Colors.white : Colors.black87,
-                  ),
-                ),
+                Text(day,
+                    style: TextStyle(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w700,
+                        color: active ? Colors.white : Colors.grey)),
+                Text(date,
+                    style: TextStyle(
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                        color: active ? Colors.white : Colors.black87)),
               ],
             ),
           ),
@@ -288,23 +238,21 @@ class _TabJadwalState extends State<TabJadwal> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: skipped ? Colors.grey : Colors.black87,
-                    decoration: skipped ? TextDecoration.lineThrough : null,
-                  ),
-                ),
+                Text(title,
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: skipped ? Colors.grey : Colors.black87,
+                      decoration:
+                          skipped ? TextDecoration.lineThrough : null,
+                    )),
                 const SizedBox(height: 2),
-                Text(
-                  subtitle,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: skipped ? const Color(0xFF0075B1) : Colors.grey,
-                  ),
-                ),
+                Text(subtitle,
+                    style: TextStyle(
+                        fontSize: 11,
+                        color: skipped
+                            ? const Color(0xFF0075B1)
+                            : Colors.grey)),
               ],
             ),
           ),
@@ -332,28 +280,19 @@ class _TabJadwalState extends State<TabJadwal> {
           child: const Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'APLIKASI BERIKUTNYA',
-                style: TextStyle(
-                  fontSize: 10,
-                  color: Color(0xFF00652C),
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
+              Text('APLIKASI BERIKUTNYA',
+                  style: TextStyle(
+                      fontSize: 10,
+                      color: Color(0xFF00652C),
+                      fontWeight: FontWeight.w800)),
               SizedBox(height: 4),
-              Text(
-                'Kamis, 31 Okt 2024',
-                style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800),
-              ),
-              Text(
-                '3 hari lagi • Pukul 07:00 - 09:00 WIB',
-                style: TextStyle(fontSize: 12, color: Colors.grey),
-              ),
+              Text('Kamis, 31 Okt 2024',
+                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
+              Text('3 hari lagi • Pukul 07:00 - 09:00 WIB',
+                  style: TextStyle(fontSize: 12, color: Colors.grey)),
               Divider(height: 22),
-              Text(
-                'Terakhir dipupuk: 24 Okt 2024 (Selesai)',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600),
-              ),
+              Text('Terakhir dipupuk: 24 Okt 2024 (Selesai)',
+                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
             ],
           ),
         ),
@@ -366,27 +305,20 @@ class _TabJadwalState extends State<TabJadwal> {
             children: [
               Row(
                 children: [
-                  const Icon(
-                    Icons.recommend,
-                    color: Color(0xFF00652C),
-                    size: 20,
-                  ),
+                  const Icon(Icons.recommend,
+                      color: Color(0xFF00652C), size: 20),
                   const SizedBox(width: 8),
                   const Expanded(
-                    child: Text(
-                      'Rekomendasi Formula AI',
-                      style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                      ),
-                    ),
+                    child: Text('Rekomendasi Formula AI',
+                        style: TextStyle(
+                            fontSize: 14, fontWeight: FontWeight.w800)),
                   ),
                   TextButton.icon(
-                    onPressed: () =>
-                        setState(() => showPupukOptions = !showPupukOptions),
-                    icon: Icon(
-                      showPupukOptions ? Icons.expand_less : Icons.expand_more,
-                    ),
+                    onPressed: () => setState(
+                        () => showPupukOptions = !showPupukOptions),
+                    icon: Icon(showPupukOptions
+                        ? Icons.expand_less
+                        : Icons.expand_more),
                     label: const Text('Ganti Jenis'),
                   ),
                 ],
@@ -400,27 +332,18 @@ class _TabJadwalState extends State<TabJadwal> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(
-                      data['name']!,
-                      style: const TextStyle(
-                        color: Color(0xFF00652C),
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    Text(data['name']!,
+                        style: const TextStyle(
+                            color: Color(0xFF00652C),
+                            fontSize: 16,
+                            fontWeight: FontWeight.w700)),
                     const SizedBox(height: 6),
-                    Text(
-                      data['desc']!,
-                      style: const TextStyle(fontSize: 12, color: Colors.grey),
-                    ),
+                    Text(data['desc']!,
+                        style: const TextStyle(fontSize: 12, color: Colors.grey)),
                     const SizedBox(height: 8),
-                    Text(
-                      'Dosis: ${data['dose']}',
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
+                    Text('Dosis: ${data['dose']}',
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w700)),
                   ],
                 ),
               ),
@@ -431,17 +354,11 @@ class _TabJadwalState extends State<TabJadwal> {
                     value: entry.key,
                     groupValue: selectedPupuk,
                     contentPadding: EdgeInsets.zero,
-                    title: Text(
-                      entry.value['name']!,
-                      style: const TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                      ),
-                    ),
-                    subtitle: Text(
-                      'Dosis: ${entry.value['dose']}',
-                      style: const TextStyle(fontSize: 11),
-                    ),
+                    title: Text(entry.value['name']!,
+                        style: const TextStyle(
+                            fontSize: 12, fontWeight: FontWeight.w700)),
+                    subtitle: Text('Dosis: ${entry.value['dose']}',
+                        style: const TextStyle(fontSize: 11)),
                     onChanged: (value) {
                       if (value != null) {
                         setState(() => selectedPupuk = value);
@@ -480,14 +397,10 @@ class _TabJadwalState extends State<TabJadwal> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Sensor Lengas Tanah IoT #C4',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
-                ),
-                Text(
-                  'Kapasitas Lapang: 74% • Suhu Media: 27.8°C',
-                  style: TextStyle(fontSize: 11, color: Colors.grey),
-                ),
+                Text('Sensor Lengas Tanah IoT #C4',
+                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
+                Text('Kapasitas Lapang: 74% • Suhu Media: 27.8°C',
+                    style: TextStyle(fontSize: 11, color: Colors.grey)),
               ],
             ),
           ),
@@ -495,14 +408,11 @@ class _TabJadwalState extends State<TabJadwal> {
             children: [
               Icon(Icons.circle, size: 9, color: Color(0xFF15803D)),
               SizedBox(width: 4),
-              Text(
-                'Sinkron',
-                style: TextStyle(
-                  color: Color(0xFF00652C),
-                  fontSize: 10,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
+              Text('Sinkron',
+                  style: TextStyle(
+                      color: Color(0xFF00652C),
+                      fontSize: 10,
+                      fontWeight: FontWeight.w700)),
             ],
           ),
         ],
@@ -522,14 +432,12 @@ class _TabJadwalState extends State<TabJadwal> {
                 const SnackBar(content: Text('Tersimpan di Jurnal Petani!')),
               );
             },
-            icon: Icon(
-              activitySaved ? Icons.done_all : Icons.assignment_turned_in,
-            ),
-            label: Text(
-              activitySaved
-                  ? 'Tersimpan di Jurnal Petani!'
-                  : 'Catat Realisasi Pupuk / Siram',
-            ),
+            icon: Icon(activitySaved
+                ? Icons.done_all
+                : Icons.assignment_turned_in),
+            label: Text(activitySaved
+                ? 'Tersimpan di Jurnal Petani!'
+                : 'Catat Realisasi Pupuk / Siram'),
             style: ElevatedButton.styleFrom(
               backgroundColor: const Color(0xFF15803D),
               foregroundColor: Colors.white,
@@ -562,7 +470,8 @@ class _TabJadwalState extends State<TabJadwal> {
             const SizedBox(width: 8),
             OutlinedButton.icon(
               onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Jadwal siap untuk dibagikan.')),
+                const SnackBar(
+                    content: Text('Jadwal siap untuk dibagikan.')),
               ),
               icon: const Icon(Icons.ios_share),
               label: const Text('Ekspor'),
@@ -579,12 +488,8 @@ class _TabJadwalState extends State<TabJadwal> {
     );
   }
 
-  Widget _sectionTitle(
-    IconData icon,
-    String title,
-    String subtitle, {
-    Color color = const Color(0xFF00652C),
-  }) {
+  Widget _sectionTitle(IconData icon, String title, String subtitle,
+      {Color color = const Color(0xFF00652C)}) {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -594,17 +499,11 @@ class _TabJadwalState extends State<TabJadwal> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                title,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w700,
-                ),
-              ),
-              Text(
-                subtitle,
-                style: const TextStyle(fontSize: 11, color: Colors.grey),
-              ),
+              Text(title,
+                  style: const TextStyle(
+                      fontSize: 18, fontWeight: FontWeight.w700)),
+              Text(subtitle,
+                  style: const TextStyle(fontSize: 11, color: Colors.grey)),
             ],
           ),
         ),
@@ -612,11 +511,8 @@ class _TabJadwalState extends State<TabJadwal> {
     );
   }
 
-  Widget _iconBox(
-    IconData icon,
-    Color background, {
-    Color iconColor = const Color(0xFF00652C),
-  }) {
+  Widget _iconBox(IconData icon, Color background,
+      {Color iconColor = const Color(0xFF00652C)}) {
     return Container(
       width: 36,
       height: 36,
@@ -632,25 +528,28 @@ class _TabJadwalState extends State<TabJadwal> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
       decoration: BoxDecoration(
-        color: active ? const Color(0xFF15803D) : const Color(0xFFEAF5EC),
+        color: active
+            ? const Color(0xFF15803D)
+            : const Color(0xFFEAF5EC),
         borderRadius: BorderRadius.circular(20),
       ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: 10,
-          fontWeight: FontWeight.w700,
-          color: active ? Colors.white : const Color(0xFF00652C),
-        ),
-      ),
+      child: Text(text,
+          style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w700,
+              color: active ? Colors.white : const Color(0xFF00652C))),
     );
   }
 
   BoxDecoration _box() => BoxDecoration(
-    color: Colors.white,
-    borderRadius: BorderRadius.circular(12),
-    boxShadow: const [
-      BoxShadow(color: Color(0x10000000), blurRadius: 5, offset: Offset(0, 2)),
-    ],
-  );
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(
+            color: Color(0x10000000),
+            blurRadius: 5,
+            offset: Offset(0, 2),
+          ),
+        ],
+      );
 }

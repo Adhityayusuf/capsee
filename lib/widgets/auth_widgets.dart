@@ -34,10 +34,8 @@ class AuthScaffold extends StatelessWidget {
           SafeArea(
             child: Center(
               child: SingleChildScrollView(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 24,
-                  vertical: 24,
-                ),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
                 child: ConstrainedBox(
                   constraints: const BoxConstraints(maxWidth: 420),
                   child: child,
@@ -283,15 +281,17 @@ InputDecoration capseeInputDecoration({
   Widget? suffix,
 }) {
   OutlineInputBorder border(Color color) => OutlineInputBorder(
-    borderRadius: BorderRadius.circular(12),
-    borderSide: BorderSide(color: color),
-  );
+        borderRadius: BorderRadius.circular(12),
+        borderSide: BorderSide(color: color),
+      );
 
   return InputDecoration(
     hintText: hint,
-    hintStyle: GoogleFonts.plusJakartaSans(fontSize: 16, color: AppColors.hint),
-    prefixIcon:
-        prefix ??
+    hintStyle: GoogleFonts.plusJakartaSans(
+      fontSize: 16,
+      color: AppColors.hint,
+    ),
+    prefixIcon: prefix ??
         (prefixIcon != null ? Icon(prefixIcon, color: AppColors.icon) : null),
     prefixIconConstraints: prefix != null
         ? const BoxConstraints(minWidth: 0, minHeight: 0)

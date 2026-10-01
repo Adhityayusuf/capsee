@@ -1,6 +1,6 @@
 // akun_screen.dart
 //
-// Memakai class warna `C` dari notifikasi_screen.dart.
+// Memakai class warna `C` dari notifikasi_screen.dart (satu folder di lib/).
 // Dependensi: google_fonts (sama seperti layar Notifikasi).
 //
 // Pemakaian: home: const AkunScreen()
@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'dart:ui' show ImageFilter;
 import 'package:google_fonts/google_fonts.dart';
 
-import 'edit_profil_screen.dart';
 import 'notifikasi_screen.dart' show C;
 import 'edit_profil_screen.dart';
 import 'login_screen.dart';
@@ -24,19 +23,15 @@ const String _kLogoUrl =
 const String _kAvatarUrl =
     'https://lh3.googleusercontent.com/aida-public/AB6AXuD9yzTTPbdLCm8UF7S10zskIXze-Iztg7iXPtN_yLtbjMgVJFf622RK8iDPg3zs34Zgmvzr-3eP0M69khUrRTVIl0PLCMmM1y1hVGB97EpVLHtlnm82aGyadJeOmtF02lZKnvK7D8cMX_Sn0t7eztxJ_iNnt56NrCCmKmtRo6I9dCrBdhvfcfKio97cfmdKq9alKshbFGQ7_2HuXJzF7laagR4yJ4pcrcc-tUfgWobAUXnQP6OqSeusdg';
 
-TextStyle _ts(
-  double size,
-  double height,
-  FontWeight w,
-  Color color, {
-  double? letterSpacing,
-}) => GoogleFonts.plusJakartaSans(
-  fontSize: size,
-  height: height / size,
-  fontWeight: w,
-  color: color,
-  letterSpacing: letterSpacing,
-);
+TextStyle _ts(double size, double height, FontWeight w, Color color,
+        {double? letterSpacing}) =>
+    GoogleFonts.plusJakartaSans(
+      fontSize: size,
+      height: height / size,
+      fontWeight: w,
+      color: color,
+      letterSpacing: letterSpacing,
+    );
 
 // ─────────────────────────── Model menu ───────────────────────────
 class _MenuItem {
@@ -147,7 +142,7 @@ class AkunScreen extends StatelessWidget {
         children: [
           _buildGreeting(),
           const SizedBox(height: 16),
-          _buildProfileCard(context),
+          _buildProfileCard(),
           const SizedBox(height: 24),
           _buildSensorBanner(),
           const SizedBox(height: 24),
@@ -174,10 +169,7 @@ class AkunScreen extends StatelessWidget {
           color: C.surface.withOpacity(0.95),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x0A000000),
-              blurRadius: 8,
-              offset: Offset(0, 1),
-            ),
+                color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 1)),
           ],
         ),
         child: SafeArea(
@@ -199,11 +191,8 @@ class AkunScreen extends StatelessWidget {
                         color: C.primaryContainer.withOpacity(0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(
-                        Icons.eco,
-                        size: 20,
-                        color: C.primaryContainer,
-                      ),
+                      child: const Icon(Icons.eco,
+                          size: 20, color: C.primaryContainer),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -212,32 +201,20 @@ class AkunScreen extends StatelessWidget {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'CAPSEE AGRI',
-                          style: _ts(
-                            10,
-                            14,
-                            FontWeight.w700,
-                            C.primary,
-                            letterSpacing: 1.0,
-                          ),
-                        ),
-                        Text(
-                          'Akun',
-                          overflow: TextOverflow.ellipsis,
-                          style: _ts(18, 24, FontWeight.w600, C.onSurface),
-                        ),
+                        Text('CAPSEE AGRI',
+                            style: _ts(10, 14, FontWeight.w700, C.primary,
+                                letterSpacing: 1.0)),
+                        Text('Akun',
+                            overflow: TextOverflow.ellipsis,
+                            style: _ts(18, 24, FontWeight.w600, C.onSurface)),
                       ],
                     ),
                   ),
                   IconButton(
                     onPressed: () {},
                     tooltip: 'Notifikasi',
-                    icon: const Icon(
-                      Icons.notifications_outlined,
-                      size: 22,
-                      color: C.onSurfaceVariant,
-                    ),
+                    icon: const Icon(Icons.notifications_outlined,
+                        size: 22, color: C.onSurfaceVariant),
                     style: IconButton.styleFrom(
                       minimumSize: const Size(44, 44),
                       shape: const CircleBorder(),
@@ -248,14 +225,9 @@ class AkunScreen extends StatelessWidget {
                     width: 32,
                     height: 32,
                     decoration: const BoxDecoration(
-                      color: C.primary,
-                      shape: BoxShape.circle,
-                    ),
-                    child: const Icon(
-                      Icons.person,
-                      size: 18,
-                      color: C.onPrimary,
-                    ),
+                        color: C.primary, shape: BoxShape.circle),
+                    child:
+                        const Icon(Icons.person, size: 18, color: C.onPrimary),
                   ),
                 ],
               ),
@@ -274,16 +246,9 @@ class AkunScreen extends StatelessWidget {
         Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'PROFIL & PENGATURAN',
-              style: _ts(
-                10,
-                14,
-                FontWeight.w700,
-                C.primary,
-                letterSpacing: 1.0,
-              ),
-            ),
+            Text('PROFIL & PENGATURAN',
+                style: _ts(10, 14, FontWeight.w700, C.primary,
+                    letterSpacing: 1.0)),
             Text('Akun Saya', style: _ts(22, 28, FontWeight.w700, C.onSurface)),
           ],
         ),
@@ -298,10 +263,8 @@ class AkunScreen extends StatelessWidget {
             children: [
               const Icon(Icons.verified, size: 16, color: C.primary),
               const SizedBox(width: 6),
-              Text(
-                'Terverifikasi',
-                style: _ts(10, 14, FontWeight.w700, C.primary),
-              ),
+              Text('Terverifikasi',
+                  style: _ts(10, 14, FontWeight.w700, C.primary)),
             ],
           ),
         ),
@@ -310,7 +273,7 @@ class AkunScreen extends StatelessWidget {
   }
 
   // ───────── Kartu profil ─────────
-  Widget _buildProfileCard(BuildContext context) {
+  Widget _buildProfileCard() {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
@@ -318,11 +281,10 @@ class AkunScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x0F0F172A),
-            blurRadius: 20,
-            spreadRadius: -4,
-            offset: Offset(0, 4),
-          ),
+              color: Color(0x0F0F172A),
+              blurRadius: 20,
+              spreadRadius: -4,
+              offset: Offset(0, 4)),
         ],
       ),
       child: Stack(
@@ -351,17 +313,15 @@ class AkunScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    _buildAvatar(context),
+                    _buildAvatar(),
                     const SizedBox(width: 16),
                     Expanded(
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text(
-                            'Budi Santoso',
-                            overflow: TextOverflow.ellipsis,
-                            style: _ts(18, 24, FontWeight.w600, C.onSurface),
-                          ),
+                          Text('Budi Santoso',
+                              overflow: TextOverflow.ellipsis,
+                              style: _ts(18, 24, FontWeight.w600, C.onSurface)),
                           const SizedBox(height: 2),
                           Row(
                             children: [
@@ -371,12 +331,8 @@ class AkunScreen extends StatelessWidget {
                                 child: Text(
                                   'Mitra Tani Cabai Rawit • Jawa Timur',
                                   overflow: TextOverflow.ellipsis,
-                                  style: _ts(
-                                    12,
-                                    16,
-                                    FontWeight.w600,
-                                    C.onSurfaceVariant,
-                                  ),
+                                  style: _ts(12, 16, FontWeight.w600,
+                                      C.onSurfaceVariant),
                                 ),
                               ),
                             ],
@@ -384,9 +340,7 @@ class AkunScreen extends StatelessWidget {
                           const SizedBox(height: 6),
                           Container(
                             padding: const EdgeInsets.symmetric(
-                              horizontal: 8,
-                              vertical: 2,
-                            ),
+                                horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
                               color: C.surfaceContainer,
                               borderRadius: BorderRadius.circular(999),
@@ -398,20 +352,13 @@ class AkunScreen extends StatelessWidget {
                                   width: 6,
                                   height: 6,
                                   decoration: const BoxDecoration(
-                                    color: Color(0xFF006E2F),
-                                    shape: BoxShape.circle,
-                                  ),
+                                      color: Color(0xFF006E2F),
+                                      shape: BoxShape.circle),
                                 ),
                                 const SizedBox(width: 4),
-                                Text(
-                                  'Petani Komersial',
-                                  style: _ts(
-                                    10,
-                                    14,
-                                    FontWeight.w600,
-                                    C.onSurfaceVariant,
-                                  ),
-                                ),
+                                Text('Petani Komersial',
+                                    style: _ts(10, 14, FontWeight.w600,
+                                        C.onSurfaceVariant)),
                               ],
                             ),
                           ),
@@ -430,7 +377,7 @@ class AkunScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildAvatar(BuildContext context) {
+  Widget _buildAvatar() {
     return SizedBox(
       width: 64,
       height: 64,
@@ -444,11 +391,8 @@ class AkunScreen extends StatelessWidget {
                 child: Image.network(
                   _kAvatarUrl,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const Icon(
-                    Icons.person,
-                    size: 32,
-                    color: C.onSurfaceVariant,
-                  ),
+                  errorBuilder: (_, __, ___) => const Icon(Icons.person,
+                      size: 32, color: C.onSurfaceVariant),
                 ),
               ),
             ),
@@ -465,15 +409,12 @@ class AkunScreen extends StatelessWidget {
                 elevation: 3,
                 child: InkWell(
                   customBorder: const CircleBorder(),
-                  onTap: () => _openEditProfile(context),
+                  onTap: () {},
                   child: const SizedBox(
                     width: 24,
                     height: 24,
-                    child: Icon(
-                      Icons.photo_camera,
-                      size: 13,
-                      color: C.onPrimary,
-                    ),
+                    child: Icon(Icons.photo_camera,
+                        size: 13, color: C.onPrimary),
                   ),
                 ),
               ),
@@ -501,17 +442,14 @@ class AkunScreen extends StatelessWidget {
                   children: [
                     const Icon(Icons.location_on, size: 18, color: C.primary),
                     const SizedBox(width: 8),
-                    Text(
-                      'Lahan Aktif',
-                      style: _ts(12, 16, FontWeight.w600, C.onSurfaceVariant),
-                    ),
+                    Text('Lahan Aktif',
+                        style:
+                            _ts(12, 16, FontWeight.w600, C.onSurfaceVariant)),
                   ],
                 ),
               ),
-              Text(
-                '2 Petak Terdaftar',
-                style: _ts(12, 16, FontWeight.w600, C.onSurface),
-              ),
+              Text('2 Petak Terdaftar',
+                  style: _ts(12, 16, FontWeight.w600, C.onSurface)),
             ],
           ),
           const SizedBox(height: 8),
@@ -524,11 +462,10 @@ class AkunScreen extends StatelessWidget {
                     const Icon(Icons.mail_outline, size: 18, color: C.outline),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        'budi.santoso@agrimail.id',
-                        overflow: TextOverflow.ellipsis,
-                        style: _ts(12, 16, FontWeight.w400, C.onSurfaceVariant),
-                      ),
+                      child: Text('budi.santoso@agrimail.id',
+                          overflow: TextOverflow.ellipsis,
+                          style: _ts(
+                              12, 16, FontWeight.w400, C.onSurfaceVariant)),
                     ),
                   ],
                 ),
@@ -543,18 +480,13 @@ class AkunScreen extends StatelessWidget {
               Expanded(
                 child: Row(
                   children: [
-                    const Icon(
-                      Icons.phone_outlined,
-                      size: 18,
-                      color: C.outline,
-                    ),
+                    const Icon(Icons.phone_outlined, size: 18, color: C.outline),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
-                        '+62 812-3456-7890',
-                        overflow: TextOverflow.ellipsis,
-                        style: _ts(12, 16, FontWeight.w400, C.onSurfaceVariant),
-                      ),
+                      child: Text('+62 812-3456-7890',
+                          overflow: TextOverflow.ellipsis,
+                          style: _ts(
+                              12, 16, FontWeight.w400, C.onSurfaceVariant)),
                     ),
                   ],
                 ),
@@ -576,10 +508,7 @@ class AkunScreen extends StatelessWidget {
         borderRadius: BorderRadius.circular(12),
         boxShadow: const [
           BoxShadow(
-            color: Color(0x0F000000),
-            blurRadius: 3,
-            offset: Offset(0, 1),
-          ),
+              color: Color(0x0F000000), blurRadius: 3, offset: Offset(0, 1)),
         ],
       ),
       child: Row(
@@ -592,10 +521,9 @@ class AkunScreen extends StatelessWidget {
               borderRadius: BorderRadius.circular(8),
               boxShadow: const [
                 BoxShadow(
-                  color: Color(0x0F000000),
-                  blurRadius: 3,
-                  offset: Offset(0, 1),
-                ),
+                    color: Color(0x0F000000),
+                    blurRadius: 3,
+                    offset: Offset(0, 1)),
               ],
             ),
             child: const Icon(Icons.sensors, size: 22, color: C.primary),
@@ -605,14 +533,10 @@ class AkunScreen extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Sensor Lapangan Aktif',
-                  style: _ts(12, 16, FontWeight.w600, C.onSurface),
-                ),
-                Text(
-                  'Blok A (98%) • Blok B (100%)',
-                  style: _ts(12, 16, FontWeight.w400, C.onSurfaceVariant),
-                ),
+                Text('Sensor Lapangan Aktif',
+                    style: _ts(12, 16, FontWeight.w600, C.onSurface)),
+                Text('Blok A (98%) • Blok B (100%)',
+                    style: _ts(12, 16, FontWeight.w400, C.onSurfaceVariant)),
               ],
             ),
           ),
@@ -623,12 +547,8 @@ class AkunScreen extends StatelessWidget {
   }
 
   // ───────── Section menu ─────────
-  Widget _buildSection(
-    String title,
-    String trailing,
-    Color trailingColor,
-    List<_MenuItem> items,
-  ) {
+  Widget _buildSection(String title, String trailing, Color trailingColor,
+      List<_MenuItem> items) {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -637,20 +557,10 @@ class AkunScreen extends StatelessWidget {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title.toUpperCase(),
-                style: _ts(
-                  10,
-                  14,
-                  FontWeight.w700,
-                  C.outline,
-                  letterSpacing: 1.0,
-                ),
-              ),
-              Text(
-                trailing,
-                style: _ts(10, 14, FontWeight.w600, trailingColor),
-              ),
+              Text(title.toUpperCase(),
+                  style: _ts(10, 14, FontWeight.w700, C.outline,
+                      letterSpacing: 1.0)),
+              Text(trailing, style: _ts(10, 14, FontWeight.w600, trailingColor)),
             ],
           ),
         ),
@@ -661,10 +571,9 @@ class AkunScreen extends StatelessWidget {
             borderRadius: BorderRadius.circular(12),
             boxShadow: const [
               BoxShadow(
-                color: Color(0x08000000),
-                blurRadius: 12,
-                offset: Offset(0, 2),
-              ),
+                  color: Color(0x08000000),
+                  blurRadius: 12,
+                  offset: Offset(0, 2)),
             ],
           ),
           child: Column(
@@ -702,10 +611,8 @@ class AkunScreen extends StatelessWidget {
               children: [
                 const Icon(Icons.logout, size: 20, color: C.error),
                 const SizedBox(width: 8),
-                Text(
-                  'Keluar dari Akun',
-                  style: _ts(14, 20, FontWeight.w700, C.error),
-                ),
+                Text('Keluar dari Akun',
+                    style: _ts(14, 20, FontWeight.w700, C.error)),
               ],
             ),
           ),
@@ -719,21 +626,15 @@ class AkunScreen extends StatelessWidget {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: C.surfaceLowest,
-        title: Text(
-          'Keluar dari akun?',
-          style: _ts(18, 24, FontWeight.w600, C.onSurface),
-        ),
-        content: Text(
-          'Anda perlu masuk lagi untuk memantau lahan.',
-          style: _ts(14, 20, FontWeight.w400, C.onSurfaceVariant),
-        ),
+        title: Text('Keluar dari akun?',
+            style: _ts(18, 24, FontWeight.w600, C.onSurface)),
+        content: Text('Anda perlu masuk lagi untuk memantau lahan.',
+            style: _ts(14, 20, FontWeight.w400, C.onSurfaceVariant)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text(
-              'Batal',
-              style: _ts(14, 20, FontWeight.w600, C.onSurfaceVariant),
-            ),
+            child: Text('Batal',
+                style: _ts(14, 20, FontWeight.w600, C.onSurfaceVariant)),
           ),
           TextButton(
             onPressed: () {
@@ -758,28 +659,17 @@ class AkunScreen extends StatelessWidget {
           children: [
             const Icon(Icons.psychology_outlined, size: 16, color: C.outline),
             const SizedBox(width: 6),
-            Text(
-              'CAPSEE PRECISION AGRI',
-              style: _ts(
-                10,
-                14,
-                FontWeight.w600,
-                C.outline,
-                letterSpacing: 1.0,
-              ),
-            ),
+            Text('CAPSEE PRECISION AGRI',
+                style: _ts(10, 14, FontWeight.w600, C.outline,
+                    letterSpacing: 1.0)),
           ],
         ),
         const SizedBox(height: 4),
         Text(
           'Versi 2.4.0 (Build 2024.11) • Sistem Terenkripsi',
           textAlign: TextAlign.center,
-          style: _ts(
-            12,
-            16,
-            FontWeight.w400,
-            C.onSurfaceVariant.withOpacity(0.8),
-          ),
+          style: _ts(12, 16, FontWeight.w400,
+              C.onSurfaceVariant.withOpacity(0.8)),
         ),
       ],
     );
@@ -817,36 +707,28 @@ class _MenuTile extends StatelessWidget {
                   Row(
                     children: [
                       Flexible(
-                        child: Text(
-                          item.title,
-                          overflow: TextOverflow.ellipsis,
-                          style: _ts(14, 20, FontWeight.w600, C.onSurface),
-                        ),
+                        child: Text(item.title,
+                            overflow: TextOverflow.ellipsis,
+                            style: _ts(14, 20, FontWeight.w600, C.onSurface)),
                       ),
                       if (item.badge != null) ...[
                         const SizedBox(width: 8),
                         Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
+                              horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
                             color: C.primary.withOpacity(0.1),
                             borderRadius: BorderRadius.circular(999),
                           ),
-                          child: Text(
-                            item.badge!,
-                            style: _ts(10, 14, FontWeight.w700, C.primary),
-                          ),
+                          child: Text(item.badge!,
+                              style: _ts(10, 14, FontWeight.w700, C.primary)),
                         ),
                       ],
                     ],
                   ),
-                  Text(
-                    item.subtitle,
-                    overflow: TextOverflow.ellipsis,
-                    style: _ts(12, 16, FontWeight.w400, C.onSurfaceVariant),
-                  ),
+                  Text(item.subtitle,
+                      overflow: TextOverflow.ellipsis,
+                      style: _ts(12, 16, FontWeight.w400, C.onSurfaceVariant)),
                 ],
               ),
             ),

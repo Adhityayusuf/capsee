@@ -11,6 +11,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+void main() => runApp(const CapseeApp());
+
 // ─────────────────────────── Warna (Material 3 token) ───────────────────────────
 class C {
   static const surface = Color(0xFFFAF8FF);
@@ -38,19 +40,34 @@ class C {
 }
 
 // ─────────────────────────── Tipografi ───────────────────────────
-TextStyle _t(
-  double size,
-  double height,
-  FontWeight w,
-  Color color, {
-  double? letterSpacing,
-}) => GoogleFonts.plusJakartaSans(
-  fontSize: size,
-  height: height / size,
-  fontWeight: w,
-  color: color,
-  letterSpacing: letterSpacing,
-);
+TextStyle _t(double size, double height, FontWeight w, Color color,
+        {double? letterSpacing}) =>
+    GoogleFonts.plusJakartaSans(
+      fontSize: size,
+      height: height / size,
+      fontWeight: w,
+      color: color,
+      letterSpacing: letterSpacing,
+    );
+
+class CapseeApp extends StatelessWidget {
+  const CapseeApp({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'Capsee',
+      debugShowCheckedModeBanner: false,
+      theme: ThemeData(
+        useMaterial3: true,
+        scaffoldBackgroundColor: C.surface,
+        colorScheme: ColorScheme.fromSeed(seedColor: C.primary),
+        textTheme: GoogleFonts.plusJakartaSansTextTheme(),
+      ),
+      home: const NotifikasiScreen(),
+    );
+  }
+}
 
 // ─────────────────────────── Model ───────────────────────────
 enum NotifType { reminder, weather, disease }
@@ -70,7 +87,6 @@ class NotifItem {
   final Color dotColor;
   final String title;
   final String body;
-  final String footerLabel;
   final String actionLabel;
   final IconData? actionIcon;
   final Color actionColor;
@@ -91,7 +107,6 @@ class NotifItem {
     required this.dotColor,
     required this.title,
     required this.body,
-    required this.footerLabel,
     required this.actionLabel,
     this.actionIcon,
     required this.actionColor,
@@ -127,7 +142,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       title: 'Prediksi Hujan Lebat di Karangploso',
       body:
           'BMKG memperkirakan hujan lebat pukul 14:00 WIB. Jadwal penyiraman otomatis Petak Blok A dilewati untuk mencegah kelembapan berlebih.',
-      footerLabel: 'Blok A (Cabai Rawit)',
       actionLabel: 'Lihat Jadwal Siram',
       actionIcon: Icons.arrow_forward,
       actionColor: C.tertiary,
@@ -147,7 +161,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       title: 'Waktunya Penyiraman Pagi (Petak Rawit Blok B)',
       body:
           'Volume irigasi 1.2 L/m² disarankan sebelum pukul 08:30 WIB. Lengas tanah terkini 62%.',
-      footerLabel: 'Kelembapan 62%',
       actionLabel: 'Konfirmasi Selesai',
       actionColor: C.onPrimary,
       actionFilled: true,
@@ -167,7 +180,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       title: 'Waktu Pindai Ulang: Petak Rawit Blok A',
       body:
           'Sudah 7 hari sejak diagnosa sehat terakhir. Pindai kembali daun utama untuk deteksi dini penyakit dan thrips.',
-      footerLabel: 'Interval Rutin 7 Hari',
       actionLabel: 'Buka Kamera Scan',
       actionIcon: Icons.photo_camera,
       actionColor: C.primaryContainer,
@@ -187,7 +199,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       title: 'Jadwal Pemupukan NPK + Kalsium Nitrat',
       body:
           'Aplikasi kocor rutin fase berbuah aktif untuk Petak Rawit Blok A (Dosis: 5 gr/tanaman). Terjadwal hari ini.',
-      footerLabel: 'Fase Generatif',
       actionLabel: 'Lihat Panduan Dosis',
       actionIcon: Icons.menu_book,
       actionColor: C.onSurfaceVariant,
@@ -207,7 +218,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       title: 'Kelembapan Kanopi Tinggi Semalam (82%)',
       body:
           'Kondisi mikroklimat ideal bagi spora Cercospora. Pastikan aerasi kanopi lancar dan lakukan inspeksi daun bawah.',
-      footerLabel: 'Resiko: Bercak Daun',
       actionLabel: 'Protokol Pencegahan',
       actionIcon: Icons.shield,
       actionColor: C.onSurfaceVariant,
@@ -275,10 +285,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
           color: C.surface.withOpacity(0.95),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x0A000000),
-              blurRadius: 8,
-              offset: Offset(0, 1),
-            ),
+                color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 1)),
           ],
         ),
         child: SafeArea(
@@ -296,11 +303,8 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                       color: C.primaryContainer.withOpacity(0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(
-                      Icons.notifications_outlined,
-                      size: 22,
-                      color: C.primaryContainer,
-                    ),
+                    child: const Icon(Icons.notifications_outlined,
+                        size: 22, color: C.primaryContainer),
                   ),
                   const SizedBox(width: 8),
                   Expanded(
@@ -308,30 +312,18 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text(
-                          'CAPSEE',
-                          style: _t(
-                            10,
-                            14,
-                            FontWeight.w700,
-                            C.primary,
-                            letterSpacing: 1.0,
-                          ),
-                        ),
-                        Text(
-                          'Notifikasi',
-                          style: _t(18, 24, FontWeight.w600, C.onSurface),
-                        ),
+                        Text('CAPSEE',
+                            style: _t(10, 14, FontWeight.w700, C.primary,
+                                letterSpacing: 1.0)),
+                        Text('Notifikasi',
+                            style: _t(18, 24, FontWeight.w600, C.onSurface)),
                       ],
                     ),
                   ),
                   _roundIconButton(Icons.tune, 'Filter notifikasi', () {}),
                   const SizedBox(width: 6),
                   _roundIconButton(
-                    Icons.done_all,
-                    'Tandai semua dibaca',
-                    _markAllRead,
-                  ),
+                      Icons.done_all, 'Tandai semua dibaca', _markAllRead),
                 ],
               ),
             ),
@@ -365,10 +357,8 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
             child: Row(
               children: [
                 Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                   decoration: BoxDecoration(
                     color: allRead
                         ? C.surfaceContainer
@@ -383,9 +373,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                         const SizedBox(width: 6),
                       ],
                       Text(
-                        allRead
-                            ? 'Semua Sudah Dibaca'
-                            : '$_unreadCount Belum Dibaca',
+                        allRead ? 'Semua Sudah Dibaca' : '$_unreadCount Belum Dibaca',
                         style: _t(12, 16, FontWeight.w700, C.primaryContainer),
                       ),
                     ],
@@ -393,11 +381,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                 ),
                 const SizedBox(width: 8),
                 Flexible(
-                  child: Text(
-                    'Pembaruan Lapangan',
-                    overflow: TextOverflow.ellipsis,
-                    style: _t(12, 16, FontWeight.w400, C.outline),
-                  ),
+                  child: Text('Pembaruan Lapangan',
+                      overflow: TextOverflow.ellipsis,
+                      style: _t(12, 16, FontWeight.w400, C.outline)),
                 ),
               ],
             ),
@@ -411,12 +397,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
             ),
             child: Text(
               allRead ? 'Selesai' : 'Tandai Selesai',
-              style: _t(
-                12,
-                16,
-                FontWeight.w700,
-                allRead ? C.outline : C.primary,
-              ),
+              style: _t(12, 16, FontWeight.w700, allRead ? C.outline : C.primary),
             ),
           ),
         ],
@@ -454,21 +435,16 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                 boxShadow: active
                     ? const [
                         BoxShadow(
-                          color: Color(0x1F000000),
-                          blurRadius: 2,
-                          offset: Offset(0, 1),
-                        ),
+                            color: Color(0x1F000000),
+                            blurRadius: 2,
+                            offset: Offset(0, 1))
                       ]
                     : null,
               ),
               child: Text(
                 label,
-                style: _t(
-                  12,
-                  16,
-                  FontWeight.w600,
-                  active ? C.onPrimary : C.onSurfaceVariant,
-                ),
+                style: _t(12, 16, FontWeight.w600,
+                    active ? C.onPrimary : C.onSurfaceVariant),
               ),
             ),
           );
@@ -487,16 +463,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title.toUpperCase(),
-                style: _t(
-                  10,
-                  14,
-                  FontWeight.w700,
-                  C.outline,
-                  letterSpacing: 1.0,
-                ),
-              ),
+              Text(title.toUpperCase(),
+                  style: _t(10, 14, FontWeight.w700, C.outline,
+                      letterSpacing: 1.0)),
               Text(trailing, style: _t(10, 14, FontWeight.w700, C.outline)),
             ],
           ),
@@ -522,10 +491,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: const [
             BoxShadow(
-              color: Color(0x0F000000),
-              blurRadius: 3,
-              offset: Offset(0, 1),
-            ),
+                color: Color(0x0F000000), blurRadius: 3, offset: Offset(0, 1)),
           ],
         ),
         child: Row(
@@ -551,9 +517,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                       Flexible(
                         child: Container(
                           padding: const EdgeInsets.symmetric(
-                            horizontal: 8,
-                            vertical: 2,
-                          ),
+                              horizontal: 8, vertical: 2),
                           decoration: BoxDecoration(
                             color: n.badgeBg,
                             borderRadius: BorderRadius.circular(999),
@@ -568,19 +532,15 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                       const SizedBox(width: 8),
                       Row(
                         children: [
-                          Text(
-                            n.time,
-                            style: _t(12, 16, FontWeight.w400, C.outline),
-                          ),
+                          Text(n.time,
+                              style: _t(12, 16, FontWeight.w400, C.outline)),
                           if (n.unread) ...[
                             const SizedBox(width: 6),
                             Container(
                               width: 8,
                               height: 8,
                               decoration: BoxDecoration(
-                                color: n.dotColor,
-                                shape: BoxShape.circle,
-                              ),
+                                  color: n.dotColor, shape: BoxShape.circle),
                             ),
                           ],
                         ],
@@ -592,37 +552,20 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                     n.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: _t(
-                      18,
-                      24,
-                      n.unread ? FontWeight.w700 : FontWeight.w600,
-                      C.onSurface,
-                    ),
+                    style: _t(18, 24, n.unread ? FontWeight.w700 : FontWeight.w600,
+                        C.onSurface),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     n.body,
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: _t(12, 16, FontWeight.w400, C.onSurfaceVariant),
                   ),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: Text(
-                            n.footerLabel,
-                            overflow: TextOverflow.ellipsis,
-                            style: _t(10, 14, FontWeight.w700, C.outline),
-                          ),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildAction(n),
-                      ],
-                    ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: _buildAction(n),
                   ),
                 ],
               ),
@@ -661,10 +604,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(
-              n.actionLabel,
-              style: _t(12, 16, FontWeight.w700, n.actionColor),
-            ),
+            Text(n.actionLabel, style: _t(12, 16, FontWeight.w700, n.actionColor)),
             if (n.actionIcon != null) ...[
               const SizedBox(width: 4),
               Icon(n.actionIcon, size: 16, color: n.actionColor),
@@ -689,9 +629,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
             width: 40,
             height: 40,
             decoration: const BoxDecoration(
-              color: C.surfaceLowest,
-              shape: BoxShape.circle,
-            ),
+                color: C.surfaceLowest, shape: BoxShape.circle),
             child: const Icon(Icons.sensors, size: 20, color: C.primary),
           ),
           const SizedBox(width: 12),
@@ -699,14 +637,10 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Sensor Lapangan Aktif',
-                  style: _t(12, 16, FontWeight.w700, C.onSurface),
-                ),
-                Text(
-                  '3 stasiun IoT memantau petak 24/7',
-                  style: _t(12, 16, FontWeight.w400, C.outline),
-                ),
+                Text('Sensor Lapangan Aktif',
+                    style: _t(12, 16, FontWeight.w700, C.onSurface)),
+                Text('3 stasiun IoT memantau petak 24/7',
+                    style: _t(12, 16, FontWeight.w400, C.outline)),
               ],
             ),
           ),
@@ -716,10 +650,8 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
               color: C.primaryFixed,
               borderRadius: BorderRadius.circular(999),
             ),
-            child: Text(
-              'Sinkron',
-              style: _t(10, 14, FontWeight.w700, C.onPrimaryFixed),
-            ),
+            child: Text('Sinkron',
+                style: _t(10, 14, FontWeight.w700, C.onPrimaryFixed)),
           ),
         ],
       ),
@@ -732,15 +664,11 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
         TextButton.icon(
           onPressed: () {},
           icon: const Icon(Icons.tune, size: 18, color: C.outline),
-          label: Text(
-            'Kelola Preferensi Notifikasi Lapangan',
-            style: _t(12, 16, FontWeight.w600, C.outline),
-          ),
+          label: Text('Kelola Preferensi Notifikasi Lapangan',
+              style: _t(12, 16, FontWeight.w600, C.outline)),
         ),
-        Text(
-          'Capsee Intelligence Telemetry v2.4',
-          style: _t(10, 14, FontWeight.w700, C.outline.withOpacity(0.7)),
-        ),
+        Text('Capsee Intelligence Telemetry v2.4',
+            style: _t(10, 14, FontWeight.w700, C.outline.withOpacity(0.7))),
         const SizedBox(height: 16),
       ],
     );

@@ -79,9 +79,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
 
     // Setelah daftar, arahkan ke halaman login
-    Navigator.of(
-      context,
-    ).pushReplacement(MaterialPageRoute(builder: (_) => const LoginScreen()));
+    Navigator.of(context).pushReplacement(
+      MaterialPageRoute(builder: (_) => const LoginScreen()),
+    );
   }
 
   @override
@@ -95,8 +95,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           const SizedBox(height: 14),
           const AuthHeader(
             title: 'Daftar Akun Capsee',
-            subtitle:
-                'Mulai pantau & lindungi kebun cabai Anda dengan presisi AI',
+            subtitle: 'Mulai pantau & lindungi kebun cabai Anda dengan presisi AI',
           ),
           const SizedBox(height: 24),
           _buildFormCard(),
@@ -343,11 +342,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
                 child: _agreed
-                    ? const Icon(
-                        Icons.check_rounded,
-                        size: 18,
-                        color: Colors.white,
-                      )
+                    ? const Icon(Icons.check_rounded,
+                        size: 18, color: Colors.white)
                     : null,
               ),
             ),
