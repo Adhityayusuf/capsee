@@ -32,13 +32,13 @@ class LandData {
 
   /// Dipakai nanti saat mengirim data ke API.
   Map<String, dynamic> toJson() => {
-        'name': name,
-        'province': province,
-        'city': city,
-        'district': district,
-        'plant_age_months': plantAgeMonths,
-        'last_watered': lastWatered.toIso8601String(),
-        'last_fertilized': lastFertilized.toIso8601String(),
-        'fertilize_interval_weeks': fertilizeIntervalWeeks,
-      };
+    'name': name,
+    'province': province,
+    'city': city,
+    'district': district,
+    'plant_age_months': plantAgeMonths,
+    'last_watered': lastWatered.toIso8601String(),
+    'last_fertilized': lastFertilized.toIso8601String(),
+    'fertilize_interval_weeks': fertilizeIntervalWeeks,
+  };
 }

@@ -6,7 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../core/app_colors.dart';
 import '../models/land_data.dart';
 import '../widgets/auth_widgets.dart';
-import 'add_land_screen.dart';
+import 'tambah_lahan_page.dart';
 import 'land_detail_screen.dart';
 
 /// Data satu kartu fitur di onboarding.
@@ -91,7 +91,7 @@ class OnboardingScreen extends StatelessWidget {
                     onPressed: () async {
                       final land = await Navigator.of(context).push<LandData>(
                         MaterialPageRoute(
-                          builder: (_) => const AddLandScreen(),
+                          builder: (_) => const TambahLahanPage(),
                         ),
                       );
                       if (land != null && context.mounted) {

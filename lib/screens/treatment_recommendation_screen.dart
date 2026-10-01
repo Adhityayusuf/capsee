@@ -22,9 +22,9 @@ class _TreatmentRecommendationScreenState
   int _selectedOption = 0; // index ke sampleTreatmentOptions
 
   void _showTodo(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   @override
@@ -46,8 +46,11 @@ class _TreatmentRecommendationScreenState
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Row(
                       children: [
-                        const Icon(Icons.qr_code_2_rounded,
-                            size: 14, color: AppColors.icon),
+                        const Icon(
+                          Icons.qr_code_2_rounded,
+                          size: 14,
+                          color: AppColors.icon,
+                        ),
                         const SizedBox(width: 6),
                         Text(
                           'ID Diagnosa ${widget.diagnosis.diagnosisId}',
@@ -103,8 +106,7 @@ class _TreatmentRecommendationScreenState
                     child: ElevatedButton.icon(
                       onPressed: () =>
                           _showTodo('Rekomendasi disimpan ke riwayat tanaman'),
-                      icon: const Icon(Icons.bookmark_added_outlined,
-                          size: 20),
+                      icon: const Icon(Icons.bookmark_added_outlined, size: 20),
                       label: Text(
                         'Simpan ke Riwayat Tanaman',
                         style: GoogleFonts.plusJakartaSans(
@@ -126,8 +128,11 @@ class _TreatmentRecommendationScreenState
                   TextButton.icon(
                     onPressed: () =>
                         _showTodo('Halaman konsultasi ahli belum dibuat'),
-                    icon: const Icon(Icons.support_agent_rounded,
-                        size: 19, color: AppColors.primaryDark),
+                    icon: const Icon(
+                      Icons.support_agent_rounded,
+                      size: 19,
+                      color: AppColors.primaryDark,
+                    ),
                     label: Text(
                       'Konsultasi Ahli Pertanian (Agronomi)',
                       style: GoogleFonts.plusJakartaSans(
@@ -174,8 +179,10 @@ class _TreatmentRecommendationScreenState
           onPressed: () => _showTodo('Bagikan rekomendasi belum dibuat'),
         ),
         IconButton(
-          icon: const Icon(Icons.bookmark_border_rounded,
-              color: AppColors.icon),
+          icon: const Icon(
+            Icons.bookmark_border_rounded,
+            color: AppColors.icon,
+          ),
           onPressed: () => _showTodo('Simpan cepat belum dibuat'),
         ),
       ],
@@ -211,8 +218,11 @@ class _TreatmentRecommendationScreenState
               color: AppColors.chipBg,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: const Icon(Icons.eco_outlined,
-                size: 26, color: AppColors.icon),
+            child: const Icon(
+              Icons.eco_outlined,
+              size: 26,
+              color: AppColors.icon,
+            ),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -235,7 +245,9 @@ class _TreatmentRecommendationScreenState
                     ),
                     Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
+                        horizontal: 10,
+                        vertical: 4,
+                      ),
                       decoration: BoxDecoration(
                         color: const Color(0xFFFEF3C7),
                         borderRadius: BorderRadius.circular(20),
@@ -372,8 +384,7 @@ class _TreatmentRecommendationScreenState
               ),
             ),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: AppColors.primarySoft,
                 borderRadius: BorderRadius.circular(20),
@@ -496,8 +507,7 @@ class _TreatmentRecommendationScreenState
               ),
             ),
             Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: AppColors.chipBg,
                 borderRadius: BorderRadius.circular(20),
@@ -505,8 +515,11 @@ class _TreatmentRecommendationScreenState
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.check_circle_rounded,
-                      size: 13, color: AppColors.primaryDark),
+                  const Icon(
+                    Icons.check_circle_rounded,
+                    size: 13,
+                    color: AppColors.primaryDark,
+                  ),
                   const SizedBox(width: 5),
                   Text(
                     'Terverifikasi',
@@ -622,7 +635,9 @@ class _TreatmentRecommendationScreenState
               const SizedBox(width: 8),
               Container(
                 padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
+                  horizontal: 10,
+                  vertical: 4,
+                ),
                 decoration: BoxDecoration(
                   color: option.badgeColor,
                   borderRadius: BorderRadius.circular(20),
@@ -652,17 +667,26 @@ class _TreatmentRecommendationScreenState
             children: [
               Expanded(
                 child: _buildOptionStat(
-                    Icons.science_outlined, 'Dosis', option.dosis),
-              ),
-              _buildOptionDivider(),
-              Expanded(
-                child: _buildOptionStat(Icons.schedule_rounded,
-                    'Waktu Aplikasi', option.waktuAplikasi),
+                  Icons.science_outlined,
+                  'Dosis',
+                  option.dosis,
+                ),
               ),
               _buildOptionDivider(),
               Expanded(
                 child: _buildOptionStat(
-                    Icons.repeat_rounded, 'Frekuensi', option.frekuensi),
+                  Icons.schedule_rounded,
+                  'Waktu Aplikasi',
+                  option.waktuAplikasi,
+                ),
+              ),
+              _buildOptionDivider(),
+              Expanded(
+                child: _buildOptionStat(
+                  Icons.repeat_rounded,
+                  'Frekuensi',
+                  option.frekuensi,
+                ),
               ),
             ],
           ),
@@ -677,8 +701,11 @@ class _TreatmentRecommendationScreenState
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(Icons.water_drop_outlined,
-                    size: 16, color: AppColors.icon),
+                const Icon(
+                  Icons.water_drop_outlined,
+                  size: 16,
+                  color: AppColors.icon,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
