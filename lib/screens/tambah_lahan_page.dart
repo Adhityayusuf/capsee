@@ -74,6 +74,11 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
         ),
       ),
     );
+
+    // Pop dan kirimkan hasil true
+    Future.delayed(const Duration(milliseconds: 500), () {
+      if (mounted) Navigator.maybePop(context, true);
+    });
   }
 
   @override

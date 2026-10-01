@@ -46,28 +46,6 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
-
-# Environment and local secrets
 .env
-.env.*
-!.env.example
-
-# Signing keys and certificates
-*.jks
-*.keystore
-*.p12
-*.pem
-key.properties
-
-# Firebase and service credentials
-google-services.json
-GoogleService-Info.plist
-
-# Local editor settings
-.vscode/
-*.code-workspace
-
-# Generated native files
-**/GeneratedPluginRegistrant.*
-**/Generated.xcconfig
-**/ephemeral/
+venv/
+__pycache__/

@@ -93,30 +93,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 icon: const Icon(Icons.arrow_back, color: cOnSurface),
                 onPressed: () => Navigator.maybePop(context),
               ),
-              title: Row(
-                children: [
-                  Container(
-                    height: 28,
-                    width: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.grey.shade300,
-                      borderRadius: BorderRadius.circular(4),
-                    ),
-                    alignment: Alignment.center,
-                    child: Text(
-                      'img',
-                      style: _font(fontSize: 11, color: Colors.black54),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Text(
-                      'Tambah Data ...',
-                      style: _font(fontSize: 18, fontWeight: FontWeight.w700),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ),
-                ],
+              title: Text(
+                'Edit Profil',
+                style: _font(fontSize: 18, fontWeight: FontWeight.w700),
               ),
               actions: [
                 IconButton(
@@ -268,7 +247,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'Data profil digunakan untuk koordinasi dengan Petugas Penyuluh Lapangan (PPL) dan sinkronisasi sensor lahan cabai secara real-time.',
+                          'Data profil digunakan untuk sinkronisasi sensor lahan cabai secara real-time.',
                           style: _font(fontSize: 12, color: cMutedText),
                         ),
                       ),

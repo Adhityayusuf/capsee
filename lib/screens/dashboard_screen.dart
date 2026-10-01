@@ -4,7 +4,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../core/app_colors.dart';
 import '../models/land_data.dart';
 import 'akun_screen.dart';
-import 'land_detail_screen.dart';
+import 'detail_lahan_screen.dart';
 import 'tambah_lahan_page.dart';
 import 'notifikasi_screen.dart';
 
@@ -37,7 +37,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       status: 'Perlu Perhatian',
       statusDetail: 'Indikasi Antraknosa',
       notice:
-          'Rekomendasi isolasi 4 tanaman di baris ke-3 untuk mencegah spora jamur.',
+          'Rekomendasi isolasi 4 tanaman di baris ke-3 untuk mencegah penyebaran patogen.',
       icon: Icons.warning_rounded,
       warning: true,
     ),
@@ -317,16 +317,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               SizedBox(width: 7),
               _Climate(
-                icon: Icons.umbrella_rounded,
-                title: 'Curah Hujan',
-                value: '12%',
+                icon: Icons.air_rounded,
+                title: 'Angin',
+                value: '12 km/j',
               ),
-              SizedBox(width: 7),
-              _Climate(
-                icon: Icons.security_rounded,
-                title: 'Risiko Jamur',
-                value: 'Aman',
-              ),
+
             ],
           ),
           const SizedBox(height: 14),
