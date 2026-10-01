@@ -87,7 +87,6 @@ class NotifItem {
   final Color dotColor;
   final String title;
   final String body;
-  final String footerLabel;
   final String actionLabel;
   final IconData? actionIcon;
   final Color actionColor;
@@ -108,7 +107,6 @@ class NotifItem {
     required this.dotColor,
     required this.title,
     required this.body,
-    required this.footerLabel,
     required this.actionLabel,
     this.actionIcon,
     required this.actionColor,
@@ -144,7 +142,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       title: 'Prediksi Hujan Lebat di Karangploso',
       body:
           'BMKG memperkirakan hujan lebat pukul 14:00 WIB. Jadwal penyiraman otomatis Petak Blok A dilewati untuk mencegah kelembapan berlebih.',
-      footerLabel: 'Blok A (Cabai Rawit)',
       actionLabel: 'Lihat Jadwal Siram',
       actionIcon: Icons.arrow_forward,
       actionColor: C.tertiary,
@@ -164,7 +161,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       title: 'Waktunya Penyiraman Pagi (Petak Rawit Blok B)',
       body:
           'Volume irigasi 1.2 L/m² disarankan sebelum pukul 08:30 WIB. Lengas tanah terkini 62%.',
-      footerLabel: 'Kelembapan 62%',
       actionLabel: 'Konfirmasi Selesai',
       actionColor: C.onPrimary,
       actionFilled: true,
@@ -184,7 +180,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       title: 'Waktu Pindai Ulang: Petak Rawit Blok A',
       body:
           'Sudah 7 hari sejak diagnosa sehat terakhir. Pindai kembali daun utama untuk deteksi dini penyakit dan thrips.',
-      footerLabel: 'Interval Rutin 7 Hari',
       actionLabel: 'Buka Kamera Scan',
       actionIcon: Icons.photo_camera,
       actionColor: C.primaryContainer,
@@ -204,7 +199,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       title: 'Jadwal Pemupukan NPK + Kalsium Nitrat',
       body:
           'Aplikasi kocor rutin fase berbuah aktif untuk Petak Rawit Blok A (Dosis: 5 gr/tanaman). Terjadwal hari ini.',
-      footerLabel: 'Fase Generatif',
       actionLabel: 'Lihat Panduan Dosis',
       actionIcon: Icons.menu_book,
       actionColor: C.onSurfaceVariant,
@@ -224,7 +218,6 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       title: 'Kelembapan Kanopi Tinggi Semalam (82%)',
       body:
           'Kondisi mikroklimat ideal bagi spora Cercospora. Pastikan aerasi kanopi lancar dan lakukan inspeksi daun bawah.',
-      footerLabel: 'Resiko: Bercak Daun',
       actionLabel: 'Protokol Pencegahan',
       actionIcon: Icons.shield,
       actionColor: C.onSurfaceVariant,
@@ -565,25 +558,14 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                   const SizedBox(height: 4),
                   Text(
                     n.body,
-                    maxLines: 2,
+                    maxLines: 1,
                     overflow: TextOverflow.ellipsis,
                     style: _t(12, 16, FontWeight.w400, C.onSurfaceVariant),
                   ),
-                  const SizedBox(height: 12),
-                  Padding(
-                    padding: const EdgeInsets.only(top: 8),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Flexible(
-                          child: Text(n.footerLabel,
-                              overflow: TextOverflow.ellipsis,
-                              style: _t(10, 14, FontWeight.w700, C.outline)),
-                        ),
-                        const SizedBox(width: 8),
-                        _buildAction(n),
-                      ],
-                    ),
+                  const SizedBox(height: 8),
+                  Align(
+                    alignment: Alignment.centerRight,
+                    child: _buildAction(n),
                   ),
                 ],
               ),
