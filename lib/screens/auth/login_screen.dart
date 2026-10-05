@@ -1,9 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/app_colors.dart';
-import '../widgets/auth_widgets.dart';
-import 'dashboard_screen.dart';
+import '../../core/app_colors.dart';
+import '../../core/validators.dart';
+import '../../widgets/auth_widgets.dart';
 import 'onboarding_screen.dart';
 import 'register_screen.dart';
 import 'lupa_sandi_screen.dart';
@@ -88,16 +88,7 @@ class _LoginScreenState extends State<LoginScreen> {
                 hint: 'nama@email.com',
                 prefixIcon: Icons.mail_outline_rounded,
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Email wajib diisi';
-                }
-                final regex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-                if (!regex.hasMatch(value.trim())) {
-                  return 'Format email tidak valid';
-                }
-                return null;
-              },
+              validator: validateEmail,
             ),
             const SizedBox(height: 20),
 
@@ -151,15 +142,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                 ),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Kata sandi wajib diisi';
-                }
-                if (value.length < 8) {
-                  return 'Minimal 8 karakter';
-                }
-                return null;
-              },
+              validator: validatePassword,
             ),
             const SizedBox(height: 18),
 

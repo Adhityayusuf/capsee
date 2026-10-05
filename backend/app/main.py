@@ -1,12 +1,24 @@
+import os
+
+from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
-from app.routers import auth, lahan, pemindaian, notifikasi
+
+from app.routers import auth, lahan, notifikasi, pemindaian
+
+load_dotenv()
 
 app = FastAPI(title="Capsee Backend", version="1.0.0")
 
+# Di production, isi CORS_ORIGINS dengan domain spesifik (dipisah koma).
+_origins = os.getenv("CORS_ORIGINS", "*").strip()
+allow_origins = (
+    ["*"] if _origins == "*" else [origin.strip() for origin in _origins.split(",")]
+)
+
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],  # untuk production, ganti dengan domain spesifik
+    allow_origins=allow_origins,
     allow_methods=["*"],
     allow_headers=["*"],
 )

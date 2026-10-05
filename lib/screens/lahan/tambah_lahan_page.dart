@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 
+import '../../core/app_colors.dart';
+
 class TambahLahanPage extends StatefulWidget {
   const TambahLahanPage({super.key});
 
@@ -36,13 +38,13 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
     5: 'Fase Panen Berkala',
   };
 
-  // Warna sesuai tema Capsee
-  static const Color primaryGreen = Color(0xFF00652C);
-  static const Color lightGreenBg = Color(0xFFE8F5E9);
-  static const Color surfaceBg = Color(0xFFF9FAFD);
-  static const Color cardFieldBg = Color(0xFFF1F3F9);
-  static const Color textDark = Color(0xFF131B2E);
-  static const Color textMuted = Color(0xFF5E6A75);
+  // Warna mengacu ke palette kanonik Capsee.
+  static const Color primaryGreen = AppColors.primary;
+  static const Color lightGreenBg = AppColors.primarySoft;
+  static const Color surfaceBg = AppColors.background;
+  static const Color cardFieldBg = AppColors.chipBg;
+  static const Color textDark = AppColors.title;
+  static const Color textMuted = AppColors.subtitle;
 
   @override
   void dispose() {
@@ -55,13 +57,13 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
   void _simpanData() {
     ScaffoldMessenger.of(context).showSnackBar(
       SnackBar(
-        backgroundColor: const Color(0xFF283044),
+        backgroundColor: AppColors.inverseSurface,
         behavior: SnackBarBehavior.floating,
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
         content: Row(
           mainAxisSize: MainAxisSize.min,
           children: const [
-            Icon(Icons.verified, color: Color(0xFF6BFF8F), size: 20),
+            Icon(Icons.verified, color: AppColors.secondaryContainer, size: 20),
             SizedBox(width: 8),
             Text(
               'Data kebun berhasil diperbarui!',
@@ -145,7 +147,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE8F5E9),
+                          color: AppColors.primarySoft,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
@@ -306,7 +308,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
             _buildCardWrapper(
               title: 'Kondisi & Budidaya',
               sectionTag: 'Seksi 2/2',
-              tagColor: const Color(0xFFE8F5E9),
+              tagColor: AppColors.primarySoft,
               tagTextColor: primaryGreen,
               children: [
                 Row(
@@ -401,7 +403,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                   decoration: _buildInputDecoration(
                     prefixIcon: Icons.compost,
                     suffixTextBadge: '6 hari lalu',
-                    badgeBg: const Color(0xFFE2E7FF),
+                    badgeBg: AppColors.surfaceHigh,
                     badgeTextColor: textDark,
                   ),
                 ),
@@ -517,10 +519,10 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withOpacity(0.06)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -608,7 +610,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                 const TextSpan(
                   text: ' *',
                   style: TextStyle(
-                    color: Colors.red,
+                    color: AppColors.error,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -634,7 +636,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
     required IconData prefixIcon,
     String? hint,
     String? suffixTextBadge,
-    Color badgeBg = const Color(0xFFC8E6C9),
+    Color badgeBg = AppColors.primaryFixedDim,
     Color badgeTextColor = primaryGreen,
   }) {
     return InputDecoration(
@@ -687,7 +689,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
     required ValueChanged<String?> onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       items: items,
       onChanged: onChanged,
       icon: const Icon(Icons.expand_more, color: textMuted),
@@ -723,7 +725,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: primaryGreen.withOpacity(0.3),
+                    color: primaryGreen.withValues(alpha: 0.3),
                     blurRadius: 6,
                     offset: const Offset(0, 3),
                   ),

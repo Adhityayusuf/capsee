@@ -15,19 +15,17 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'notifikasi_screen.dart' show C;
+import '../../core/app_colors.dart';
 
-// ─────────────────────────── Token tambahan ───────────────────────────
+// ─────────────────────────── Token tambahan (alias ke AppColors) ───────────────────────────
 class _P {
-  static const inverseSurface = Color(0xFF283044);
-  static const inverseOnSurface = Color(0xFFEEF0FF);
-  static const onPrimaryContainer = Color(0xFFD3FFD5);
-  static const secondaryContainer = Color(0xFF6BFF8F);
-  static const onSecondaryContainer = Color(0xFF007432);
-  static const secondary = Color(0xFF006E2F);
-  static const onSecondaryFixedVariant = Color(0xFF005321);
-  static const surfaceDim = Color(0xFFD2D9F4);
-  static const outlineVariant = Color(0xFFBECABC);
+  static const inverseSurface = AppColors.inverseSurface;
+  static const inverseOnSurface = AppColors.inverseOnSurface;
+  static const onPrimaryContainer = AppColors.onPrimaryContainer;
+  static const secondaryContainer = AppColors.secondaryContainer;
+  static const onSecondaryContainer = AppColors.onSecondaryContainer;
+  static const secondary = AppColors.secondary;
+  static const onSecondaryFixedVariant = AppColors.onSecondaryFixedVariant;
 }
 
 // ─────────────────────────── URL gambar ───────────────────────────
@@ -53,7 +51,7 @@ TextStyle _ts(double size, double height, FontWeight w, Color color,
     );
 
 const _softShadow = [
-  BoxShadow(color: Color(0x0F000000), blurRadius: 3, offset: Offset(0, 1)),
+  BoxShadow(color: AppColors.shadow, blurRadius: 3, offset: Offset(0, 1)),
 ];
 
 // ─────────────────────────── Data langkah ───────────────────────────
@@ -71,21 +69,6 @@ const _primaryIcons = [
   Icons.arrow_forward,
   Icons.arrow_forward,
   Icons.check_circle,
-];
-
-// Tombol sekunder untuk langkah 2–4 (indeks 1..3)
-const _secondaryLabels = [
-  '',
-  'Lihat Contoh Foto Daun yang Benar',
-  'Pelajari Kalibrasi Dosis Pupuk',
-  'Atur Preferensi Notifikasi',
-];
-
-const _secondaryIcons = [
-  Icons.abc,
-  Icons.photo_library,
-  Icons.menu_book,
-  Icons.tune,
 ];
 
 // ─────────────────────────── Layar utama ───────────────────────────
@@ -168,7 +151,7 @@ class _PanduanScreenState extends State<PanduanScreen> {
               duration: const Duration(milliseconds: 250),
               layoutBuilder: (current, previous) => Stack(
                 alignment: Alignment.topCenter,
-                children: [...previous, if (current != null) current],
+                children: [...previous, ?current],
               ),
               child: KeyedSubtree(key: ValueKey(_step), child: _stepBody()),
             ),
@@ -190,10 +173,10 @@ class _PanduanScreenState extends State<PanduanScreen> {
       preferredSize: const Size.fromHeight(64),
       child: Container(
         decoration: BoxDecoration(
-          color: C.surface.withOpacity(0.95),
+          color: C.surface.withValues(alpha: 0.95),
           boxShadow: const [
             BoxShadow(
-                color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 1)),
+                color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 1)),
           ],
         ),
         child: SafeArea(
@@ -563,8 +546,8 @@ class _Step2 extends StatelessWidget {
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        Colors.black.withOpacity(0.6),
-                        Colors.black.withOpacity(0.15),
+                        Colors.black.withValues(alpha: 0.6),
+                        Colors.black.withValues(alpha: 0.15),
                         Colors.transparent,
                       ],
                     ),
@@ -597,7 +580,7 @@ class _Step2 extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: _P.inverseSurface.withOpacity(0.8),
+                          color: _P.inverseSurface.withValues(alpha: 0.8),
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Row(
@@ -617,7 +600,7 @@ class _Step2 extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: C.surfaceLowest.withOpacity(0.9),
+                          color: C.surfaceLowest.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(999),
                           boxShadow: _softShadow,
                         ),
@@ -636,7 +619,7 @@ class _Step2 extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: _P.inverseSurface.withOpacity(0.85),
+                      color: _P.inverseSurface.withValues(alpha: 0.85),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: Row(
@@ -801,7 +784,7 @@ class _Step3 extends StatelessWidget {
                   icon: Icons.water_drop,
                   title: 'Penyiraman Pagi',
                   chip: '06.30 WIB',
-                  chipBg: C.primaryFixedDim.withOpacity(0.3),
+                  chipBg: C.primaryFixedDim.withValues(alpha: 0.3),
                   chipFg: C.primary,
                   subtitle: 'Volume 450ml / tanaman • Drip otomatis',
                   trailing: const Icon(Icons.check_circle,
@@ -814,7 +797,7 @@ class _Step3 extends StatelessWidget {
                   icon: Icons.science,
                   title: 'Pemupukan NPK 16-16-16',
                   chip: '3 Hari Lagi',
-                  chipBg: C.tertiaryFixed.withOpacity(0.4),
+                  chipBg: C.tertiaryFixed.withValues(alpha: 0.4),
                   chipFg: C.tertiary,
                   subtitle: 'Fase Vegetatif Lanjut • Dosis 15g/liter',
                   trailing: Container(
@@ -842,7 +825,7 @@ class _Step3 extends StatelessWidget {
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
                               colors: [
-                                _P.inverseSurface.withOpacity(0.7),
+                                _P.inverseSurface.withValues(alpha: 0.7),
                                 Colors.transparent,
                               ],
                             ),
@@ -1238,7 +1221,7 @@ class _NetImage extends StatelessWidget {
       fit: BoxFit.cover,
       loadingBuilder: (context, child, progress) =>
           progress == null ? child : Container(color: C.surfaceLow),
-      errorBuilder: (_, __, ___) => Container(
+      errorBuilder: (_, _, _) => Container(
         color: C.surfaceContainer,
         alignment: Alignment.center,
         child: const Icon(Icons.image_outlined, size: 32, color: C.outline),
@@ -1258,8 +1241,8 @@ class _BottomGradient extends StatelessWidget {
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
           colors: [
-            _P.inverseSurface.withOpacity(0.8),
-            _P.inverseSurface.withOpacity(0.2),
+            _P.inverseSurface.withValues(alpha: 0.8),
+            _P.inverseSurface.withValues(alpha: 0.2),
             Colors.transparent,
           ],
         ),
@@ -1285,7 +1268,7 @@ class _GlassPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: C.surface.withOpacity(0.9),
+        color: C.surface.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(999),
         boxShadow: _softShadow,
       ),
@@ -1702,7 +1685,7 @@ class _PingState extends State<_Ping> with SingleTickerProviderStateMixin {
         children: [
           AnimatedBuilder(
             animation: _c,
-            builder: (_, __) {
+            builder: (_, _) {
               final t = Curves.easeOut.transform(_c.value);
               return Opacity(
                 opacity: 0.75 * (1 - t),
@@ -1724,11 +1707,11 @@ class _PingState extends State<_Ping> with SingleTickerProviderStateMixin {
             width: 16,
             height: 16,
             decoration: BoxDecoration(
-              color: C.primaryFixed.withOpacity(0.8),
+              color: C.primaryFixed.withValues(alpha: 0.8),
               shape: BoxShape.circle,
               boxShadow: const [
                 BoxShadow(
-                    color: Color(0x33000000),
+                    color: AppColors.shadow,
                     blurRadius: 4,
                     offset: Offset(0, 2)),
               ],

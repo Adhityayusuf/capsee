@@ -15,9 +15,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'notifikasi_screen.dart' show C;
+import '../../core/app_colors.dart';
 
-const _secondary = Color(0xFF006E2F);
+const _secondary = AppColors.secondary;
 
 const _kImgCabai =
     'https://lh3.googleusercontent.com/aida-public/AB6AXuACXKFh4uJJo_9LdD7gVIMkBulVs-nN_Lh8BrSPNR5yiexRNG2sMplxELObCVynXUHbWbFAneF85ql3sX4Iah7dUk-2saIkGskfjUxFwLsF2bTU-P6Qd2nDc-tXBS6K9HmwnnBVMuDCW-f9kSvCidnd3jYNZNxbjQ2NCtRxKTkZ7OvSn_-yvPmjRqPCTqLEJVJAtT-gPqI3VcAmNT1W_tdNkYFEi6JwYElFOwcA6JVYJYkQCeCCi6sQSQ';
@@ -36,7 +36,7 @@ TextStyle _ts(double size, double height, FontWeight w, Color color,
     );
 
 const _softShadow = [
-  BoxShadow(color: Color(0x0F000000), blurRadius: 3, offset: Offset(0, 1)),
+  BoxShadow(color: AppColors.shadow, blurRadius: 3, offset: Offset(0, 1)),
 ];
 
 /// Teks dengan potongan tebal. Gunakan `_b('...')` untuk bagian bold.
@@ -175,10 +175,10 @@ class _SyaratScreenState extends State<SyaratScreen> {
       preferredSize: const Size.fromHeight(64),
       child: Container(
         decoration: BoxDecoration(
-          color: C.surface.withOpacity(0.95),
+          color: C.surface.withValues(alpha: 0.95),
           boxShadow: const [
             BoxShadow(
-                color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 1)),
+                color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 1)),
           ],
         ),
         child: SafeArea(
@@ -266,7 +266,7 @@ class _SyaratScreenState extends State<SyaratScreen> {
               width: 96,
               height: 96,
               decoration: BoxDecoration(
-                color: C.primary.withOpacity(0.05),
+                color: C.primary.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
             ),
@@ -348,7 +348,7 @@ class _SyaratScreenState extends State<SyaratScreen> {
         scrollDirection: Axis.horizontal,
         clipBehavior: Clip.none,
         itemCount: _navLabels.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 4),
+        separatorBuilder: (_, _) => const SizedBox(width: 4),
         itemBuilder: (_, i) => Material(
           color: C.surfaceHigh,
           borderRadius: BorderRadius.circular(999),
@@ -540,7 +540,7 @@ class _SyaratScreenState extends State<SyaratScreen> {
       Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: C.errorContainer.withOpacity(0.4),
+          color: C.errorContainer.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -844,7 +844,7 @@ class _RoundedImage extends StatelessWidget {
         child: Image.network(
           url,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(
+          errorBuilder: (_, _, _) => Container(
             color: C.surfaceContainer,
             alignment: Alignment.center,
             child: const Icon(Icons.image_outlined, size: 24, color: C.outline),

@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/app_colors.dart';
-import '../models/activity_log.dart';
-import '../models/land_data.dart';
-import 'lahan/tab_jadwal.dart';
-import 'scan/hasil_scan_tidak_sehat.dart';
-import 'treatment_recommendation_screen.dart';
+import '../../core/app_colors.dart';
+import '../../models/activity_log.dart';
+import '../../models/land_data.dart';
+import '../scan/hasil_scan_tidak_sehat.dart';
+import '../scan/treatment_recommendation_screen.dart';
+import 'tab_jadwal.dart';
 
 class LandDetailScreen extends StatefulWidget {
   final LandData land;
@@ -349,12 +349,12 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
           children: [
             Positioned.fill(
               child: Container(
-                color: const Color(0xFF283044),
+                color: AppColors.inverseSurface,
                 child: const Center(
                   child: Icon(
                     Icons.local_florist_rounded,
                     size: 96,
-                    color: Color(0xFF6E9273),
+                    color: AppColors.outline,
                   ),
                 ),
               ),
@@ -375,7 +375,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                                 width: 6,
                                 height: 6,
                                 decoration: const BoxDecoration(
-                                  color: Color(0xFF6BFF8F),
+                                  color: AppColors.secondaryContainer,
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -421,7 +421,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                           height: 130,
                           decoration: BoxDecoration(
                             border: Border.all(
-                              color: const Color(0xFF95F8A7),
+                              color: AppColors.primaryFixed,
                               width: 1.5,
                             ),
                             borderRadius: BorderRadius.circular(8),
@@ -429,7 +429,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                           child: const Center(
                             child: CircleAvatar(
                               radius: 8,
-                              backgroundColor: Color(0xFF95F8A7),
+                              backgroundColor: AppColors.primaryFixed,
                             ),
                           ),
                         ),
@@ -462,7 +462,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                         children: [
                           Icon(
                             Icons.wb_sunny_rounded,
-                            color: Color(0xFF6BFF8F),
+                            color: AppColors.secondaryContainer,
                             size: 14,
                           ),
                           SizedBox(width: 6),
@@ -498,7 +498,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: const Color(0xFF283044).withValues(alpha: 0.8),
+        color: AppColors.inverseSurface.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
       ),
       child: child,
@@ -510,7 +510,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       width: 32,
       height: 32,
       decoration: BoxDecoration(
-        color: const Color(0xFF283044).withValues(alpha: 0.8),
+        color: AppColors.inverseSurface.withValues(alpha: 0.8),
         shape: BoxShape.circle,
       ),
       child: Icon(icon, color: Colors.white, size: 16),
@@ -1047,7 +1047,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _filters.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, i) {
           final label = _filters[i];
           final selected = _filter == label;

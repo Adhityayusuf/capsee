@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/app_colors.dart';
-import '../models/treatment_recommendation.dart';
+import '../../core/app_colors.dart';
+import '../../models/treatment_recommendation.dart';
 
 class TreatmentRecommendationScreen extends StatefulWidget {
   final DiagnosisSummary diagnosis;
@@ -67,12 +67,12 @@ class _TreatmentRecommendationScreenState
                       Expanded(
                         child: _buildMetricCard(
                           icon: Icons.warning_amber_rounded,
-                          iconColor: const Color(0xFFD97706),
-                          iconBg: const Color(0xFFFEF3C7),
+                          iconColor: AppColors.warning,
+                          iconBg: AppColors.warningSoft,
                           label: 'Tingkat Keparahan',
                           value: widget.diagnosis.severityLabel,
                           progress: widget.diagnosis.severityProgress,
-                          progressColor: const Color(0xFFD97706),
+                          progressColor: AppColors.warning,
                         ),
                       ),
                       const SizedBox(width: 12),
@@ -223,7 +223,7 @@ class _TreatmentRecommendationScreenState
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFEF3C7),
+                        color: AppColors.warningSoft,
                         borderRadius: BorderRadius.circular(20),
                       ),
                       child: Text(
@@ -231,7 +231,7 @@ class _TreatmentRecommendationScreenState
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 11,
                           fontWeight: FontWeight.w800,
-                          color: const Color(0xFFB45309),
+                          color: AppColors.warning,
                         ),
                       ),
                     ),
@@ -766,10 +766,10 @@ class _TreatmentRecommendationScreenState
             width: 36,
             height: 36,
             decoration: BoxDecoration(
-              color: const Color(0xFFDBEAFE),
+              color: AppColors.infoSoft,
               borderRadius: BorderRadius.circular(10),
             ),
-            child: Icon(tip.icon, size: 18, color: const Color(0xFF1D4ED8)),
+            child: Icon(tip.icon, size: 18, color: AppColors.info),
           ),
           const SizedBox(width: 12),
           Expanded(
