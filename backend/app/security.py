@@ -8,6 +8,13 @@ from dotenv import load_dotenv
 load_dotenv()
 
 JWT_SECRET = os.getenv("JWT_SECRET")
+
+if not JWT_SECRET:
+    raise RuntimeError(
+        "JWT_SECRET belum diset. Salin backend/.env.example menjadi "
+        "backend/.env lalu isi JWT_SECRET."
+    )
+
 JWT_ALGORITHM = "HS256"
 JWT_EXPIRE_DAYS = 7
 
@@ -28,7 +35,7 @@ def buat_token(id_pengguna: str) -> str:
     return jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
 
 
-def verifikasi_token(authorization: str = Header(None)) -> str:
+def verifikasi_token(authorization: str | None = Header(default=None)) -> str:
     """
     Dipakai sebagai dependency FastAPI untuk melindungi endpoint.
     Flutter wajib kirim header: Authorization: Bearer <token>
