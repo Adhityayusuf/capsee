@@ -15,8 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/app_colors.dart';
-import 'notifikasi_screen.dart' show C;
+import '../../core/app_colors.dart';
 
 const _secondary = AppColors.secondary;
 const _secondaryFixed = AppColors.secondaryContainer;
@@ -146,7 +145,7 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
       preferredSize: const Size.fromHeight(56),
       child: Container(
         decoration: BoxDecoration(
-          color: C.surface.withOpacity(0.95),
+          color: C.surface.withValues(alpha: 0.95),
           boxShadow: const [
             BoxShadow(
                 color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 1)),
@@ -274,7 +273,7 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
         scrollDirection: Axis.horizontal,
         clipBehavior: Clip.none,
         itemCount: _navLabels.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (_, i) => Material(
           color: C.surfaceContainer,
           borderRadius: BorderRadius.circular(999),

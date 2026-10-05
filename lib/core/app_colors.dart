@@ -75,3 +75,35 @@ class AppColors {
   static const primaryShadow = Color(0x2615803D);
   static const primaryDisabled = Color(0x9915803D);
 }
+
+/// Alias ringkas ke [AppColors] untuk layar yang memakai nama pendek (`C.primary`).
+///
+/// Dulu didefinisikan di `notifikasi_screen.dart` dan diimpor lintas-fitur.
+/// Sekarang tinggal di core agar tidak ada layar yang bergantung ke folder fitur
+/// lain hanya demi warna.
+class C {
+  C._();
+
+  static const surface = AppColors.surface;
+  static const surfaceLowest = AppColors.surfaceLowest;
+  static const surfaceLow = AppColors.surfaceLow;
+  static const surfaceContainer = AppColors.surfaceContainer;
+  static const surfaceHigh = AppColors.surfaceHigh;
+  static const surfaceHighest = AppColors.surfaceHighest;
+  static const onSurface = AppColors.onSurface;
+  static const onSurfaceVariant = AppColors.onSurfaceVariant;
+  static const outline = AppColors.outline;
+  static const primary = AppColors.primary;
+  static const primaryContainer = AppColors.primaryContainer;
+  static const onPrimary = AppColors.onPrimary;
+  static const primaryFixed = AppColors.primaryFixed;
+  static const primaryFixedDim = AppColors.primaryFixedDim;
+  static const onPrimaryFixed = AppColors.onPrimaryFixed;
+  static const tertiary = AppColors.tertiary;
+  static const tertiaryContainer = AppColors.tertiaryContainer;
+  static const tertiaryFixed = AppColors.tertiaryFixed;
+  static const onTertiaryFixedVariant = AppColors.onTertiaryFixedVariant;
+  static const error = AppColors.error;
+  static const errorContainer = AppColors.errorContainer;
+  static const onErrorContainer = AppColors.onErrorContainer;
+}

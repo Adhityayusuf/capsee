@@ -1,7 +1,7 @@
 import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 
-import '../core/app_colors.dart';
+import '../../core/app_colors.dart';
 
 class UbahKataSandiScreen extends StatefulWidget {
   const UbahKataSandiScreen({super.key});
@@ -92,7 +92,7 @@ class _UbahKataSandiScreenState extends State<UbahKataSandiScreen> {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
             child: AppBar(
-              backgroundColor: cBg.withOpacity(0.8),
+              backgroundColor: cBg.withValues(alpha: 0.8),
               elevation: 0,
               scrolledUnderElevation: 0,
               leading: IconButton(

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 
-import '../core/app_colors.dart';
+import '../../core/app_colors.dart';
 
 class TambahLahanPage extends StatefulWidget {
   const TambahLahanPage({super.key});
@@ -519,10 +519,10 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withOpacity(0.06)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -689,7 +689,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
     required ValueChanged<String?> onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       items: items,
       onChanged: onChanged,
       icon: const Icon(Icons.expand_more, color: textMuted),
@@ -725,7 +725,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: primaryGreen.withOpacity(0.3),
+                    color: primaryGreen.withValues(alpha: 0.3),
                     blurRadius: 6,
                     offset: const Offset(0, 3),
                   ),

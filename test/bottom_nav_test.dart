@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
-import 'package:capsee/screens/dashboard_screen.dart';
+import 'package:capsee/screens/home/dashboard_screen.dart';
 
 void main() {
   testWidgets('bottom nav punya 5 slot dan tab berfungsi', (tester) async {

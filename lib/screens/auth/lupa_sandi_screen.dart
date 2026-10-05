@@ -16,8 +16,8 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/app_colors.dart';
-import 'notifikasi_screen.dart' show C;
+import '../../core/app_colors.dart';
+import '../../core/validators.dart';
 
 const _onSecondaryContainer = AppColors.onSecondaryContainer;
 const _secondaryContainer = AppColors.secondaryContainer;
@@ -35,8 +35,6 @@ TextStyle _ts(double size, double height, FontWeight w, Color color,
 const _softShadow = [
   BoxShadow(color: AppColors.shadow, blurRadius: 3, offset: Offset(0, 1)),
 ];
-
-final _emailRegex = RegExp(r'^[^\s@]+@[^\s@]+\.[^\s@]+$');
 
 class LupaSandiScreen extends StatefulWidget {
   /// Dipanggil saat tautan reset diminta (juga saat "Kirim Ulang").
@@ -62,7 +60,7 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
   int _countdown = 0;
   Timer? _timer;
 
-  bool get _emailValid => _emailRegex.hasMatch(_emailCtrl.text.trim());
+  bool get _emailValid => isValidEmail(_emailCtrl.text);
 
   @override
   void initState() {
@@ -147,7 +145,7 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
                     duration: const Duration(milliseconds: 250),
                     layoutBuilder: (current, previous) => Stack(
                       alignment: Alignment.topCenter,
-                      children: [...previous, if (current != null) current],
+                      children: [...previous, ?current],
                     ),
                     child: _sent
                         ? KeyedSubtree(
@@ -176,7 +174,7 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
       preferredSize: const Size.fromHeight(64),
       child: Container(
         decoration: BoxDecoration(
-          color: C.surface.withOpacity(0.95),
+          color: C.surface.withValues(alpha: 0.95),
           boxShadow: const [
             BoxShadow(
                 color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 1)),
@@ -356,18 +354,11 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
             onFieldSubmitted: (_) => _submit(),
             style: _ts(16, 24, FontWeight.w400, C.onSurface),
             cursorColor: C.primary,
-            validator: (v) {
-              final value = (v ?? '').trim();
-              if (value.isEmpty) return 'Email wajib diisi';
-              if (!_emailRegex.hasMatch(value)) {
-                return 'Format email tidak valid';
-              }
-              return null;
-            },
+            validator: validateEmail,
             decoration: InputDecoration(
               hintText: 'petani@capsee.id',
               hintStyle: _ts(16, 24, FontWeight.w400,
-                  C.onSurfaceVariant.withOpacity(0.5)),
+                  C.onSurfaceVariant.withValues(alpha: 0.5)),
               filled: true,
               fillColor: C.surfaceLowest,
               contentPadding: const EdgeInsets.symmetric(vertical: 16),

@@ -2,9 +2,8 @@ import 'dart:typed_data';
 import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
 
-import '../core/app_colors.dart';
+import '../../core/app_colors.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -21,8 +20,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late final TextEditingController _phoneController;
   late final TextEditingController _farmLocationController;
 
-  bool _isLoading = false;
-  final ImagePicker _picker = ImagePicker();
   Uint8List? _avatarBytes;
 
   // Token warna kini mengacu ke palette kanonik.
@@ -75,7 +72,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
             child: AppBar(
-              backgroundColor: cBackground.withOpacity(0.8),
+              backgroundColor: cBackground.withValues(alpha: 0.8),
               elevation: 0.5,
               scrolledUnderElevation: 0,
               leading: IconButton(
@@ -163,7 +160,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   icon: Icons.mail_outline,
                   placeholder: 'contoh@domain.id',
                   badgeText: 'Terverifikasi',
-                  badgeBg: AppColors.onPrimaryContainer.withOpacity(0.5),
+                  badgeBg: AppColors.onPrimaryContainer.withValues(alpha: 0.5),
                   badgeTextColor: cPrimaryContainer,
                   caption: 'Email digunakan untuk laporan ringkasan mingguan petak dan diagnosa ML.',
                 ),
@@ -178,7 +175,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   placeholder: '+62 8xx-xxxx-xxxx',
                   badgeText: 'Aktif WA',
                   badgeIcon: Icons.sms,
-                  badgeBg: AppColors.secondaryContainer.withOpacity(0.3),
+                  badgeBg: AppColors.secondaryContainer.withValues(alpha: 0.3),
                   badgeTextColor: AppColors.onSecondaryFixedVariant,
                   caption: 'Nomor aktif untuk pengiriman notifikasi darurat hama & cuaca ekstrem.',
                 ),

@@ -3,13 +3,11 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/app_colors.dart';
-import '../models/land_data.dart';
-import '../widgets/auth_widgets.dart';
-import 'dashboard_screen.dart';
-import 'detail_lahan_screen.dart';
-import 'panduan_screen.dart';
-import 'tambah_lahan_page.dart';
+import '../../core/app_colors.dart';
+import '../../widgets/auth_widgets.dart';
+import '../bantuan/panduan_screen.dart';
+import '../home/dashboard_screen.dart';
+import '../lahan/tambah_lahan_page.dart';
 
 /// Data satu kartu fitur di onboarding.
 class _Feature {
@@ -57,12 +55,6 @@ const _features = [
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
-
-  void _showTodo(BuildContext context, String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
-  }
 
   @override
   Widget build(BuildContext context) {

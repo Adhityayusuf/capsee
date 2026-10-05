@@ -2,14 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
-import '../core/app_colors.dart';
-import '../models/land_data.dart';
-import 'akun_screen.dart';
-import 'detail_lahan_screen.dart';
-import 'notifikasi_screen.dart';
-import 'riwayat_scan_screen.dart';
-import 'scan/hasil_scan_tidak_sehat.dart';
-import 'tambah_lahan_page.dart';
+import '../../core/app_colors.dart';
+import '../../models/land_data.dart';
+import '../akun/akun_screen.dart';
+import '../lahan/detail_lahan_screen.dart';
+import '../lahan/tambah_lahan_page.dart';
+import '../notifikasi/notifikasi_screen.dart';
+import '../scan/hasil_scan_tidak_sehat.dart';
+import '../scan/riwayat_scan_screen.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});

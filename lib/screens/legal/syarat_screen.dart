@@ -15,8 +15,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/app_colors.dart';
-import 'notifikasi_screen.dart' show C;
+import '../../core/app_colors.dart';
 
 const _secondary = AppColors.secondary;
 
@@ -176,7 +175,7 @@ class _SyaratScreenState extends State<SyaratScreen> {
       preferredSize: const Size.fromHeight(64),
       child: Container(
         decoration: BoxDecoration(
-          color: C.surface.withOpacity(0.95),
+          color: C.surface.withValues(alpha: 0.95),
           boxShadow: const [
             BoxShadow(
                 color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 1)),
@@ -267,7 +266,7 @@ class _SyaratScreenState extends State<SyaratScreen> {
               width: 96,
               height: 96,
               decoration: BoxDecoration(
-                color: C.primary.withOpacity(0.05),
+                color: C.primary.withValues(alpha: 0.05),
                 shape: BoxShape.circle,
               ),
             ),
@@ -349,7 +348,7 @@ class _SyaratScreenState extends State<SyaratScreen> {
         scrollDirection: Axis.horizontal,
         clipBehavior: Clip.none,
         itemCount: _navLabels.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 4),
+        separatorBuilder: (_, _) => const SizedBox(width: 4),
         itemBuilder: (_, i) => Material(
           color: C.surfaceHigh,
           borderRadius: BorderRadius.circular(999),
@@ -541,7 +540,7 @@ class _SyaratScreenState extends State<SyaratScreen> {
       Container(
         padding: const EdgeInsets.all(16),
         decoration: BoxDecoration(
-          color: C.errorContainer.withOpacity(0.4),
+          color: C.errorContainer.withValues(alpha: 0.4),
           borderRadius: BorderRadius.circular(12),
         ),
         child: Column(
@@ -845,7 +844,7 @@ class _RoundedImage extends StatelessWidget {
         child: Image.network(
           url,
           fit: BoxFit.cover,
-          errorBuilder: (_, __, ___) => Container(
+          errorBuilder: (_, _, _) => Container(
             color: C.surfaceContainer,
             alignment: Alignment.center,
             child: const Icon(Icons.image_outlined, size: 24, color: C.outline),

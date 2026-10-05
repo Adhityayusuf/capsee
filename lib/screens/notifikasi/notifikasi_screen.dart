@@ -1,47 +1,12 @@
 // notifikasi_screen.dart
 //
-// Dependensi (pubspec.yaml):
-//   dependencies:
-//     flutter:
-//       sdk: flutter
-//     google_fonts: ^6.2.1
-//
-// Jalankan: taruh file ini di lib/ lalu panggil runApp(const CapseeApp()).
+// Layar daftar notifikasi Capsee.
+// Dependensi: google_fonts.
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/app_colors.dart';
-
-void main() => runApp(const CapseeApp());
-
-// ─────────────────────────── Warna (alias ke AppColors) ───────────────────────────
-// Nama `C` dipertahankan agar layar yang mengimpornya tetap kompilasi, tetapi
-// seluruh nilai kini menunjuk ke palette kanonik di core/app_colors.dart.
-class C {
-  static const surface = AppColors.surface;
-  static const surfaceLowest = AppColors.surfaceLowest;
-  static const surfaceLow = AppColors.surfaceLow;
-  static const surfaceContainer = AppColors.surfaceContainer;
-  static const surfaceHigh = AppColors.surfaceHigh;
-  static const surfaceHighest = AppColors.surfaceHighest;
-  static const onSurface = AppColors.onSurface;
-  static const onSurfaceVariant = AppColors.onSurfaceVariant;
-  static const outline = AppColors.outline;
-  static const primary = AppColors.primary;
-  static const primaryContainer = AppColors.primaryContainer;
-  static const onPrimary = AppColors.onPrimary;
-  static const primaryFixed = AppColors.primaryFixed;
-  static const primaryFixedDim = AppColors.primaryFixedDim;
-  static const onPrimaryFixed = AppColors.onPrimaryFixed;
-  static const tertiary = AppColors.tertiary;
-  static const tertiaryContainer = AppColors.tertiaryContainer;
-  static const tertiaryFixed = AppColors.tertiaryFixed;
-  static const onTertiaryFixedVariant = AppColors.onTertiaryFixedVariant;
-  static const error = AppColors.error;
-  static const errorContainer = AppColors.errorContainer;
-  static const onErrorContainer = AppColors.onErrorContainer;
-}
+import '../../core/app_colors.dart';
 
 // ─────────────────────────── Tipografi ───────────────────────────
 TextStyle _t(double size, double height, FontWeight w, Color color,
@@ -53,25 +18,6 @@ TextStyle _t(double size, double height, FontWeight w, Color color,
       color: color,
       letterSpacing: letterSpacing,
     );
-
-class CapseeApp extends StatelessWidget {
-  const CapseeApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Capsee',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: C.surface,
-        colorScheme: ColorScheme.fromSeed(seedColor: C.primary),
-        textTheme: GoogleFonts.plusJakartaSansTextTheme(),
-      ),
-      home: const NotifikasiScreen(),
-    );
-  }
-}
 
 // ─────────────────────────── Model ───────────────────────────
 enum NotifType { reminder, weather, disease }
@@ -139,7 +85,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       iconBg: C.tertiaryFixed,
       iconColor: C.tertiary,
       badge: 'Peringatan Cuaca BMKG',
-      badgeBg: C.tertiaryFixed.withOpacity(0.6),
+      badgeBg: C.tertiaryFixed.withValues(alpha: 0.6),
       badgeFg: C.onTertiaryFixedVariant,
       time: '10 mnt lalu',
       dotColor: C.tertiary,
@@ -177,7 +123,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       iconBg: C.primaryFixed,
       iconColor: C.primary,
       badge: 'Evaluasi Tanaman AI',
-      badgeBg: C.primaryFixedDim.withOpacity(0.3),
+      badgeBg: C.primaryFixedDim.withValues(alpha: 0.3),
       badgeFg: C.primary,
       time: '3 jam lalu',
       dotColor: C.primaryContainer,
@@ -286,7 +232,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       preferredSize: const Size.fromHeight(64),
       child: Container(
         decoration: BoxDecoration(
-          color: C.surface.withOpacity(0.95),
+          color: C.surface.withValues(alpha: 0.95),
           boxShadow: const [
             BoxShadow(
                 color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 1)),
@@ -304,7 +250,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: C.primaryContainer.withOpacity(0.1),
+                      color: C.primaryContainer.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(Icons.notifications_outlined,
@@ -366,7 +312,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                   decoration: BoxDecoration(
                     color: allRead
                         ? C.surfaceContainer
-                        : C.primaryContainer.withOpacity(0.1),
+                        : C.primaryContainer.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Row(
@@ -423,7 +369,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: chips.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (_, i) {
           final (label, type) = chips[i];
           final active = _selected == type;
@@ -584,7 +530,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
     if (n.actionFilled) {
       final done = n.confirmed;
       return Material(
-        color: done ? C.outline.withOpacity(0.75) : C.primaryContainer,
+        color: done ? C.outline.withValues(alpha: 0.75) : C.primaryContainer,
         borderRadius: BorderRadius.circular(4),
         elevation: 1,
         child: InkWell(
@@ -672,7 +618,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
               style: _t(12, 16, FontWeight.w600, C.outline)),
         ),
         Text('Capsee Intelligence Telemetry v2.4',
-            style: _t(10, 14, FontWeight.w700, C.outline.withOpacity(0.7))),
+            style: _t(10, 14, FontWeight.w700, C.outline.withValues(alpha: 0.7))),
         const SizedBox(height: 16),
       ],
     );

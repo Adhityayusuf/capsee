@@ -9,14 +9,13 @@ import 'package:flutter/material.dart';
 import 'dart:ui' show ImageFilter;
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/app_colors.dart';
-import 'notifikasi_screen.dart' show C;
+import '../../core/app_colors.dart';
+import '../auth/login_screen.dart';
+import '../bantuan/bantuan_faq_screen.dart';
+import '../legal/privasi_screen.dart';
+import '../legal/syarat_screen.dart';
 import 'edit_profil_screen.dart';
-import 'login_screen.dart';
-import 'bantuan_faq_screen.dart';
 import 'ubah_sandi.dart';
-import 'syarat_screen.dart';
-import 'privasi_screen.dart';
 
 const String _kLogoUrl =
     'https://lh3.googleusercontent.com/aida/AEtjO1Xr_77lDlwa3ZADA-1HeBJZ-Tn0VWtE6n-7pOHm4d2azQUim5BjoLf575UzLtz0ODNUzEVcV30y0Qygv7t04JxHmpUwopBEQ96lDQ7I0bpin4-N1IS1l-FoVePayedbE5_okishN0kcXmjse5fCF-NG5aQpKrjWoygNzg2Vb2Qvga9t5r_iZu7cGKe9q8GulMspHO6C3lCzeGHgRcSPog9XdXtsBfBZsWTWU4MeoT564Ej-_JzkDExBIpo';
@@ -40,7 +39,6 @@ class _MenuItem {
   final Color iconColor;
   final String title;
   final String subtitle;
-  final String? badge;
   final VoidCallback? onTap;
 
   const _MenuItem({
@@ -48,7 +46,6 @@ class _MenuItem {
     required this.iconColor,
     required this.title,
     required this.subtitle,
-    this.badge,
     this.onTap,
   });
 }
@@ -167,7 +164,7 @@ class AkunScreen extends StatelessWidget {
       preferredSize: const Size.fromHeight(64),
       child: Container(
         decoration: BoxDecoration(
-          color: C.surface.withOpacity(0.95),
+          color: C.surface.withValues(alpha: 0.95),
           boxShadow: const [
             BoxShadow(
                 color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 1)),
@@ -185,11 +182,11 @@ class AkunScreen extends StatelessWidget {
                     _kLogoUrl,
                     height: 32,
                     fit: BoxFit.contain,
-                    errorBuilder: (_, __, ___) => Container(
+                    errorBuilder: (_, _, _) => Container(
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: C.primaryContainer.withOpacity(0.1),
+                        color: C.primaryContainer.withValues(alpha: 0.1),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(Icons.eco,
@@ -256,7 +253,7 @@ class AkunScreen extends StatelessWidget {
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
           decoration: BoxDecoration(
-            color: AppColors.secondaryContainer.withOpacity(0.3),
+            color: AppColors.secondaryContainer.withValues(alpha: 0.3),
             borderRadius: BorderRadius.circular(999),
           ),
           child: Row(
@@ -301,7 +298,7 @@ class AkunScreen extends StatelessWidget {
                   width: 144,
                   height: 144,
                   decoration: BoxDecoration(
-                    color: C.primaryFixed.withOpacity(0.3),
+                    color: C.primaryFixed.withValues(alpha: 0.3),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -392,7 +389,7 @@ class AkunScreen extends StatelessWidget {
                 child: Image.network(
                   _kAvatarUrl,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, __, ___) => const Icon(Icons.person,
+                  errorBuilder: (_, _, _) => const Icon(Icons.person,
                       size: 32, color: C.onSurfaceVariant),
                 ),
               ),
@@ -430,7 +427,7 @@ class AkunScreen extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: C.surfaceLow.withOpacity(0.7),
+        color: C.surfaceLow.withValues(alpha: 0.7),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -585,7 +582,7 @@ class AkunScreen extends StatelessWidget {
                   Container(
                     height: 1,
                     margin: const EdgeInsets.symmetric(horizontal: 16),
-                    color: C.surfaceContainer.withOpacity(0.6),
+                    color: C.surfaceContainer.withValues(alpha: 0.6),
                   ),
               ],
             ],
@@ -598,7 +595,7 @@ class AkunScreen extends StatelessWidget {
   // ───────── Tombol keluar ─────────
   Widget _buildLogout(BuildContext context) {
     return Material(
-      color: C.errorContainer.withOpacity(0.4),
+      color: C.errorContainer.withValues(alpha: 0.4),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -670,7 +667,7 @@ class AkunScreen extends StatelessWidget {
           'Versi 2.4.0 (Build 2024.11) • Sistem Terenkripsi',
           textAlign: TextAlign.center,
           style: _ts(12, 16, FontWeight.w400,
-              C.onSurfaceVariant.withOpacity(0.8)),
+              C.onSurfaceVariant.withValues(alpha: 0.8)),
         ),
       ],
     );
@@ -705,28 +702,9 @@ class _MenuTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Row(
-                    children: [
-                      Flexible(
-                        child: Text(item.title,
-                            overflow: TextOverflow.ellipsis,
-                            style: _ts(14, 20, FontWeight.w600, C.onSurface)),
-                      ),
-                      if (item.badge != null) ...[
-                        const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: C.primary.withOpacity(0.1),
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(item.badge!,
-                              style: _ts(10, 14, FontWeight.w700, C.primary)),
-                        ),
-                      ],
-                    ],
-                  ),
+                  Text(item.title,
+                      overflow: TextOverflow.ellipsis,
+                      style: _ts(14, 20, FontWeight.w600, C.onSurface)),
                   Text(item.subtitle,
                       overflow: TextOverflow.ellipsis,
                       style: _ts(12, 16, FontWeight.w400, C.onSurfaceVariant)),

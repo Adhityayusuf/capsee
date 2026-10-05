@@ -1,12 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/app_colors.dart';
-import '../models/activity_log.dart';
-import '../models/land_data.dart';
-import 'lahan/tab_jadwal.dart';
-import 'scan/hasil_scan_tidak_sehat.dart';
-import 'treatment_recommendation_screen.dart';
+import '../../core/app_colors.dart';
+import '../../models/activity_log.dart';
+import '../../models/land_data.dart';
+import '../scan/hasil_scan_tidak_sehat.dart';
+import '../scan/treatment_recommendation_screen.dart';
+import 'tab_jadwal.dart';
 
 class LandDetailScreen extends StatefulWidget {
   final LandData land;
@@ -1047,7 +1047,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _filters.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, i) {
           final label = _filters[i];
           final selected = _filter == label;

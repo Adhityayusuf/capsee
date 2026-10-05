@@ -351,21 +351,26 @@ class _TabJadwalState extends State<TabJadwal> {
               ),
               if (showPupukOptions) ...[
                 const SizedBox(height: 10),
-                ...pupukData.entries.map(
-                  (entry) => RadioListTile<String>(
-                    value: entry.key,
-                    groupValue: selectedPupuk,
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(entry.value['name']!,
-                        style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w700)),
-                    subtitle: Text('Dosis: ${entry.value['dose']}',
-                        style: const TextStyle(fontSize: 11)),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => selectedPupuk = value);
-                      }
-                    },
+                RadioGroup<String>(
+                  groupValue: selectedPupuk,
+                  onChanged: (value) {
+                    if (value != null) {
+                      setState(() => selectedPupuk = value);
+                    }
+                  },
+                  child: Column(
+                    children: [
+                      for (final entry in pupukData.entries)
+                        RadioListTile<String>(
+                          value: entry.key,
+                          contentPadding: EdgeInsets.zero,
+                          title: Text(entry.value['name']!,
+                              style: const TextStyle(
+                                  fontSize: 12, fontWeight: FontWeight.w700)),
+                          subtitle: Text('Dosis: ${entry.value['dose']}',
+                              style: const TextStyle(fontSize: 11)),
+                        ),
+                    ],
                   ),
                 ),
                 SizedBox(

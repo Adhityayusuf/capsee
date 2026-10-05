@@ -3,8 +3,8 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:capsee/main.dart';
 import 'package:capsee/models/land_data.dart';
-import 'package:capsee/screens/detail_lahan_screen.dart';
-import 'package:capsee/screens/tambah_lahan_page.dart';
+import 'package:capsee/screens/lahan/detail_lahan_screen.dart';
+import 'package:capsee/screens/lahan/tambah_lahan_page.dart';
 
 void main() {
   testWidgets('Capsee membuka halaman register', (tester) async {

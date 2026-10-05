@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/app_colors.dart';
-import '../models/treatment_recommendation.dart';
+import '../../core/app_colors.dart';
+import '../../models/treatment_recommendation.dart';
 
 class TreatmentRecommendationScreen extends StatefulWidget {
   final DiagnosisSummary diagnosis;
