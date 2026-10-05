@@ -22,6 +22,21 @@ class TambahLahanRequest(BaseModel):
     interval_pupuk_minggu: int = Field(ge=1)
 
 
+class EditLahanRequest(BaseModel):
+    nama: str | None = Field(default=None, min_length=1)
+    provinsi: str | None = Field(default=None, min_length=1)
+    kota: str | None = Field(default=None, min_length=1)
+    kecamatan: str | None = Field(default=None, min_length=1)
+    umur_tanaman_bulan: int | None = Field(default=None, ge=0)
+    tanggal_terakhir_siram: date | None = None
+    tanggal_terakhir_pupuk: date | None = None
+    interval_pupuk_minggu: int | None = Field(default=None, ge=1)
+
+
+# ─────────────────────────────────────────────────
+# CRUD LAHAN
+# ─────────────────────────────────────────────────
+
 @router.post("", status_code=201)
 def tambah_lahan(data: TambahLahanRequest, id_pengguna: str = Depends(verifikasi_token)):
     with get_db_connection() as conn:
@@ -86,6 +101,62 @@ def detail_lahan(id_lahan: str, id_pengguna: str = Depends(verifikasi_token)):
         return {"lahan": row_to_dict(cur, cur.fetchone())}
 
 
+@router.put("/{id_lahan}")
+def edit_lahan(
+    id_lahan: str,
+    data: EditLahanRequest,
+    id_pengguna: str = Depends(verifikasi_token),
+):
+    """Edit sebagian atau seluruh field lahan. Field yang tidak dikirim tidak berubah."""
+    fields = {
+        "nama": data.nama,
+        "provinsi": data.provinsi,
+        "kota": data.kota,
+        "kecamatan": data.kecamatan,
+        "umur_tanaman_bulan": data.umur_tanaman_bulan,
+        "tanggal_terakhir_siram": data.tanggal_terakhir_siram,
+        "tanggal_terakhir_pupuk": data.tanggal_terakhir_pupuk,
+        "interval_pupuk_minggu": data.interval_pupuk_minggu,
+    }
+    # Hanya kolom yang dikirim (bukan None)
+    to_update = {k: v for k, v in fields.items() if v is not None}
+
+    if not to_update:
+        raise HTTPException(status_code=400, detail="Tidak ada field yang diubah")
+
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        pastikan_lahan_milik_pengguna(cur, id_lahan, id_pengguna)
+
+        set_clause = ", ".join(f"{col} = %s" for col in to_update)
+        values = list(to_update.values()) + [id_lahan]
+
+        cur.execute(
+            f"""
+            UPDATE lahan
+            SET {set_clause}, diperbarui_pada = now()
+            WHERE id = %s
+            RETURNING *
+            """,
+            values,
+        )
+        return {"lahan": row_to_dict(cur, cur.fetchone())}
+
+
+@router.delete("/{id_lahan}", status_code=200)
+def hapus_lahan(id_lahan: str, id_pengguna: str = Depends(verifikasi_token)):
+    """Hapus lahan beserta semua data turunannya (CASCADE dari DB)."""
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        pastikan_lahan_milik_pengguna(cur, id_lahan, id_pengguna)
+        cur.execute("DELETE FROM lahan WHERE id = %s", (id_lahan,))
+        return {"pesan": "Lahan berhasil dihapus"}
+
+
+# ─────────────────────────────────────────────────
+# JADWAL PENYIRAMAN
+# ─────────────────────────────────────────────────
+
 @router.get("/{id_lahan}/jadwal-penyiraman")
 def jadwal_penyiraman(id_lahan: str, id_pengguna: str = Depends(verifikasi_token)):
     with get_db_connection() as conn:
@@ -98,6 +169,65 @@ def jadwal_penyiraman(id_lahan: str, id_pengguna: str = Depends(verifikasi_token
         return {"jadwal_penyiraman": rows_to_dicts(cur)}
 
 
+@router.patch("/{id_lahan}/jadwal-penyiraman/{id_jadwal}/selesai")
+def selesai_penyiraman(
+    id_lahan: str,
+    id_jadwal: str,
+    id_pengguna: str = Depends(verifikasi_token),
+):
+    """Tandai jadwal penyiraman sebagai selesai, update tanggal_terakhir_siram di lahan,
+    dan catat ke log_aktivitas."""
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        pastikan_lahan_milik_pengguna(cur, id_lahan, id_pengguna)
+
+        cur.execute(
+            "SELECT * FROM jadwal_penyiraman WHERE id = %s AND id_lahan = %s",
+            (id_jadwal, id_lahan),
+        )
+        jadwal = cur.fetchone()
+        if not jadwal:
+            raise HTTPException(status_code=404, detail="Jadwal penyiraman tidak ditemukan")
+
+        jadwal_dict = row_to_dict(cur, jadwal)
+        if jadwal_dict["status"] == "selesai":
+            raise HTTPException(status_code=409, detail="Jadwal sudah ditandai selesai")
+
+        # Tandai selesai
+        cur.execute(
+            """
+            UPDATE jadwal_penyiraman
+            SET status = 'selesai', selesai_pada = now()
+            WHERE id = %s
+            RETURNING *
+            """,
+            (id_jadwal,),
+        )
+        jadwal_updated = row_to_dict(cur, cur.fetchone())
+
+        # Update tanggal_terakhir_siram di lahan
+        cur.execute(
+            "UPDATE lahan SET tanggal_terakhir_siram = CURRENT_DATE, diperbarui_pada = now() WHERE id = %s",
+            (id_lahan,),
+        )
+
+        # Catat ke log_aktivitas
+        cur.execute(
+            """
+            INSERT INTO log_aktivitas (id, id_lahan, jenis_aktivitas, id_referensi, deskripsi)
+            VALUES (%s, %s, 'siram', %s, %s)
+            """,
+            (str(uuid.uuid4()), id_lahan, id_jadwal,
+             f"Penyiraman selesai untuk jadwal {jadwal_dict['tanggal_jadwal']}"),
+        )
+
+        return {"jadwal_penyiraman": jadwal_updated}
+
+
+# ─────────────────────────────────────────────────
+# JADWAL PEMUPUKAN
+# ─────────────────────────────────────────────────
+
 @router.get("/{id_lahan}/jadwal-pemupukan")
 def jadwal_pemupukan(id_lahan: str, id_pengguna: str = Depends(verifikasi_token)):
     with get_db_connection() as conn:
@@ -109,6 +239,78 @@ def jadwal_pemupukan(id_lahan: str, id_pengguna: str = Depends(verifikasi_token)
         )
         return {"jadwal_pemupukan": rows_to_dicts(cur)}
 
+
+@router.patch("/{id_lahan}/jadwal-pemupukan/{id_jadwal}/selesai")
+def selesai_pemupukan(
+    id_lahan: str,
+    id_jadwal: str,
+    id_pengguna: str = Depends(verifikasi_token),
+):
+    """Tandai jadwal pemupukan sebagai selesai, update tanggal_terakhir_pupuk di lahan,
+    dan generate jadwal pemupukan berikutnya secara otomatis."""
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        pastikan_lahan_milik_pengguna(cur, id_lahan, id_pengguna)
+
+        cur.execute(
+            "SELECT * FROM jadwal_pemupukan WHERE id = %s AND id_lahan = %s",
+            (id_jadwal, id_lahan),
+        )
+        jadwal = cur.fetchone()
+        if not jadwal:
+            raise HTTPException(status_code=404, detail="Jadwal pemupukan tidak ditemukan")
+
+        jadwal_dict = row_to_dict(cur, jadwal)
+        if jadwal_dict["status"] == "selesai":
+            raise HTTPException(status_code=409, detail="Jadwal sudah ditandai selesai")
+
+        # Tandai selesai
+        cur.execute(
+            """
+            UPDATE jadwal_pemupukan
+            SET status = 'selesai', selesai_pada = now()
+            WHERE id = %s
+            RETURNING *
+            """,
+            (id_jadwal,),
+        )
+        jadwal_updated = row_to_dict(cur, cur.fetchone())
+
+        # Ambil interval pupuk dari lahan
+        cur.execute("SELECT interval_pupuk_minggu FROM lahan WHERE id = %s", (id_lahan,))
+        interval = cur.fetchone()[0]
+
+        # Update tanggal_terakhir_pupuk di lahan
+        cur.execute(
+            "UPDATE lahan SET tanggal_terakhir_pupuk = CURRENT_DATE, diperbarui_pada = now() WHERE id = %s",
+            (id_lahan,),
+        )
+
+        # Auto-generate jadwal pemupukan berikutnya
+        cur.execute(
+            """
+            INSERT INTO jadwal_pemupukan (id, id_lahan, tanggal_jadwal)
+            VALUES (%s, %s, CURRENT_DATE + (%s * 7 || ' days')::interval)
+            """,
+            (str(uuid.uuid4()), id_lahan, interval),
+        )
+
+        # Catat ke log_aktivitas
+        cur.execute(
+            """
+            INSERT INTO log_aktivitas (id, id_lahan, jenis_aktivitas, id_referensi, deskripsi)
+            VALUES (%s, %s, 'pupuk', %s, %s)
+            """,
+            (str(uuid.uuid4()), id_lahan, id_jadwal,
+             f"Pemupukan selesai untuk jadwal {jadwal_dict['tanggal_jadwal']}"),
+        )
+
+        return {"jadwal_pemupukan": jadwal_updated}
+
+
+# ─────────────────────────────────────────────────
+# RIWAYAT AKTIVITAS
+# ─────────────────────────────────────────────────
 
 @router.get("/{id_lahan}/riwayat")
 def riwayat_lahan(id_lahan: str, id_pengguna: str = Depends(verifikasi_token)):

@@ -74,6 +74,7 @@ __pycache__/
 .pytest_cache/
 .mypy_cache/
 .ruff_cache/
+cek_db.py
 
 # OS & database files
 Thumbs.db

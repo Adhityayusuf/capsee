@@ -86,14 +86,43 @@ async def buat_pemindaian(
         )
 
         penanganan = []
+        langkah_tindakan = []
+        pencegahan = []
+        penyakit = None
+
         if hasil_ml["status_hasil"] == "tidak_sehat" and hasil_ml["id_penyakit"]:
+            id_penyakit = hasil_ml["id_penyakit"]
+
+            cur.execute("SELECT * FROM penyakit WHERE id = %s", (id_penyakit,))
+            row_penyakit = cur.fetchone()
+            if row_penyakit:
+                penyakit = row_to_dict(cur, row_penyakit)
+
             cur.execute(
                 "SELECT * FROM penanganan WHERE id_penyakit = %s",
-                (hasil_ml["id_penyakit"],),
+                (id_penyakit,),
             )
             penanganan = rows_to_dicts(cur)
 
-        return {"pemindaian": scan, "penanganan": penanganan}
+            cur.execute(
+                "SELECT * FROM langkah_tindakan WHERE id_penyakit = %s ORDER BY urutan ASC",
+                (id_penyakit,),
+            )
+            langkah_tindakan = rows_to_dicts(cur)
+
+            cur.execute(
+                "SELECT * FROM pencegahan WHERE id_penyakit = %s",
+                (id_penyakit,),
+            )
+            pencegahan = rows_to_dicts(cur)
+
+        return {
+            "pemindaian": scan,
+            "penyakit": penyakit,
+            "penanganan": penanganan,
+            "langkah_tindakan": langkah_tindakan,
+            "pencegahan": pencegahan,
+        }
 
 
 @router.get("/lahan/{id_lahan}")
@@ -106,3 +135,67 @@ def riwayat_scan(id_lahan: str, id_pengguna: str = Depends(verifikasi_token)):
             (id_lahan,),
         )
         return {"pemindaian": rows_to_dicts(cur)}
+
+
+@router.get("/{id_scan}")
+def detail_scan(
+    id_scan: str,
+    id_pengguna: str = Depends(verifikasi_token),
+):
+    """Ambil detail satu hasil scan beserta data penyakit, penanganan,
+    langkah tindakan, dan pencegahan (jika tidak sehat)."""
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+
+        # Pastikan scan ada dan milik pengguna yang login
+        cur.execute(
+            """
+            SELECT p.* FROM pemindaian p
+            JOIN lahan l ON l.id = p.id_lahan
+            WHERE p.id = %s AND l.id_pengguna = %s
+            """,
+            (id_scan, id_pengguna),
+        )
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Hasil scan tidak ditemukan")
+
+        scan = row_to_dict(cur, row)
+        id_penyakit = scan.get("id_penyakit")
+
+        penanganan = []
+        langkah_tindakan = []
+        pencegahan = []
+        penyakit = None
+
+        if id_penyakit:
+            cur.execute("SELECT * FROM penyakit WHERE id = %s", (id_penyakit,))
+            row_penyakit = cur.fetchone()
+            if row_penyakit:
+                penyakit = row_to_dict(cur, row_penyakit)
+
+            cur.execute(
+                "SELECT * FROM penanganan WHERE id_penyakit = %s",
+                (id_penyakit,),
+            )
+            penanganan = rows_to_dicts(cur)
+
+            cur.execute(
+                "SELECT * FROM langkah_tindakan WHERE id_penyakit = %s ORDER BY urutan ASC",
+                (id_penyakit,),
+            )
+            langkah_tindakan = rows_to_dicts(cur)
+
+            cur.execute(
+                "SELECT * FROM pencegahan WHERE id_penyakit = %s",
+                (id_penyakit,),
+            )
+            pencegahan = rows_to_dicts(cur)
+
+        return {
+            "pemindaian": scan,
+            "penyakit": penyakit,
+            "penanganan": penanganan,
+            "langkah_tindakan": langkah_tindakan,
+            "pencegahan": pencegahan,
+        }

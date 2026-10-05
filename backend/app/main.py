@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import auth, lahan, notifikasi, pemindaian
+from app.routers import auth, lahan, notifikasi, pemindaian, pengguna
 
 load_dotenv()
 
@@ -24,6 +24,7 @@ app.add_middleware(
 )
 
 app.include_router(auth.router)
+app.include_router(pengguna.router)
 app.include_router(lahan.router)
 app.include_router(pemindaian.router)
 app.include_router(notifikasi.router)
