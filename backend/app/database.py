@@ -2,7 +2,7 @@ import os
 from contextlib import contextmanager
 
 from dotenv import load_dotenv
-from psycopg2 import pool
+from psycopg2 import pool, OperationalError
 from psycopg2.extensions import cursor as PgCursor
 
 load_dotenv()
@@ -25,13 +25,29 @@ _connection_pool = pool.SimpleConnectionPool(
 
 @contextmanager
 def get_db_connection():
-    """Pakai dengan: `with get_db_connection() as conn:`"""
+    """Pakai dengan: `with get_db_connection() as conn:`
+
+    Secara otomatis mendeteksi koneksi mati (SSL idle timeout dari Neon)
+    dan menggantinya dengan koneksi baru dari pool.
+    """
     conn = _connection_pool.getconn()
     try:
+        # Deteksi koneksi mati: coba ping ringan, kalau gagal ganti koneksi baru
+        try:
+            if conn.closed:
+                raise OperationalError("Koneksi sudah tertutup")
+            conn.cursor().execute("SELECT 1")
+        except OperationalError:
+            _connection_pool.putconn(conn, close=True)
+            conn = _connection_pool.getconn()
+
         yield conn
         conn.commit()
     except Exception:
-        conn.rollback()
+        try:
+            conn.rollback()
+        except Exception:
+            pass
         raise
     finally:
         _connection_pool.putconn(conn)

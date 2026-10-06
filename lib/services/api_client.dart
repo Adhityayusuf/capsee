@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Satu-satunya tempat yang tahu alamat backend.
 /// Ganti ke URL Railway/Render/VPS saat production.
-const String baseUrl = 'http://127.0.0.1:8000';
+const String baseUrl = 'http://10.77.80.35:8000';
 
 /// Key untuk menyimpan token JWT di SharedPreferences.
 const String _tokenKey = 'auth_token';

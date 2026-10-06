@@ -6,6 +6,7 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/app_colors.dart';
 import '../../core/validators.dart';
 import '../../widgets/auth_widgets.dart';
+import '../../services/services.dart';
 import '../legal/privasi_screen.dart';
 import '../legal/syarat_screen.dart';
 import 'login_screen.dart';
@@ -69,21 +70,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _isLoading = true);
 
-    // TODO: ganti dengan pemanggilan API register sebenarnya
-    // Nomor lengkap: '+62${_phoneController.text}'
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      // Hilangkan +62 jika user input prefix, atau gunakan langsung
+      String phone = _phoneController.text.trim();
+      if (phone.startsWith('0')) {
+        phone = phone.substring(1);
+      }
+      final nomorHp = '+62$phone';
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+      await register(
+        nama: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        nomorHp: nomorHp,
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Akun berhasil dibuat, silakan masuk')),
-    );
+      if (!mounted) return;
+      setState(() => _isLoading = false);
 
-    // Setelah daftar, arahkan ke halaman login
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Akun berhasil dibuat, silakan masuk')),
+      );
+
+      // Setelah daftar, arahkan ke halaman login
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
   }
 
   @override

@@ -4,7 +4,7 @@ from dotenv import load_dotenv
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 
-from app.routers import auth, lahan, notifikasi, pemindaian, pengguna
+from app.routers import auth, cuaca, lahan, notifikasi, pemindaian, pengguna
 
 load_dotenv()
 
@@ -28,8 +28,14 @@ app.include_router(pengguna.router)
 app.include_router(lahan.router)
 app.include_router(pemindaian.router)
 app.include_router(notifikasi.router)
+app.include_router(cuaca.router)
 
 
 @app.get("/")
 def root():
     return {"status": "Capsee backend (Python) berjalan dengan baik"}
+
+
+@app.get("/health")
+def health_check():
+    return {"status": "ok", "message": "Server is healthy"}

@@ -16,6 +16,7 @@ import '../legal/privasi_screen.dart';
 import '../legal/syarat_screen.dart';
 import 'edit_profil_screen.dart';
 import 'ubah_sandi.dart';
+import '../../services/services.dart';
 
 const String _kLogoUrl =
     'https://lh3.googleusercontent.com/aida/AEtjO1Xr_77lDlwa3ZADA-1HeBJZ-Tn0VWtE6n-7pOHm4d2azQUim5BjoLf575UzLtz0ODNUzEVcV30y0Qygv7t04JxHmpUwopBEQ96lDQ7I0bpin4-N1IS1l-FoVePayedbE5_okishN0kcXmjse5fCF-NG5aQpKrjWoygNzg2Vb2Qvga9t5r_iZu7cGKe9q8GulMspHO6C3lCzeGHgRcSPog9XdXtsBfBZsWTWU4MeoT564Ej-_JzkDExBIpo';
@@ -51,8 +52,36 @@ class _MenuItem {
 }
 
 // ─────────────────────────── Layar ───────────────────────────
-class AkunScreen extends StatelessWidget {
+class AkunScreen extends StatefulWidget {
   const AkunScreen({super.key});
+
+  @override
+  State<AkunScreen> createState() => _AkunScreenState();
+}
+
+class _AkunScreenState extends State<AkunScreen> {
+  Map<String, dynamic>? _profil;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadProfil();
+  }
+
+  Future<void> _loadProfil() async {
+    try {
+      final profil = await getProfil();
+      if (mounted) {
+        setState(() {
+          _profil = profil;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   List<_MenuItem> _getAccountItems(BuildContext context) => [
     _MenuItem(
@@ -132,6 +161,10 @@ class AkunScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
+
     return Scaffold(
       backgroundColor: C.surface,
       appBar: _buildAppBar(),
@@ -317,7 +350,7 @@ class AkunScreen extends StatelessWidget {
                       child: Column(
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
-                          Text('Budi Santoso',
+                          Text(_profil?['nama'] ?? 'Pengguna',
                               overflow: TextOverflow.ellipsis,
                               style: _ts(18, 24, FontWeight.w600, C.onSurface)),
                           const SizedBox(height: 2),
@@ -460,7 +493,7 @@ class AkunScreen extends StatelessWidget {
                     const Icon(Icons.mail_outline, size: 18, color: C.outline),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text('budi.santoso@agrimail.id',
+                      child: Text(_profil?['email'] ?? 'budi.santoso@agrimail.id',
                           overflow: TextOverflow.ellipsis,
                           style: _ts(
                               12, 16, FontWeight.w400, C.onSurfaceVariant)),
@@ -481,7 +514,7 @@ class AkunScreen extends StatelessWidget {
                     const Icon(Icons.phone_outlined, size: 18, color: C.outline),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text('+62 812-3456-7890',
+                      child: Text(_profil?['nomor_hp'] ?? '+62 812-3456-7890',
                           overflow: TextOverflow.ellipsis,
                           style: _ts(
                               12, 16, FontWeight.w400, C.onSurfaceVariant)),
@@ -635,12 +668,15 @@ class AkunScreen extends StatelessWidget {
                 style: _ts(14, 20, FontWeight.w600, C.onSurfaceVariant)),
           ),
           TextButton(
-            onPressed: () {
+            onPressed: () async {
               Navigator.pop(ctx);
-              Navigator.of(context).pushAndRemoveUntil(
-                MaterialPageRoute(builder: (_) => const LoginScreen()),
-                (route) => false,
-              );
+              await logout();
+              if (mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
+                );
+              }
             },
             child: Text('Keluar', style: _ts(14, 20, FontWeight.w700, C.error)),
           ),

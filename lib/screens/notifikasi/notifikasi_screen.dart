@@ -7,6 +7,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/app_colors.dart';
+import '../../services/services.dart';
 
 // ─────────────────────────── Tipografi ───────────────────────────
 TextStyle _t(double size, double height, FontWeight w, Color color,
@@ -44,7 +45,9 @@ class NotifItem {
   bool unread;
   bool confirmed;
 
+  final String id;
   NotifItem({
+    required this.id,
     required this.type,
     required this.group,
     required this.icon,
@@ -77,112 +80,61 @@ class NotifikasiScreen extends StatefulWidget {
 class _NotifikasiScreenState extends State<NotifikasiScreen> {
   NotifType? _selected; // null = Semua
 
-  late final List<NotifItem> _items = [
-    NotifItem(
-      type: NotifType.weather,
-      group: NotifGroup.today,
-      icon: Icons.thunderstorm,
-      iconBg: C.tertiaryFixed,
-      iconColor: C.tertiary,
-      badge: 'Peringatan Cuaca BMKG',
-      badgeBg: C.tertiaryFixed.withValues(alpha: 0.6),
-      badgeFg: C.onTertiaryFixedVariant,
-      time: '10 mnt lalu',
-      dotColor: C.tertiary,
-      title: 'Prediksi Hujan Lebat di Karangploso',
-      body:
-          'BMKG memperkirakan hujan lebat pukul 14:00 WIB. Jadwal penyiraman otomatis Petak Blok A dilewati untuk mencegah kelembapan berlebih.',
-      actionLabel: 'Lihat Jadwal Siram',
-      actionIcon: Icons.arrow_forward,
-      actionColor: C.tertiary,
-      unread: true,
-    ),
-    NotifItem(
-      type: NotifType.reminder,
-      group: NotifGroup.today,
-      icon: Icons.water_drop,
-      iconBg: C.surfaceHigh,
-      iconColor: C.tertiaryContainer,
-      badge: 'Jadwal Irigasi',
-      badgeBg: C.surfaceContainer,
-      badgeFg: C.tertiaryContainer,
-      time: '1 jam lalu',
-      dotColor: C.primaryContainer,
-      title: 'Waktunya Penyiraman Pagi (Petak Rawit Blok B)',
-      body:
-          'Volume irigasi 1.2 L/m² disarankan sebelum pukul 08:30 WIB. Lengas tanah terkini 62%.',
-      actionLabel: 'Konfirmasi Selesai',
-      actionColor: C.onPrimary,
-      actionFilled: true,
-      unread: true,
-    ),
-    NotifItem(
-      type: NotifType.reminder,
-      group: NotifGroup.today,
-      icon: Icons.document_scanner,
-      iconBg: C.primaryFixed,
-      iconColor: C.primary,
-      badge: 'Evaluasi Tanaman AI',
-      badgeBg: C.primaryFixedDim.withValues(alpha: 0.3),
-      badgeFg: C.primary,
-      time: '3 jam lalu',
-      dotColor: C.primaryContainer,
-      title: 'Waktu Pindai Ulang: Petak Rawit Blok A',
-      body:
-          'Sudah 7 hari sejak diagnosa sehat terakhir. Pindai kembali daun utama untuk deteksi dini penyakit dan thrips.',
-      actionLabel: 'Buka Kamera Scan',
-      actionIcon: Icons.photo_camera,
-      actionColor: C.primaryContainer,
-      unread: true,
-    ),
-    NotifItem(
-      type: NotifType.reminder,
-      group: NotifGroup.earlier,
-      icon: Icons.science,
-      iconBg: C.surfaceHighest,
-      iconColor: C.onSurfaceVariant,
-      badge: 'Jadwal Nutrisi',
-      badgeBg: C.surfaceHighest,
-      badgeFg: C.onSurfaceVariant,
-      time: 'Kemarin, 16:45',
-      dotColor: C.primaryContainer,
-      title: 'Jadwal Pemupukan NPK + Kalsium Nitrat',
-      body:
-          'Aplikasi kocor rutin fase berbuah aktif untuk Petak Rawit Blok A (Dosis: 5 gr/tanaman). Terjadwal hari ini.',
-      actionLabel: 'Lihat Panduan Dosis',
-      actionIcon: Icons.menu_book,
-      actionColor: C.onSurfaceVariant,
-      unread: false,
-    ),
-    NotifItem(
-      type: NotifType.disease,
-      group: NotifGroup.earlier,
-      icon: Icons.warning,
-      iconBg: C.errorContainer,
-      iconColor: C.error,
-      badge: 'Kewaspadaan Penyakit',
-      badgeBg: C.errorContainer,
-      badgeFg: C.onErrorContainer,
-      time: '2 hari lalu (25 Okt)',
-      dotColor: C.primaryContainer,
-      title: 'Kelembapan Kanopi Tinggi Semalam (82%)',
-      body:
-          'Kondisi mikroklimat ideal bagi spora Cercospora. Pastikan aerasi kanopi lancar dan lakukan inspeksi daun bawah.',
-      actionLabel: 'Protokol Pencegahan',
-      actionIcon: Icons.shield,
-      actionColor: C.onSurfaceVariant,
-      unread: false,
-    ),
-  ];
+  bool _isLoading = true;
+  List<NotifItem> _items = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotif();
+  }
+
+  Future<void> _loadNotif() async {
+    setState(() => _isLoading = true);
+    try {
+      final data = await getDaftarNotifikasi();
+      final List<NotifItem> mapped = data.map((n) {
+        // Mapping sederhana dari backend ke NotifItem visual
+        return NotifItem(
+          id: n['id'],
+          type: NotifType.reminder, // fallback
+          group: NotifGroup.today, // fallback
+          icon: Icons.notifications,
+          iconBg: C.primaryFixed,
+          iconColor: C.primary,
+          badge: n['kategori'] ?? 'Info',
+          badgeBg: C.primaryFixedDim.withValues(alpha: 0.3),
+          badgeFg: C.primary,
+          time: 'Baru saja', // Ideally parse n['dibuat_pada']
+          dotColor: C.primaryContainer,
+          title: n['judul'] ?? '',
+          body: n['pesan'] ?? '',
+          actionLabel: 'Lihat Detail',
+          actionColor: C.primary,
+          unread: !(n['sudah_dibaca'] ?? false),
+        );
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          _items = mapped;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   int get _unreadCount => _items.where((e) => e.unread).length;
 
-  void _markAllRead() {
-    setState(() {
-      for (final e in _items) {
-        e.unread = false;
+  Future<void> _markAllRead() async {
+    for (final e in _items) {
+      if (e.unread) {
+        await tandaiDibaca(e.id);
       }
-    });
+    }
+    _loadNotif();
   }
 
   List<NotifItem> _visible(NotifGroup g) => _items
@@ -191,6 +143,14 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: C.surface,
+        appBar: _buildAppBar(),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final today = _visible(NotifGroup.today);
     final earlier = _visible(NotifGroup.earlier);
 
@@ -203,24 +163,32 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
           _buildStatusBar(),
           _buildChips(),
           const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (today.isNotEmpty)
-                  _buildSection('Hari Ini', '26 Okt 2024', today),
-                if (today.isNotEmpty && earlier.isNotEmpty)
+          if (_items.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(32),
+              child: Center(
+                child: Text('Belum ada notifikasi.', style: TextStyle(color: C.outline)),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (today.isNotEmpty)
+                    _buildSection('Hari Ini', '26 Okt 2024', today),
+                  if (today.isNotEmpty && earlier.isNotEmpty)
+                    const SizedBox(height: 24),
+                  if (earlier.isNotEmpty)
+                    _buildSection('Kemarin & Sebelumnya', 'Riwayat Log', earlier),
                   const SizedBox(height: 24),
-                if (earlier.isNotEmpty)
-                  _buildSection('Kemarin & Sebelumnya', 'Riwayat Log', earlier),
-                const SizedBox(height: 24),
-                _buildTelemetryCard(),
-                const SizedBox(height: 8),
-                _buildFooter(),
-              ],
+                  _buildTelemetryCard(),
+                  const SizedBox(height: 8),
+                  _buildFooter(),
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );

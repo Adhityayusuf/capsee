@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../../core/app_colors.dart';
+import '../../services/services.dart';
 
 class TambahLahanPage extends StatefulWidget {
   const TambahLahanPage({super.key});
@@ -54,33 +55,64 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
     super.dispose();
   }
 
-  void _simpanData() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: AppColors.inverseSurface,
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-        content: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.verified, color: AppColors.secondaryContainer, size: 20),
-            SizedBox(width: 8),
-            Text(
-              'Data kebun berhasil diperbarui!',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  bool _isLoading = false;
 
-    // Pop dan kirimkan hasil true
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) Navigator.maybePop(context, true);
-    });
+  Future<void> _simpanData() async {
+    if (_namaLahanController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nama lahan tidak boleh kosong')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await tambahLahan(
+        nama: _namaLahanController.text.trim(),
+        provinsi: _selectedProvince,
+        kota: _selectedCity,
+        kecamatan: _selectedDistrict,
+        umurTanamanBulan: _selectedAgeMonth,
+        intervalPupukMinggu: _selectedIntervalWeek,
+      );
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.inverseSurface,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          content: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.verified, color: AppColors.secondaryContainer, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Data kebun berhasil ditambahkan!',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // Pop dan kirimkan hasil true agar dashboard merefresh data
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) Navigator.maybePop(context, true);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menyimpan: $e')),
+      );
+    }
   }
 
   @override
@@ -443,11 +475,17 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
               width: double.infinity,
               height: 52,
               child: ElevatedButton.icon(
-                onPressed: _simpanData,
-                icon: const Icon(Icons.task_alt, color: Colors.white),
-                label: const Text(
-                  'Simpan Data Lahan',
-                  style: TextStyle(
+                onPressed: _isLoading ? null : _simpanData,
+                icon: _isLoading 
+                    ? const SizedBox(
+                        width: 20, 
+                        height: 20, 
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                      )
+                    : const Icon(Icons.task_alt, color: Colors.white),
+                label: Text(
+                  _isLoading ? 'Menyimpan...' : 'Simpan Data Lahan',
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,

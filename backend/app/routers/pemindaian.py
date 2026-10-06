@@ -13,18 +13,36 @@ from app.security import verifikasi_token
 router = APIRouter(prefix="/api/pemindaian", tags=["Pemindaian"])
 
 
+import random
+
 def _jalankan_model_ml() -> dict:
     """Placeholder hasil model ML.
 
-    TODO: ganti dengan pemanggilan model yang sesungguhnya. Struktur return
-    dibuat tetap agar endpoint dan skema DB tidak perlu berubah nanti.
+    Secara acak mengembalikan 'sehat' atau 'tidak_sehat' agar UI bisa diuji.
     """
-    return {
-        "status_hasil": "sehat",
-        "id_penyakit": None,
-        "skor_keyakinan": 95.0,
-        "tanggal_scan_ulang_disarankan": date.today() + timedelta(days=7),
-    }
+    is_sehat = random.choice([True, False])
+    
+    if is_sehat:
+        return {
+            "status_hasil": "sehat",
+            "id_penyakit": None,
+            "skor_keyakinan": random.uniform(85.0, 99.9),
+            "tanggal_scan_ulang_disarankan": date.today() + timedelta(days=7),
+        }
+    else:
+        # Menggunakan ID penyakit yang baru saja di-seed ('Bercak Daun')
+        with get_db_connection() as conn:
+            cur = conn.cursor()
+            cur.execute("SELECT id FROM penyakit LIMIT 1")
+            row = cur.fetchone()
+            id_penyakit = row[0] if row else None
+            
+        return {
+            "status_hasil": "tidak_sehat",
+            "id_penyakit": id_penyakit,
+            "skor_keyakinan": random.uniform(75.0, 98.5),
+            "tanggal_scan_ulang_disarankan": date.today() + timedelta(days=3),
+        }
 
 
 @router.post("", status_code=201)
@@ -34,15 +52,11 @@ async def buat_pemindaian(
     gambar: UploadFile = File(...),
     id_pengguna: str = Depends(verifikasi_token),
 ):
-    # 1. Pastikan lahan milik pengguna SEBELUM upload agar tidak membuang bandwidth.
-    with get_db_connection() as conn:
-        pastikan_lahan_milik_pengguna(conn.cursor(), id_lahan, id_pengguna)
-
-    # 2. Baca + kompres gambar (resize + turunkan kualitas) sebelum diupload
+    # 1. Baca + kompres gambar SEBELUM membuka koneksi DB
     gambar_asli_bytes = await gambar.read()
     gambar_terkompres = kompres_gambar(gambar_asli_bytes, kualitas=70, lebar_maksimal=1280)
 
-    # 3. Upload hasil kompresi ke Cloudinary
+    # 2. Upload hasil kompresi ke Cloudinary
     try:
         url_gambar = upload_ke_cloudinary(
             gambar_terkompres,
@@ -54,8 +68,12 @@ async def buat_pemindaian(
     hasil_ml = _jalankan_model_ml()
     id_scan = str(uuid.uuid4())
 
+    # 3. Semua operasi DB dalam SATU blok koneksi
     with get_db_connection() as conn:
         cur = conn.cursor()
+
+        # Pastikan lahan milik pengguna
+        pastikan_lahan_milik_pengguna(cur, id_lahan, id_pengguna)
 
         cur.execute(
             """

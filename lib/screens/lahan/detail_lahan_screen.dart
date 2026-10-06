@@ -7,6 +7,9 @@ import '../../models/land_data.dart';
 import '../scan/hasil_scan_tidak_sehat.dart';
 import '../scan/treatment_recommendation_screen.dart';
 import 'tab_jadwal.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import '../../services/services.dart';
 
 class LandDetailScreen extends StatefulWidget {
   final LandData land;
@@ -21,10 +24,45 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   String _filter = 'Semua Aktivitas';
 
   // State alur scan.
-  String _selectedOrgan = 'leaf'; // 'leaf' atau 'fruit'
-  int _imageSource = 0; // 0: Kamera Langsung, 1: Galeri
+  String _selectedOrgan = 'leaf';
+  int _imageSource = 0;
   bool _isAnalyzing = false;
   bool _isDone = false;
+  final ImagePicker _picker = ImagePicker();
+
+  // ── State cuaca BMKG ──
+  Map<String, dynamic>? _cuaca; // prakiraan[0]
+  bool _cuacaLoading = true;
+  bool _cuacaError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCuaca();
+  }
+
+  Future<void> _loadCuaca() async {
+    final idLahan = widget.land.id;
+    if (idLahan == null || idLahan.isEmpty) {
+      setState(() { _cuacaLoading = false; _cuacaError = true; });
+      return;
+    }
+    try {
+      final data = await getCuacaLahan(idLahan);
+      final prakiraan = data['prakiraan'] as List?;
+      if (mounted) {
+        setState(() {
+          _cuaca = (prakiraan != null && prakiraan.isNotEmpty)
+              ? prakiraan[0] as Map<String, dynamic>
+              : null;
+          _cuacaLoading = false;
+          _cuacaError = _cuaca == null;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() { _cuacaLoading = false; _cuacaError = true; });
+    }
+  }
 
   static const _filters = [
     'Semua Aktivitas',
@@ -65,21 +103,45 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   }
 
   Future<void> _handleAnalyze() async {
+    final source = _imageSource == 0 ? ImageSource.camera : ImageSource.gallery;
+    final pickedFile = await _picker.pickImage(source: source);
+    if (pickedFile == null) return;
+
     setState(() {
       _isAnalyzing = true;
       _isDone = false;
     });
 
-    await Future.delayed(const Duration(milliseconds: 1200));
-    if (!mounted) return;
-    setState(() {
-      _isAnalyzing = false;
-      _isDone = true;
-    });
+    try {
+      final res = await uploadScan(
+        file: File(pickedFile.path),
+        idLahan: widget.land.id ?? '', 
+        bagianTanaman: _selectedOrgan == 'leaf' ? 'daun' : 'buah',
+      );
 
-    await Future.delayed(const Duration(milliseconds: 1500));
-    if (!mounted) return;
-    setState(() => _isDone = false);
+      if (!mounted) return;
+      setState(() {
+        _isAnalyzing = false;
+        _isDone = true;
+      });
+
+      // Arahkan ke hasil lengkap (bisa passing hasil dari API nanti)
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+      setState(() => _isDone = false);
+      
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const HasilScanTidakSehatPage()),
+      );
+
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isAnalyzing = false;
+        _isDone = false;
+      });
+      _showTodo('Gagal analisis: $e');
+    }
   }
 
   @override
@@ -748,36 +810,78 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
     return Card(
       elevation: 0,
       color: Colors.white,
-      child: const Padding(
-        padding: EdgeInsets.all(14),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Sensor Realtime',
-              style: TextStyle(fontWeight: FontWeight.w800),
-            ),
-            SizedBox(height: 12),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _ScanMetric(
-                  icon: Icons.thermostat,
-                  label: 'Suhu',
-                  value: '28.4°C',
+                const Text(
+                  'Cuaca Lapangan',
+                  style: TextStyle(fontWeight: FontWeight.w800),
                 ),
-                _ScanMetric(
-                  icon: Icons.water_drop,
-                  label: 'Kelembapan',
-                  value: '76% RH',
-                ),
-                _ScanMetric(
-                  icon: Icons.opacity,
-                  label: 'Kebasahan',
-                  value: 'Sedang',
+                const Spacer(),
+                // Atribusi wajib BMKG
+                const Text(
+                  'Sumber: BMKG',
+                  style: TextStyle(fontSize: 10, color: AppColors.subtitle),
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            if (_cuacaLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: SizedBox(
+                    width: 20, height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              )
+            else if (_cuacaError || _cuaca == null)
+              const Text(
+                'Data cuaca tidak tersedia',
+                style: TextStyle(fontSize: 12, color: AppColors.subtitle),
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _ScanMetric(
+                    icon: Icons.thermostat,
+                    label: 'Suhu',
+                    value: '${_cuaca!['suhu'] ?? '--'}°C',
+                  ),
+                  _ScanMetric(
+                    icon: Icons.water_drop,
+                    label: 'Kelembapan',
+                    value: '${_cuaca!['kelembapan'] ?? '--'}% RH',
+                  ),
+                  _ScanMetric(
+                    icon: Icons.air,
+                    label: 'Angin',
+                    value: '${_cuaca!['kecepatan_angin']?.toStringAsFixed(0) ?? '--'} km/j',
+                  ),
+                ],
+              ),
+            if (!_cuacaLoading && !_cuacaError && _cuaca != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.wb_cloudy_outlined, size: 14, color: AppColors.subtitle),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      '${_cuaca!['cuaca'] ?? ''}'  
+                      '${(_cuaca!['kemungkinan_hujan'] == true) ? " • ⚠ Kemungkinan Hujan" : ""}',
+                      style: const TextStyle(fontSize: 11, color: AppColors.subtitle),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),

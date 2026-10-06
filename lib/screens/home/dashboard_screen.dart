@@ -1,3 +1,4 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -10,6 +11,7 @@ import '../lahan/tambah_lahan_page.dart';
 import '../notifikasi/notifikasi_screen.dart';
 import '../scan/hasil_scan_tidak_sehat.dart';
 import '../scan/riwayat_scan_screen.dart';
+import '../../services/services.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -23,41 +25,35 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final ImagePicker _picker = ImagePicker();
   final List<ScanHistoryItem> _scanHistory = [];
 
-  static const _lands = [
-    _Land(
-      title: 'Petak Cabai Rawit Blok A',
-      category: 'BLOK HORTIKULTURA',
-      location: 'Lembang, Bandung Barat',
-      phase: '3 Bulan • Fase Berbuah Lebat',
-      status: 'Tanaman Sehat',
-      statusDetail: '98% Bebas Hama',
-      notice: 'Jadwal pemupukan interval 1 minggu jatuh tempo besok pagi.',
-      icon: Icons.verified_rounded,
-    ),
-    _Land(
-      title: 'Petak Cabai Merah Keriting B2',
-      category: 'ATENSI MENDESAK',
-      location: 'Parongpong, Bandung Barat',
-      phase: '2.5 Bulan • Fase Pembungaan',
-      status: 'Perlu Perhatian',
-      statusDetail: 'Indikasi Antraknosa',
-      notice:
-          'Rekomendasi isolasi 4 tanaman di baris ke-3 untuk mencegah penyebaran patogen.',
-      icon: Icons.warning_rounded,
-      warning: true,
-    ),
-    _Land(
-      title: 'Petak Pembibitan Greenhouse C',
-      category: 'BIBIT BARU',
-      location: 'Ciater, Subang',
-      phase: '3 Minggu • Fase Vegetatif Awal',
-      status: 'Belum Discan',
-      statusDetail: 'Perlu Kalibrasi',
-      notice:
-          'Lakukan foto daun pertama hari ini untuk kalibrasi pertumbuhan bulan ke-2.',
-      icon: Icons.pending_actions_rounded,
-    ),
-  ];
+  Map<String, dynamic>? _profil;
+  List<Map<String, dynamic>>? _lahanList;
+  bool _isLoading = true;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final profil = await getProfil();
+      final lahanList = await getDaftarLahan();
+      if (mounted) {
+        setState(() {
+          _profil = profil;
+          _lahanList = lahanList;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() => _isLoading = false);
+        _message('Gagal memuat data: $e');
+      }
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -84,46 +80,59 @@ class _DashboardScreenState extends State<DashboardScreen> {
       child: CustomScrollView(
         slivers: [
           SliverToBoxAdapter(child: _header()),
-          SliverPadding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-            sliver: SliverList(
-              delegate: SliverChildListDelegate([
-                _greeting(),
-                const SizedBox(height: 16),
-                _climateCard(),
-                const SizedBox(height: 24),
-                Row(
-                  children: [
-                    Text(
-                      'Lahan Anda',
-                      style: _style(18, AppColors.title, FontWeight.w700),
-                    ),
-                    const SizedBox(width: 8),
-                    _badge('3 Petak', AppColors.chipBg, AppColors.title),
-                    const Spacer(),
-                    TextButton.icon(
-                      onPressed: _addLand,
-                      icon: const Icon(Icons.add, size: 17),
-                      label: const Text('Tambah'),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 10),
-                for (final land in _lands) ...[
-                  _landCard(land),
-                  const SizedBox(height: 14),
-                ],
-                OutlinedButton.icon(
-                  onPressed: _addLand,
-                  icon: const Icon(Icons.add_circle_outline_rounded),
-                  label: const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 15),
-                    child: Text('Tambah Lahan Baru'),
+          if (_isLoading)
+            const SliverFillRemaining(
+              child: Center(child: CircularProgressIndicator()),
+            )
+          else
+            SliverPadding(
+              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              sliver: SliverList(
+                delegate: SliverChildListDelegate([
+                  _greeting(),
+                  const SizedBox(height: 16),
+                  _climateCard(),
+                  const SizedBox(height: 24),
+                  Row(
+                    children: [
+                      Text(
+                        'Lahan Anda',
+                        style: _style(18, AppColors.title, FontWeight.w700),
+                      ),
+                      const SizedBox(width: 8),
+                      _badge('${_lahanList?.length ?? 0} Petak', AppColors.chipBg, AppColors.title),
+                      const Spacer(),
+                      TextButton.icon(
+                        onPressed: _addLand,
+                        icon: const Icon(Icons.add, size: 17),
+                        label: const Text('Tambah'),
+                      ),
+                    ],
                   ),
-                ),
-              ]),
+                  const SizedBox(height: 10),
+                  if (_lahanList == null || _lahanList!.isEmpty)
+                    const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: Text('Belum ada data lahan.'),
+                      ),
+                    )
+                  else
+                    for (final landMap in _lahanList!) ...[
+                      _landCard(landMap),
+                      const SizedBox(height: 14),
+                    ],
+                  OutlinedButton.icon(
+                    onPressed: _addLand,
+                    icon: const Icon(Icons.add_circle_outline_rounded),
+                    label: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 15),
+                      child: Text('Tambah Lahan Baru'),
+                    ),
+                  ),
+                ]),
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -198,12 +207,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 ),
                 const SizedBox(height: 5),
                 Text(
-                  'Selamat Pagi, Pak Budi 🌿',
+                  'Selamat Pagi, ${_profil?['nama']?.split(' ')?.first ?? 'Pengguna'} 🌿',
                   style: _style(21, AppColors.title, FontWeight.w700),
                 ),
                 const SizedBox(height: 3),
                 Text(
-                  'Pantau kondisi 3 petak lahan cabai Anda hari ini',
+                  'Pantau kondisi ${_lahanList?.length ?? 0} petak lahan cabai Anda hari ini',
                   style: _style(12, AppColors.subtitle, FontWeight.w400),
                 ),
               ],
@@ -349,8 +358,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ),
   );
 
-  Widget _landCard(_Land land) {
-    final color = land.warning ? AppColors.error : AppColors.primary;
+  Widget _landCard(Map<String, dynamic> land) {
+    final title = land['nama'] ?? 'Petak Lahan';
+    final location = '${land['kecamatan'] ?? ''}, ${land['kota'] ?? ''}'.trim();
+    final phase = '${land['umur_tanaman_bulan'] ?? 0} Bulan';
+    final category = 'BLOK HORTIKULTURA'; // Bisa dari API jika ada
+    
+    // Status dummy karena detail status dan jadwal didapat dari endpoint lain
+    final status = 'Sedang Dipantau';
+    final statusDetail = 'Data Tersinkronisasi';
+    final notice = 'Interval pupuk tiap ${land['interval_pupuk_minggu']} minggu.';
+    final warning = false; 
+
+    final color = warning ? AppColors.error : AppColors.primary;
     return Card(
       elevation: 1,
       color: Colors.white,
@@ -366,7 +386,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   width: 64,
                   height: 64,
                   decoration: BoxDecoration(
-                    color: land.warning
+                    color: warning
                         ? AppColors.error.withAlpha(25)
                         : AppColors.primarySoft,
                     borderRadius: BorderRadius.circular(8),
@@ -379,7 +399,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Text(
-                        land.category,
+                        category,
                         style: _style(
                           10,
                           color,
@@ -389,17 +409,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
                       ),
                       const SizedBox(height: 3),
                       Text(
-                        land.title,
+                        title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
                         style: _style(13, AppColors.title, FontWeight.w700),
                       ),
                       Text(
-                        land.location,
+                        location,
                         style: _style(11, AppColors.subtitle, FontWeight.w400),
                       ),
                       Text(
-                        land.phase,
+                        phase,
                         style: _style(11, AppColors.title, FontWeight.w600),
                       ),
                     ],
@@ -412,7 +432,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
               decoration: BoxDecoration(
                 color:
-                    (land.warning
+                    (warning
                             ? AppColors.errorContainer
                             : AppColors.primarySoft)
                         .withAlpha(130),
@@ -420,16 +440,16 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
               child: Row(
                 children: [
-                  Icon(land.icon, color: color, size: 19),
+                  Icon(Icons.verified_rounded, color: color, size: 19),
                   const SizedBox(width: 7),
                   Expanded(
                     child: Text(
-                      land.status,
+                      status,
                       style: _style(12, color, FontWeight.w700),
                     ),
                   ),
                   Text(
-                    land.statusDetail,
+                    statusDetail,
                     style: _style(10, color, FontWeight.w600),
                   ),
                 ],
@@ -446,7 +466,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Icon(
-                    land.warning
+                    warning
                         ? Icons.notification_important_rounded
                         : Icons.event_available_rounded,
                     color: color,
@@ -455,7 +475,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   const SizedBox(width: 7),
                   Expanded(
                     child: Text(
-                      land.notice,
+                      notice,
                       style: _style(
                         11,
                         AppColors.title,
@@ -481,7 +501,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   child: FilledButton.icon(
                     onPressed: _openScan,
                     icon: const Icon(Icons.photo_camera_rounded, size: 17),
-                    label: Text(land.warning ? 'Pindai Ulang' : 'Pindai Daun'),
+                    label: Text(warning ? 'Pindai Ulang' : 'Pindai Daun'),
                   ),
                 ),
               ],
@@ -502,47 +522,82 @@ class _DashboardScreenState extends State<DashboardScreen> {
   );
 
   Future<void> _openScan() async {
+    if (_lahanList == null || _lahanList!.isEmpty) {
+      _message('Buat lahan terlebih dahulu sebelum melakukan pemindaian.');
+      return;
+    }
+
     try {
       final picked = await _picker.pickImage(source: ImageSource.camera);
       if (picked == null || !mounted) return;
-      setState(() {
-        _scanHistory.insert(
-          0,
-          ScanHistoryItem(imagePath: picked.path, scannedAt: DateTime.now()),
-        );
-      });
+
+      // Ambil ID lahan pertama sebagai target scan (untuk testing dari dashboard)
+      final String idLahanTarget = _lahanList!.first['id'];
+
+      // Tampilkan loading dialog
+      showDialog(
+        context: context,
+        barrierDismissible: false,
+        builder: (_) => const Center(child: CircularProgressIndicator()),
+      );
+
+      // Panggil backend: ini akan otomatis kompres, upload ke Cloudinary, dan simpan ke DB!
+      final res = await uploadScan(
+        file: File(picked.path),
+        idLahan: idLahanTarget,
+        bagianTanaman: 'daun', // Default dari dashboard
+      );
+
+      if (!mounted) return;
+      Navigator.of(context).pop(); // Tutup loading
+
+      _message('Upload berhasil! URL Cloudinary tersimpan di Neon.');
+
+      // Buka halaman hasil statis (tampilannya masih statis, tapi datanya sudah masuk DB)
       await Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const HasilScanTidakSehatPage()),
       );
-    } catch (_) {
+      
+      // Muat ulang data untuk memperbarui riwayat lahan
+      _loadData();
+    } catch (e) {
       if (!mounted) return;
-      _message('Kamera tidak dapat dibuka. Periksa izin kamera aplikasi.');
+      Navigator.of(context).pop(); // Tutup loading
+      _message('Gagal melakukan scan atau upload: $e');
     }
   }
 
-  void _addLand() {
-    Navigator.of(
-      context,
-    ).push(MaterialPageRoute(builder: (_) => const TambahLahanPage()));
+  Future<void> _addLand() async {
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const TambahLahanPage()),
+    );
+    if (result == true) {
+      _loadData();
+    }
   }
 
-  void _openLandDetail(_Land land) {
+  void _openLandDetail(Map<String, dynamic> land) {
     Navigator.of(context).push(
       MaterialPageRoute(
         builder: (_) => LandDetailScreen(
           land: LandData(
-            name: land.title,
-            province: 'Jawa Barat',
-            city: 'Bandung Barat',
-            district: land.warning ? 'Parongpong' : 'Lembang',
-            plantAgeMonths: land.warning ? 2 : 3,
-            lastWatered: DateTime(2024, 10, 26),
-            lastFertilized: DateTime(2024, 10, 24),
-            fertilizeIntervalWeeks: 1,
+            id: land['id'] as String?,
+            name: land['nama'] ?? 'Lahan',
+            province: land['provinsi'] ?? '',
+            city: land['kota'] ?? '',
+            district: land['kecamatan'] ?? '',
+            plantAgeMonths: land['umur_tanaman_bulan'] ?? 1,
+            lastWatered: land['tanggal_terakhir_siram'] != null 
+                ? (DateTime.tryParse(land['tanggal_terakhir_siram']) ?? DateTime.now()) 
+                : DateTime.now(),
+            lastFertilized: land['tanggal_terakhir_pupuk'] != null 
+                ? (DateTime.tryParse(land['tanggal_terakhir_pupuk']) ?? DateTime.now()) 
+                : DateTime.now(),
+            fertilizeIntervalWeeks: land['interval_pupuk_minggu'] ?? 1,
           ),
         ),
       ),
-    );
+    ).then((_) => _loadData()); // Muat ulang setelah kembali dari detail
   }
 
   void _message(String message) => ScaffoldMessenger.of(
@@ -599,22 +654,7 @@ class _Climate extends StatelessWidget {
   );
 }
 
-class _Land {
-  final String title, category, location, phase, status, statusDetail, notice;
-  final IconData icon;
-  final bool warning;
-  const _Land({
-    required this.title,
-    required this.category,
-    required this.location,
-    required this.phase,
-    required this.status,
-    required this.statusDetail,
-    required this.notice,
-    required this.icon,
-    this.warning = false,
-  });
-}
+
 
 class _BottomNav extends StatelessWidget {
   final int selectedIndex;
