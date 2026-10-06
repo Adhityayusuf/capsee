@@ -70,8 +70,6 @@ class _LoginScreenState extends State<LoginScreen> {
     return AuthScaffold(
       child: Column(
         children: [
-          const CapseeLogo(),
-          const SizedBox(height: 24),
           const AuthHeader(
             title: 'Masuk ke Capsee',
             subtitle: 'Pantau kesehatan tanaman cabai Anda dengan presisi AI.',

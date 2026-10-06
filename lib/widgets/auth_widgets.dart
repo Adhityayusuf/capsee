@@ -55,17 +55,19 @@ class AuthScaffold extends StatelessWidget {
 /// punya file logo cabai (daftarkan di pubspec.yaml).
 /// ---------------------------------------------------------------
 class CapseeLogo extends StatelessWidget {
-  const CapseeLogo({super.key});
+  final double size;
+  const CapseeLogo({super.key, this.size = 88});
 
   @override
   Widget build(BuildContext context) {
+    final scale = size / 88;
     return Container(
-      width: 88,
-      height: 88,
-      padding: const EdgeInsets.all(10),
+      width: size,
+      height: size,
+      padding: EdgeInsets.all(10 * scale),
       decoration: BoxDecoration(
         color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
+        borderRadius: BorderRadius.circular(22 * scale),
         boxShadow: const [
           BoxShadow(
             color: AppColors.primaryShadow,
@@ -77,11 +79,11 @@ class CapseeLogo extends StatelessWidget {
       child: Container(
         decoration: BoxDecoration(
           color: AppColors.primarySoft,
-          borderRadius: BorderRadius.circular(16),
+          borderRadius: BorderRadius.circular(16 * scale),
         ),
-        child: const Icon(
+        child: Icon(
           Icons.eco_rounded,
-          size: 40,
+          size: 40 * scale,
           color: AppColors.primary,
         ),
       ),

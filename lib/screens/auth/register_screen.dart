@@ -110,8 +110,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return AuthScaffold(
       child: Column(
         children: [
-          const CapseeLogo(),
-          const SizedBox(height: 16),
           _buildBadge(),
           const SizedBox(height: 14),
           const AuthHeader(
