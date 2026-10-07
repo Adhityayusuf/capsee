@@ -17,6 +17,7 @@ class AppColors {
   static const surfaceHighest = Color(0xFFDAE2FD);
   static const surfaceDim = Color(0xFFD2D9F4);
   static const chipBg = Color(0xFFF1F2FC);
+  static const fieldFill = Color(0xFFF1F3F5);
 
   // ── Primer (hijau utama) ──
   static const primary = Color(0xFF15803D);

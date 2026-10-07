@@ -58,24 +58,10 @@ class _SplashScreenState extends State<SplashScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.primary,
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Positioned(
-            top: -120,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 340,
-              decoration: const BoxDecoration(
-                gradient: RadialGradient(
-                  radius: 0.6,
-                  colors: [AppColors.glow, Color(0x00F7F7FF)],
-                ),
-              ),
-            ),
-          ),
           SafeArea(
             child: Column(
               children: [
@@ -86,14 +72,14 @@ class _SplashScreenState extends State<SplashScreen>
                     scale: _scale,
                     child: Column(
                       children: [
-                        const CapseeLogo(size: 112),
+                        const CapseeLogo(size: 112, onPrimary: true),
                         const SizedBox(height: 26),
                         Text(
                           AppInfo.name,
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 34,
                             fontWeight: FontWeight.w800,
-                            color: AppColors.title,
+                            color: Colors.white,
                           ),
                         ),
                         const SizedBox(height: 6),
@@ -103,7 +89,7 @@ class _SplashScreenState extends State<SplashScreen>
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
                             letterSpacing: 0.5,
-                            color: AppColors.subtitle,
+                            color: Colors.white70,
                           ),
                         ),
                       ],
@@ -118,7 +104,7 @@ class _SplashScreenState extends State<SplashScreen>
                     height: 26,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.6,
-                      color: AppColors.primary,
+                      color: Colors.white,
                     ),
                   ),
                 ),
@@ -132,7 +118,7 @@ class _SplashScreenState extends State<SplashScreen>
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 13,
                         fontWeight: FontWeight.w600,
-                        color: AppColors.icon,
+                        color: Colors.white70,
                       ),
                     ),
                   ),
