@@ -162,7 +162,11 @@ class _AkunScreenState extends State<AkunScreen> {
   @override
   Widget build(BuildContext context) {
     if (_isLoading) {
-      return const Center(child: CircularProgressIndicator());
+      return Scaffold(
+        backgroundColor: C.surface,
+        appBar: _buildAppBar(),
+        body: const Center(child: CircularProgressIndicator()),
+      );
     }
 
     return Scaffold(
@@ -211,6 +215,19 @@ class _AkunScreenState extends State<AkunScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
+                  if (Navigator.of(context).canPop()) ...[
+                    IconButton(
+                      tooltip: 'Kembali',
+                      onPressed: () => Navigator.of(context).maybePop(),
+                      icon: const Icon(Icons.arrow_back_rounded,
+                          size: 22, color: C.onSurface),
+                      style: IconButton.styleFrom(
+                        minimumSize: const Size(40, 40),
+                        shape: const CircleBorder(),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
                   Image.network(
                     _kLogoUrl,
                     height: 32,
