@@ -1,4 +1,3 @@
-import 'package:http/http.dart' as http;
 import 'api_client.dart';
 
 // ─────────────────────────────────────────────────────────
@@ -8,8 +7,8 @@ import 'api_client.dart';
 /// Ambil semua notifikasi milik pengguna yang login,
 /// diurutkan dari yang terbaru.
 Future<List<Map<String, dynamic>>> getDaftarNotifikasi() async {
-  final res = await http.get(
-    Uri.parse('$baseUrl/api/notifikasi'),
+  final res = await apiGet(
+    '/api/notifikasi',
     headers: await headerAuth(),
   );
   final body = parseResponse(res);
@@ -18,10 +17,16 @@ Future<List<Map<String, dynamic>>> getDaftarNotifikasi() async {
 
 /// Tandai satu notifikasi sebagai sudah dibaca.
 Future<Map<String, dynamic>> tandaiDibaca(String idNotifikasi) async {
-  final res = await http.patch(
-    Uri.parse('$baseUrl/api/notifikasi/$idNotifikasi/baca'),
+  final res = await apiPatch(
+    '/api/notifikasi/$idNotifikasi/baca',
     headers: await headerAuth(),
   );
   final body = parseResponse(res);
   return body['notifikasi'] as Map<String, dynamic>;
+}
+
+/// Hitung jumlah notifikasi yang belum dibaca (untuk badge lonceng).
+Future<int> getJumlahNotifikasiBelumDibaca() async {
+  final daftar = await getDaftarNotifikasi();
+  return daftar.where((n) => n['sudah_dibaca'] != true).length;
 }

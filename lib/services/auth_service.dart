@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'api_client.dart';
 
 // ─────────────────────────────────────────────────────────
@@ -35,8 +34,8 @@ Future<Map<String, dynamic>> register({
   required String password,
   String? nomorHp,
 }) async {
-  final res = await http.post(
-    Uri.parse('$baseUrl/api/auth/register'),
+  final res = await apiPost(
+    '/api/auth/register',
     headers: headerJson(),
     body: jsonEncode({
       'nama': nama,
@@ -55,8 +54,8 @@ Future<HasilLogin> login({
   required String email,
   required String password,
 }) async {
-  final res = await http.post(
-    Uri.parse('$baseUrl/api/auth/login'),
+  final res = await apiPost(
+    '/api/auth/login',
     headers: headerJson(),
     body: jsonEncode({'email': email, 'password': password}),
   );

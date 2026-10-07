@@ -1,10 +1,24 @@
+import 'dart:async';
 import 'dart:convert';
+
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Satu-satunya tempat yang tahu alamat backend.
-/// Ganti ke URL Railway/Render/VPS saat production.
-const String baseUrl = 'http://10.77.80.35:8000';
+/// Alamat backend Capsee.
+///
+/// Default menunjuk ke backend lokal (`uvicorn app.main:app --port 8000`).
+/// Untuk perangkat fisik / server lain, timpa saat build:
+/// ```
+/// flutter run --dart-define=API_BASE_URL=http://192.168.1.10:8000
+/// ```
+const String baseUrl = String.fromEnvironment(
+  'API_BASE_URL',
+  defaultValue: 'http://localhost:8000',
+);
+
+/// Batas waktu tiap permintaan ke backend. Tanpa ini, request yang tidak
+/// terjawab membuat UI berputar tanpa henti.
+const Duration apiTimeout = Duration(seconds: 15);
 
 /// Key untuk menyimpan token JWT di SharedPreferences.
 const String _tokenKey = 'auth_token';
@@ -59,6 +73,81 @@ Future<Map<String, String>> headerAuthMultipart() async {
   return {
     if (token != null) 'Authorization': 'Bearer $token',
   };
+}
+
+// ─────────────────────────────────────────────────────────
+// HTTP WRAPPERS (dengan timeout + pesan error yang ramah)
+// ─────────────────────────────────────────────────────────
+
+Future<http.Response> _guard(Future<http.Response> Function() run) async {
+  try {
+    return await run().timeout(apiTimeout);
+  } on TimeoutException {
+    throw ApiException(
+      'Koneksi ke server timeout. Pastikan backend berjalan.',
+      0,
+    );
+  } on ApiException {
+    rethrow;
+  } catch (_) {
+    throw ApiException(
+      'Tidak dapat terhubung ke server. Periksa koneksi Anda.',
+      0,
+    );
+  }
+}
+
+Uri _uri(String path) => Uri.parse('$baseUrl$path');
+
+Future<http.Response> apiGet(
+  String path, {
+  Map<String, String>? headers,
+}) =>
+    _guard(() => http.get(_uri(path), headers: headers));
+
+Future<http.Response> apiPost(
+  String path, {
+  Map<String, String>? headers,
+  Object? body,
+}) =>
+    _guard(() => http.post(_uri(path), headers: headers, body: body));
+
+Future<http.Response> apiPut(
+  String path, {
+  Map<String, String>? headers,
+  Object? body,
+}) =>
+    _guard(() => http.put(_uri(path), headers: headers, body: body));
+
+Future<http.Response> apiPatch(
+  String path, {
+  Map<String, String>? headers,
+  Object? body,
+}) =>
+    _guard(() => http.patch(_uri(path), headers: headers, body: body));
+
+Future<http.Response> apiDelete(
+  String path, {
+  Map<String, String>? headers,
+}) =>
+    _guard(() => http.delete(_uri(path), headers: headers));
+
+/// Kirim [http.MultipartRequest] dengan timeout.
+Future<http.Response> apiSend(http.MultipartRequest request) async {
+  try {
+    final streamed = await request.send().timeout(apiTimeout);
+    return await http.Response.fromStream(streamed).timeout(apiTimeout);
+  } on TimeoutException {
+    throw ApiException(
+      'Koneksi ke server timeout. Pastikan backend berjalan.',
+      0,
+    );
+  } catch (_) {
+    throw ApiException(
+      'Tidak dapat terhubung ke server. Periksa koneksi Anda.',
+      0,
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────

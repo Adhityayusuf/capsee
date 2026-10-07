@@ -38,15 +38,14 @@ Future<Map<String, dynamic>> uploadScan({
       // Backend yang mengatur kompresi — tidak perlu kompres di Flutter
     ));
 
-  final streamed = await request.send();
-  final res = await http.Response.fromStream(streamed);
+  final res = await apiSend(request);
   return parseResponse(res);
 }
 
 /// Ambil semua riwayat scan untuk satu lahan.
 Future<List<Map<String, dynamic>>> getRiwayatScan(String idLahan) async {
-  final res = await http.get(
-    Uri.parse('$baseUrl/api/pemindaian/lahan/$idLahan'),
+  final res = await apiGet(
+    '/api/pemindaian/lahan/$idLahan',
     headers: await headerAuth(),
   );
   final body = parseResponse(res);
@@ -56,8 +55,8 @@ Future<List<Map<String, dynamic>>> getRiwayatScan(String idLahan) async {
 /// Ambil detail satu hasil scan beserta penyakit, penanganan,
 /// langkah tindakan, dan pencegahan.
 Future<Map<String, dynamic>> getDetailScan(String idScan) async {
-  final res = await http.get(
-    Uri.parse('$baseUrl/api/pemindaian/$idScan'),
+  final res = await apiGet(
+    '/api/pemindaian/$idScan',
     headers: await headerAuth(),
   );
   return parseResponse(res);
