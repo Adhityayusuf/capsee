@@ -26,6 +26,10 @@
 	<string>$(FLUTTER_BUILD_NUMBER)</string>
 	<key>LSRequiresIPhoneOS</key>
 	<true/>
+	<key>NSCameraUsageDescription</key>
+	<string>Capsee memerlukan kamera untuk memindai kondisi daun tanaman.</string>
+	<key>NSPhotoLibraryUsageDescription</key>
+	<string>Capsee memerlukan akses galeri untuk memilih foto daun yang akan dipindai.</string>
 	<key>UIApplicationSceneManifest</key>
 	<dict>
 		<key>UIApplicationSupportsMultipleScenes</key>

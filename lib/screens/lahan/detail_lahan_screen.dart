@@ -1,12 +1,15 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/app_colors.dart';
-import '../models/activity_log.dart';
-import '../models/land_data.dart';
-import 'lahan/tab_jadwal.dart';
-import 'scan/hasil_scan_tidak_sehat.dart';
-import 'treatment_recommendation_screen.dart';
+import '../../core/app_colors.dart';
+import '../../models/activity_log.dart';
+import '../../models/land_data.dart';
+import '../scan/hasil_scan_tidak_sehat.dart';
+import '../scan/treatment_recommendation_screen.dart';
+import 'tab_jadwal.dart';
+import 'dart:io';
+import 'package:image_picker/image_picker.dart';
+import '../../services/services.dart';
 
 class LandDetailScreen extends StatefulWidget {
   final LandData land;
@@ -21,10 +24,45 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   String _filter = 'Semua Aktivitas';
 
   // State alur scan.
-  String _selectedOrgan = 'leaf'; // 'leaf' atau 'fruit'
-  int _imageSource = 0; // 0: Kamera Langsung, 1: Galeri
+  String _selectedOrgan = 'leaf';
+  int _imageSource = 0;
   bool _isAnalyzing = false;
   bool _isDone = false;
+  final ImagePicker _picker = ImagePicker();
+
+  // ── State cuaca BMKG ──
+  Map<String, dynamic>? _cuaca; // prakiraan[0]
+  bool _cuacaLoading = true;
+  bool _cuacaError = false;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadCuaca();
+  }
+
+  Future<void> _loadCuaca() async {
+    final idLahan = widget.land.id;
+    if (idLahan == null || idLahan.isEmpty) {
+      setState(() { _cuacaLoading = false; _cuacaError = true; });
+      return;
+    }
+    try {
+      final data = await getCuacaLahan(idLahan);
+      final prakiraan = data['prakiraan'] as List?;
+      if (mounted) {
+        setState(() {
+          _cuaca = (prakiraan != null && prakiraan.isNotEmpty)
+              ? prakiraan[0] as Map<String, dynamic>
+              : null;
+          _cuacaLoading = false;
+          _cuacaError = _cuaca == null;
+        });
+      }
+    } catch (_) {
+      if (mounted) setState(() { _cuacaLoading = false; _cuacaError = true; });
+    }
+  }
 
   static const _filters = [
     'Semua Aktivitas',
@@ -65,21 +103,45 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   }
 
   Future<void> _handleAnalyze() async {
+    final source = _imageSource == 0 ? ImageSource.camera : ImageSource.gallery;
+    final pickedFile = await _picker.pickImage(source: source);
+    if (pickedFile == null) return;
+
     setState(() {
       _isAnalyzing = true;
       _isDone = false;
     });
 
-    await Future.delayed(const Duration(milliseconds: 1200));
-    if (!mounted) return;
-    setState(() {
-      _isAnalyzing = false;
-      _isDone = true;
-    });
+    try {
+      final res = await uploadScan(
+        file: File(pickedFile.path),
+        idLahan: widget.land.id ?? '', 
+        bagianTanaman: _selectedOrgan == 'leaf' ? 'daun' : 'buah',
+      );
 
-    await Future.delayed(const Duration(milliseconds: 1500));
-    if (!mounted) return;
-    setState(() => _isDone = false);
+      if (!mounted) return;
+      setState(() {
+        _isAnalyzing = false;
+        _isDone = true;
+      });
+
+      // Arahkan ke hasil lengkap (bisa passing hasil dari API nanti)
+      await Future.delayed(const Duration(milliseconds: 500));
+      if (!mounted) return;
+      setState(() => _isDone = false);
+      
+      Navigator.of(context).push(
+        MaterialPageRoute(builder: (_) => const HasilScanTidakSehatPage()),
+      );
+
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _isAnalyzing = false;
+        _isDone = false;
+      });
+      _showTodo('Gagal analisis: $e');
+    }
   }
 
   @override
@@ -349,12 +411,12 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
           children: [
             Positioned.fill(
               child: Container(
-                color: const Color(0xFF283044),
+                color: AppColors.inverseSurface,
                 child: const Center(
                   child: Icon(
                     Icons.local_florist_rounded,
                     size: 96,
-                    color: Color(0xFF6E9273),
+                    color: AppColors.outline,
                   ),
                 ),
               ),
@@ -375,7 +437,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                                 width: 6,
                                 height: 6,
                                 decoration: const BoxDecoration(
-                                  color: Color(0xFF6BFF8F),
+                                  color: AppColors.secondaryContainer,
                                   shape: BoxShape.circle,
                                 ),
                               ),
@@ -421,7 +483,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                           height: 130,
                           decoration: BoxDecoration(
                             border: Border.all(
-                              color: const Color(0xFF95F8A7),
+                              color: AppColors.primaryFixed,
                               width: 1.5,
                             ),
                             borderRadius: BorderRadius.circular(8),
@@ -429,7 +491,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                           child: const Center(
                             child: CircleAvatar(
                               radius: 8,
-                              backgroundColor: Color(0xFF95F8A7),
+                              backgroundColor: AppColors.primaryFixed,
                             ),
                           ),
                         ),
@@ -462,7 +524,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                         children: [
                           Icon(
                             Icons.wb_sunny_rounded,
-                            color: Color(0xFF6BFF8F),
+                            color: AppColors.secondaryContainer,
                             size: 14,
                           ),
                           SizedBox(width: 6),
@@ -498,7 +560,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
-        color: const Color(0xFF283044).withValues(alpha: 0.8),
+        color: AppColors.inverseSurface.withValues(alpha: 0.8),
         borderRadius: BorderRadius.circular(20),
       ),
       child: child,
@@ -510,7 +572,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       width: 32,
       height: 32,
       decoration: BoxDecoration(
-        color: const Color(0xFF283044).withValues(alpha: 0.8),
+        color: AppColors.inverseSurface.withValues(alpha: 0.8),
         shape: BoxShape.circle,
       ),
       child: Icon(icon, color: Colors.white, size: 16),
@@ -748,36 +810,78 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
     return Card(
       elevation: 0,
       color: Colors.white,
-      child: const Padding(
-        padding: EdgeInsets.all(14),
+      child: Padding(
+        padding: const EdgeInsets.all(14),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            Text(
-              'Sensor Realtime',
-              style: TextStyle(fontWeight: FontWeight.w800),
-            ),
-            SizedBox(height: 12),
             Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                _ScanMetric(
-                  icon: Icons.thermostat,
-                  label: 'Suhu',
-                  value: '28.4°C',
+                const Text(
+                  'Cuaca Lapangan',
+                  style: TextStyle(fontWeight: FontWeight.w800),
                 ),
-                _ScanMetric(
-                  icon: Icons.water_drop,
-                  label: 'Kelembapan',
-                  value: '76% RH',
-                ),
-                _ScanMetric(
-                  icon: Icons.opacity,
-                  label: 'Kebasahan',
-                  value: 'Sedang',
+                const Spacer(),
+                // Atribusi wajib BMKG
+                const Text(
+                  'Sumber: BMKG',
+                  style: TextStyle(fontSize: 10, color: AppColors.subtitle),
                 ),
               ],
             ),
+            const SizedBox(height: 12),
+            if (_cuacaLoading)
+              const Center(
+                child: Padding(
+                  padding: EdgeInsets.symmetric(vertical: 8),
+                  child: SizedBox(
+                    width: 20, height: 20,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  ),
+                ),
+              )
+            else if (_cuacaError || _cuaca == null)
+              const Text(
+                'Data cuaca tidak tersedia',
+                style: TextStyle(fontSize: 12, color: AppColors.subtitle),
+              )
+            else
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  _ScanMetric(
+                    icon: Icons.thermostat,
+                    label: 'Suhu',
+                    value: '${_cuaca!['suhu'] ?? '--'}°C',
+                  ),
+                  _ScanMetric(
+                    icon: Icons.water_drop,
+                    label: 'Kelembapan',
+                    value: '${_cuaca!['kelembapan'] ?? '--'}% RH',
+                  ),
+                  _ScanMetric(
+                    icon: Icons.air,
+                    label: 'Angin',
+                    value: '${_cuaca!['kecepatan_angin']?.toStringAsFixed(0) ?? '--'} km/j',
+                  ),
+                ],
+              ),
+            if (!_cuacaLoading && !_cuacaError && _cuaca != null) ...[
+              const SizedBox(height: 8),
+              Row(
+                children: [
+                  const Icon(Icons.wb_cloudy_outlined, size: 14, color: AppColors.subtitle),
+                  const SizedBox(width: 4),
+                  Expanded(
+                    child: Text(
+                      '${_cuaca!['cuaca'] ?? ''}'  
+                      '${(_cuaca!['kemungkinan_hujan'] == true) ? " • ⚠ Kemungkinan Hujan" : ""}',
+                      style: const TextStyle(fontSize: 11, color: AppColors.subtitle),
+                    ),
+                  ),
+                ],
+              ),
+            ],
           ],
         ),
       ),
@@ -1047,7 +1151,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
         itemCount: _filters.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (context, i) {
           final label = _filters[i];
           final selected = _filter == label;

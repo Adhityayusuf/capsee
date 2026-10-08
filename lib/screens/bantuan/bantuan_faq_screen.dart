@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import '../../core/app_colors.dart';
 import 'panduan_screen.dart';
-import 'notifikasi_screen.dart' show C;
 
 class BantuanFaqScreen extends StatefulWidget {
   const BantuanFaqScreen({super.key});
@@ -161,7 +161,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: C.surfaceHigh.withOpacity(0.5),
+                color: C.surfaceHigh.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -170,7 +170,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: C.primary.withOpacity(0.1),
+                      color: C.primary.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(Icons.psychology_alt, color: C.primary, size: 26),
@@ -252,7 +252,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 4,
             offset: const Offset(0, 1),
           )
@@ -299,7 +299,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.04),
+            color: Colors.black.withValues(alpha: 0.04),
             blurRadius: 4,
             offset: const Offset(0, 1),
           )
@@ -313,10 +313,10 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                 width: 40,
                 height: 40,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF6BFF8F),
+                  color: AppColors.secondaryContainer,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.forum, color: Color(0xFF007432), size: 22),
+                child: const Icon(Icons.forum, color: AppColors.onSecondaryContainer, size: 22),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -419,7 +419,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: iconColor.withOpacity(0.1),
+              color: iconColor.withValues(alpha: 0.1),
               shape: BoxShape.circle,
             ),
             child: Icon(icon, color: iconColor, size: 18),

@@ -3,11 +3,14 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/app_colors.dart';
-import '../widgets/auth_widgets.dart';
+import '../../core/app_colors.dart';
+import '../../core/validators.dart';
+import '../../widgets/auth_widgets.dart';
+import '../../services/services.dart';
+import '../legal/privasi_screen.dart';
+import '../legal/syarat_screen.dart';
 import 'login_screen.dart';
-import 'syarat_screen.dart';
-import 'privasi_screen.dart';
+
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
 
@@ -67,21 +70,39 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
     setState(() => _isLoading = true);
 
-    // TODO: ganti dengan pemanggilan API register sebenarnya
-    // Nomor lengkap: '+62${_phoneController.text}'
-    await Future.delayed(const Duration(seconds: 1));
+    try {
+      // Hilangkan +62 jika user input prefix, atau gunakan langsung
+      String phone = _phoneController.text.trim();
+      if (phone.startsWith('0')) {
+        phone = phone.substring(1);
+      }
+      final nomorHp = '+62$phone';
 
-    if (!mounted) return;
-    setState(() => _isLoading = false);
+      await register(
+        nama: _nameController.text.trim(),
+        email: _emailController.text.trim(),
+        password: _passwordController.text,
+        nomorHp: nomorHp,
+      );
 
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Akun berhasil dibuat, silakan masuk')),
-    );
+      if (!mounted) return;
+      setState(() => _isLoading = false);
 
-    // Setelah daftar, arahkan ke halaman login
-    Navigator.of(context).pushReplacement(
-      MaterialPageRoute(builder: (_) => const LoginScreen()),
-    );
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Akun berhasil dibuat, silakan masuk')),
+      );
+
+      // Setelah daftar, arahkan ke halaman login
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const LoginScreen()),
+      );
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text(e.toString())),
+      );
+    }
   }
 
   @override
@@ -167,15 +188,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 hint: 'Nama lengkap Anda',
                 prefixIcon: Icons.person_outline_rounded,
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Nama lengkap wajib diisi';
-                }
-                if (value.trim().length < 3) {
-                  return 'Nama terlalu pendek';
-                }
-                return null;
-              },
+              validator: validateName,
             ),
             const SizedBox(height: 18),
 
@@ -190,16 +203,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 hint: 'nama@email.com',
                 prefixIcon: Icons.mail_outline_rounded,
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Email wajib diisi';
-                }
-                final regex = RegExp(r'^[^@\s]+@[^@\s]+\.[^@\s]+$');
-                if (!regex.hasMatch(value.trim())) {
-                  return 'Format email tidak valid';
-                }
-                return null;
-              },
+              validator: validateEmail,
             ),
             const SizedBox(height: 18),
 
@@ -215,18 +219,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 hint: '812 3456 7890',
                 prefix: _buildPhonePrefix(),
               ),
-              validator: (value) {
-                if (value == null || value.trim().isEmpty) {
-                  return 'Nomor WhatsApp / HP wajib diisi';
-                }
-                if (value.startsWith('0')) {
-                  return 'Tulis tanpa angka 0 di depan';
-                }
-                if (value.length < 9 || value.length > 13) {
-                  return 'Nomor tidak valid';
-                }
-                return null;
-              },
+              validator: validatePhone,
             ),
             const SizedBox(height: 18),
 
@@ -251,15 +244,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                   ),
                 ),
               ),
-              validator: (value) {
-                if (value == null || value.isEmpty) {
-                  return 'Kata sandi wajib diisi';
-                }
-                if (value.length < 8) {
-                  return 'Minimal 8 karakter';
-                }
-                return null;
-              },
+              validator: validatePassword,
             ),
             const SizedBox(height: 20),
 

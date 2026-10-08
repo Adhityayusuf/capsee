@@ -2,8 +2,8 @@ import 'dart:typed_data';
 import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import 'package:image_picker/image_picker.dart';
-// import 'notifikasi_screen.dart' show C; // Aktifkan jika class C Anda sudah ada
+
+import '../../core/app_colors.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -20,16 +20,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late final TextEditingController _phoneController;
   late final TextEditingController _farmLocationController;
 
-  bool _isLoading = false;
-  final ImagePicker _picker = ImagePicker();
   Uint8List? _avatarBytes;
 
-  // Jika belum ada class C, definisikan di sini atau ambil dari C.primary dsb
-  static const Color cPrimaryGreen = Color(0xFF00652C);
-  static const Color cPrimaryContainer = Color(0xFF15803D);
-  static const Color cBackground = Color(0xFFFAF8FF);
-  static const Color cOnSurface = Color(0xFF131B2E);
-  static const Color cMutedText = Color(0xFF3F493F);
+  // Token warna kini mengacu ke palette kanonik.
+  static const Color cPrimaryGreen = AppColors.primary;
+  static const Color cPrimaryContainer = AppColors.primaryContainer;
+  static const Color cBackground = AppColors.background;
+  static const Color cOnSurface = AppColors.onSurface;
+  static const Color cMutedText = AppColors.onSurfaceVariant;
 
   @override
   void initState() {
@@ -74,7 +72,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
             child: AppBar(
-              backgroundColor: cBackground.withOpacity(0.8),
+              backgroundColor: cBackground.withValues(alpha: 0.8),
               elevation: 0.5,
               scrolledUnderElevation: 0,
               leading: IconButton(
@@ -118,7 +116,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   children: [
                     CircleAvatar(
                       radius: 56,
-                      backgroundColor: Colors.grey.shade200,
+                      backgroundColor: AppColors.surfaceHigh,
                       backgroundImage: _avatarBytes != null
                           ? MemoryImage(_avatarBytes!) as ImageProvider
                           : const NetworkImage(
@@ -162,7 +160,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   icon: Icons.mail_outline,
                   placeholder: 'contoh@domain.id',
                   badgeText: 'Terverifikasi',
-                  badgeBg: const Color(0xFFD3FFD5).withOpacity(0.5),
+                  badgeBg: AppColors.onPrimaryContainer.withValues(alpha: 0.5),
                   badgeTextColor: cPrimaryContainer,
                   caption: 'Email digunakan untuk laporan ringkasan mingguan petak dan diagnosa ML.',
                 ),
@@ -177,8 +175,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   placeholder: '+62 8xx-xxxx-xxxx',
                   badgeText: 'Aktif WA',
                   badgeIcon: Icons.sms,
-                  badgeBg: const Color(0xFF6BFF8F).withOpacity(0.3),
-                  badgeTextColor: const Color(0xFF005321),
+                  badgeBg: AppColors.secondaryContainer.withValues(alpha: 0.3),
+                  badgeTextColor: AppColors.onSecondaryFixedVariant,
                   caption: 'Nomor aktif untuk pengiriman notifikasi darurat hama & cuaca ekstrem.',
                 ),
                 const SizedBox(height: 18),
@@ -196,7 +194,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF2F3FF),
+                    color: AppColors.surfaceLow,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
@@ -245,7 +243,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   child: TextButton(
                     onPressed: () => Navigator.maybePop(context),
                     style: TextButton.styleFrom(
-                      backgroundColor: const Color(0xFFEAEDFF),
+                      backgroundColor: AppColors.surfaceContainer,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     child: Text('Batal',
@@ -283,7 +281,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               children: [
                 Text(label, style: _font(fontSize: 11, fontWeight: FontWeight.w700, color: cMutedText)),
                 if (isRequired)
-                  Text(' *', style: _font(fontSize: 11, fontWeight: FontWeight.w700, color: Colors.red)),
+                  Text(' *', style: _font(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.error)),
               ],
             ),
             if (badgeText != null)
@@ -313,7 +311,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
             color: Colors.white,
             borderRadius: BorderRadius.circular(12),
             boxShadow: const [
-              BoxShadow(color: Color(0x08000000), blurRadius: 4, offset: Offset(0, 2)),
+              BoxShadow(color: AppColors.shadow, blurRadius: 4, offset: Offset(0, 2)),
             ],
           ),
           child: TextFormField(

@@ -1,5 +1,6 @@
 from fastapi import APIRouter, Depends, HTTPException
-from app.database import get_db_connection
+
+from app.database import get_db_connection, row_to_dict, rows_to_dicts
 from app.security import verifikasi_token
 
 router = APIRouter(prefix="/api/notifikasi", tags=["Notifikasi"])
@@ -13,9 +14,7 @@ def daftar_notifikasi(id_pengguna: str = Depends(verifikasi_token)):
             "SELECT * FROM notifikasi WHERE id_pengguna = %s ORDER BY dibuat_pada DESC",
             (id_pengguna,),
         )
-        kolom = [desc[0] for desc in cur.description]
-        hasil = [dict(zip(kolom, row)) for row in cur.fetchall()]
-        return {"notifikasi": hasil}
+        return {"notifikasi": rows_to_dicts(cur)}
 
 
 @router.patch("/{id_notifikasi}/baca")
@@ -33,5 +32,4 @@ def tandai_dibaca(id_notifikasi: str, id_pengguna: str = Depends(verifikasi_toke
         row = cur.fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Notifikasi tidak ditemukan")
-        kolom = [desc[0] for desc in cur.description]
-        return {"notifikasi": dict(zip(kolom, row))}
+        return {"notifikasi": row_to_dict(cur, row)}

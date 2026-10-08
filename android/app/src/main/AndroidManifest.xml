@@ -1,4 +1,7 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
+    <uses-permission android:name="android.permission.CAMERA" />
+    <uses-permission android:name="android.permission.INTERNET" />
+
     <application
         android:label="capsee"
         android:name="${applicationName}"
@@ -42,4 +45,5 @@
             <data android:mimeType="text/plain"/>
         </intent>
     </queries>
+    <uses-feature android:name="android.hardware.camera" android:required="false"/>
 </manifest>

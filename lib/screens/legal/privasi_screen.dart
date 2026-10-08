@@ -15,11 +15,11 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import 'notifikasi_screen.dart' show C;
+import '../../core/app_colors.dart';
 
-const _secondary = Color(0xFF006E2F);
-const _secondaryFixed = Color(0xFF6BFF8F);
-const _onSecondaryFixed = Color(0xFF002109);
+const _secondary = AppColors.secondary;
+const _secondaryFixed = AppColors.secondaryContainer;
+const _onSecondaryFixed = AppColors.onPrimaryFixed;
 
 TextStyle _ts(double size, double height, FontWeight w, Color color,
         {double? letterSpacing}) =>
@@ -32,7 +32,7 @@ TextStyle _ts(double size, double height, FontWeight w, Color color,
     );
 
 const _softShadow = [
-  BoxShadow(color: Color(0x0F000000), blurRadius: 3, offset: Offset(0, 1)),
+  BoxShadow(color: AppColors.shadow, blurRadius: 3, offset: Offset(0, 1)),
 ];
 
 class PrivasiScreen extends StatefulWidget {
@@ -145,10 +145,10 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
       preferredSize: const Size.fromHeight(56),
       child: Container(
         decoration: BoxDecoration(
-          color: C.surface.withOpacity(0.95),
+          color: C.surface.withValues(alpha: 0.95),
           boxShadow: const [
             BoxShadow(
-                color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 1)),
+                color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 1)),
           ],
         ),
         child: SafeArea(
@@ -243,7 +243,7 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
               borderRadius: BorderRadius.circular(8),
             ),
             child: const Icon(Icons.verified_user,
-                size: 24, color: Color(0xFFD3FFD5)),
+                size: 24, color: AppColors.onPrimaryContainer),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -273,7 +273,7 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
         scrollDirection: Axis.horizontal,
         clipBehavior: Clip.none,
         itemCount: _navLabels.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (_, i) => Material(
           color: C.surfaceContainer,
           borderRadius: BorderRadius.circular(999),

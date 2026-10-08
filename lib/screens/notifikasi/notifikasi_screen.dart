@@ -1,43 +1,13 @@
 // notifikasi_screen.dart
 //
-// Dependensi (pubspec.yaml):
-//   dependencies:
-//     flutter:
-//       sdk: flutter
-//     google_fonts: ^6.2.1
-//
-// Jalankan: taruh file ini di lib/ lalu panggil runApp(const CapseeApp()).
+// Layar daftar notifikasi Capsee.
+// Dependensi: google_fonts.
 
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-void main() => runApp(const CapseeApp());
-
-// ─────────────────────────── Warna (Material 3 token) ───────────────────────────
-class C {
-  static const surface = Color(0xFFFAF8FF);
-  static const surfaceLowest = Color(0xFFFFFFFF);
-  static const surfaceLow = Color(0xFFF2F3FF);
-  static const surfaceContainer = Color(0xFFEAEDFF);
-  static const surfaceHigh = Color(0xFFE2E7FF);
-  static const surfaceHighest = Color(0xFFDAE2FD);
-  static const onSurface = Color(0xFF131B2E);
-  static const onSurfaceVariant = Color(0xFF3F493F);
-  static const outline = Color(0xFF6F7A6E);
-  static const primary = Color(0xFF00652C);
-  static const primaryContainer = Color(0xFF15803D);
-  static const onPrimary = Color(0xFFFFFFFF);
-  static const primaryFixed = Color(0xFF95F8A7);
-  static const primaryFixedDim = Color(0xFF79DB8D);
-  static const onPrimaryFixed = Color(0xFF00210A);
-  static const tertiary = Color(0xFF005B8C);
-  static const tertiaryContainer = Color(0xFF0075B1);
-  static const tertiaryFixed = Color(0xFFCCE5FF);
-  static const onTertiaryFixedVariant = Color(0xFF004B73);
-  static const error = Color(0xFFBA1A1A);
-  static const errorContainer = Color(0xFFFFDAD6);
-  static const onErrorContainer = Color(0xFF93000A);
-}
+import '../../core/app_colors.dart';
+import '../../services/services.dart';
 
 // ─────────────────────────── Tipografi ───────────────────────────
 TextStyle _t(double size, double height, FontWeight w, Color color,
@@ -49,25 +19,6 @@ TextStyle _t(double size, double height, FontWeight w, Color color,
       color: color,
       letterSpacing: letterSpacing,
     );
-
-class CapseeApp extends StatelessWidget {
-  const CapseeApp({super.key});
-
-  @override
-  Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Capsee',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: C.surface,
-        colorScheme: ColorScheme.fromSeed(seedColor: C.primary),
-        textTheme: GoogleFonts.plusJakartaSansTextTheme(),
-      ),
-      home: const NotifikasiScreen(),
-    );
-  }
-}
 
 // ─────────────────────────── Model ───────────────────────────
 enum NotifType { reminder, weather, disease }
@@ -94,7 +45,9 @@ class NotifItem {
   bool unread;
   bool confirmed;
 
+  final String id;
   NotifItem({
+    required this.id,
     required this.type,
     required this.group,
     required this.icon,
@@ -127,112 +80,61 @@ class NotifikasiScreen extends StatefulWidget {
 class _NotifikasiScreenState extends State<NotifikasiScreen> {
   NotifType? _selected; // null = Semua
 
-  late final List<NotifItem> _items = [
-    NotifItem(
-      type: NotifType.weather,
-      group: NotifGroup.today,
-      icon: Icons.thunderstorm,
-      iconBg: C.tertiaryFixed,
-      iconColor: C.tertiary,
-      badge: 'Peringatan Cuaca BMKG',
-      badgeBg: C.tertiaryFixed.withOpacity(0.6),
-      badgeFg: C.onTertiaryFixedVariant,
-      time: '10 mnt lalu',
-      dotColor: C.tertiary,
-      title: 'Prediksi Hujan Lebat di Karangploso',
-      body:
-          'BMKG memperkirakan hujan lebat pukul 14:00 WIB. Jadwal penyiraman otomatis Petak Blok A dilewati untuk mencegah kelembapan berlebih.',
-      actionLabel: 'Lihat Jadwal Siram',
-      actionIcon: Icons.arrow_forward,
-      actionColor: C.tertiary,
-      unread: true,
-    ),
-    NotifItem(
-      type: NotifType.reminder,
-      group: NotifGroup.today,
-      icon: Icons.water_drop,
-      iconBg: C.surfaceHigh,
-      iconColor: C.tertiaryContainer,
-      badge: 'Jadwal Irigasi',
-      badgeBg: C.surfaceContainer,
-      badgeFg: C.tertiaryContainer,
-      time: '1 jam lalu',
-      dotColor: C.primaryContainer,
-      title: 'Waktunya Penyiraman Pagi (Petak Rawit Blok B)',
-      body:
-          'Volume irigasi 1.2 L/m² disarankan sebelum pukul 08:30 WIB. Lengas tanah terkini 62%.',
-      actionLabel: 'Konfirmasi Selesai',
-      actionColor: C.onPrimary,
-      actionFilled: true,
-      unread: true,
-    ),
-    NotifItem(
-      type: NotifType.reminder,
-      group: NotifGroup.today,
-      icon: Icons.document_scanner,
-      iconBg: C.primaryFixed,
-      iconColor: C.primary,
-      badge: 'Evaluasi Tanaman AI',
-      badgeBg: C.primaryFixedDim.withOpacity(0.3),
-      badgeFg: C.primary,
-      time: '3 jam lalu',
-      dotColor: C.primaryContainer,
-      title: 'Waktu Pindai Ulang: Petak Rawit Blok A',
-      body:
-          'Sudah 7 hari sejak diagnosa sehat terakhir. Pindai kembali daun utama untuk deteksi dini penyakit dan thrips.',
-      actionLabel: 'Buka Kamera Scan',
-      actionIcon: Icons.photo_camera,
-      actionColor: C.primaryContainer,
-      unread: true,
-    ),
-    NotifItem(
-      type: NotifType.reminder,
-      group: NotifGroup.earlier,
-      icon: Icons.science,
-      iconBg: C.surfaceHighest,
-      iconColor: C.onSurfaceVariant,
-      badge: 'Jadwal Nutrisi',
-      badgeBg: C.surfaceHighest,
-      badgeFg: C.onSurfaceVariant,
-      time: 'Kemarin, 16:45',
-      dotColor: C.primaryContainer,
-      title: 'Jadwal Pemupukan NPK + Kalsium Nitrat',
-      body:
-          'Aplikasi kocor rutin fase berbuah aktif untuk Petak Rawit Blok A (Dosis: 5 gr/tanaman). Terjadwal hari ini.',
-      actionLabel: 'Lihat Panduan Dosis',
-      actionIcon: Icons.menu_book,
-      actionColor: C.onSurfaceVariant,
-      unread: false,
-    ),
-    NotifItem(
-      type: NotifType.disease,
-      group: NotifGroup.earlier,
-      icon: Icons.warning,
-      iconBg: C.errorContainer,
-      iconColor: C.error,
-      badge: 'Kewaspadaan Penyakit',
-      badgeBg: C.errorContainer,
-      badgeFg: C.onErrorContainer,
-      time: '2 hari lalu (25 Okt)',
-      dotColor: C.primaryContainer,
-      title: 'Kelembapan Kanopi Tinggi Semalam (82%)',
-      body:
-          'Kondisi mikroklimat ideal bagi spora Cercospora. Pastikan aerasi kanopi lancar dan lakukan inspeksi daun bawah.',
-      actionLabel: 'Protokol Pencegahan',
-      actionIcon: Icons.shield,
-      actionColor: C.onSurfaceVariant,
-      unread: false,
-    ),
-  ];
+  bool _isLoading = true;
+  List<NotifItem> _items = [];
+
+  @override
+  void initState() {
+    super.initState();
+    _loadNotif();
+  }
+
+  Future<void> _loadNotif() async {
+    setState(() => _isLoading = true);
+    try {
+      final data = await getDaftarNotifikasi();
+      final List<NotifItem> mapped = data.map((n) {
+        // Mapping sederhana dari backend ke NotifItem visual
+        return NotifItem(
+          id: n['id'],
+          type: NotifType.reminder, // fallback
+          group: NotifGroup.today, // fallback
+          icon: Icons.notifications,
+          iconBg: C.primaryFixed,
+          iconColor: C.primary,
+          badge: n['kategori'] ?? 'Info',
+          badgeBg: C.primaryFixedDim.withValues(alpha: 0.3),
+          badgeFg: C.primary,
+          time: 'Baru saja', // Ideally parse n['dibuat_pada']
+          dotColor: C.primaryContainer,
+          title: n['judul'] ?? '',
+          body: n['pesan'] ?? '',
+          actionLabel: 'Lihat Detail',
+          actionColor: C.primary,
+          unread: !(n['sudah_dibaca'] ?? false),
+        );
+      }).toList();
+
+      if (mounted) {
+        setState(() {
+          _items = mapped;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
 
   int get _unreadCount => _items.where((e) => e.unread).length;
 
-  void _markAllRead() {
-    setState(() {
-      for (final e in _items) {
-        e.unread = false;
+  Future<void> _markAllRead() async {
+    for (final e in _items) {
+      if (e.unread) {
+        await tandaiDibaca(e.id);
       }
-    });
+    }
+    _loadNotif();
   }
 
   List<NotifItem> _visible(NotifGroup g) => _items
@@ -241,6 +143,14 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
 
   @override
   Widget build(BuildContext context) {
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: C.surface,
+        appBar: _buildAppBar(),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
+
     final today = _visible(NotifGroup.today);
     final earlier = _visible(NotifGroup.earlier);
 
@@ -253,24 +163,32 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
           _buildStatusBar(),
           _buildChips(),
           const SizedBox(height: 16),
-          Padding(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.stretch,
-              children: [
-                if (today.isNotEmpty)
-                  _buildSection('Hari Ini', '26 Okt 2024', today),
-                if (today.isNotEmpty && earlier.isNotEmpty)
+          if (_items.isEmpty)
+            const Padding(
+              padding: EdgeInsets.all(32),
+              child: Center(
+                child: Text('Belum ada notifikasi.', style: TextStyle(color: C.outline)),
+              ),
+            )
+          else
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16),
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
+                children: [
+                  if (today.isNotEmpty)
+                    _buildSection('Hari Ini', '26 Okt 2024', today),
+                  if (today.isNotEmpty && earlier.isNotEmpty)
+                    const SizedBox(height: 24),
+                  if (earlier.isNotEmpty)
+                    _buildSection('Kemarin & Sebelumnya', 'Riwayat Log', earlier),
                   const SizedBox(height: 24),
-                if (earlier.isNotEmpty)
-                  _buildSection('Kemarin & Sebelumnya', 'Riwayat Log', earlier),
-                const SizedBox(height: 24),
-                _buildTelemetryCard(),
-                const SizedBox(height: 8),
-                _buildFooter(),
-              ],
+                  _buildTelemetryCard(),
+                  const SizedBox(height: 8),
+                  _buildFooter(),
+                ],
+              ),
             ),
-          ),
         ],
       ),
     );
@@ -282,10 +200,10 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       preferredSize: const Size.fromHeight(64),
       child: Container(
         decoration: BoxDecoration(
-          color: C.surface.withOpacity(0.95),
+          color: C.surface.withValues(alpha: 0.95),
           boxShadow: const [
             BoxShadow(
-                color: Color(0x0A000000), blurRadius: 8, offset: Offset(0, 1)),
+                color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 1)),
           ],
         ),
         child: SafeArea(
@@ -300,7 +218,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: C.primaryContainer.withOpacity(0.1),
+                      color: C.primaryContainer.withValues(alpha: 0.1),
                       borderRadius: BorderRadius.circular(8),
                     ),
                     child: const Icon(Icons.notifications_outlined,
@@ -362,7 +280,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                   decoration: BoxDecoration(
                     color: allRead
                         ? C.surfaceContainer
-                        : C.primaryContainer.withOpacity(0.1),
+                        : C.primaryContainer.withValues(alpha: 0.1),
                     borderRadius: BorderRadius.circular(999),
                   ),
                   child: Row(
@@ -419,7 +337,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
         scrollDirection: Axis.horizontal,
         padding: const EdgeInsets.symmetric(horizontal: 16),
         itemCount: chips.length,
-        separatorBuilder: (_, __) => const SizedBox(width: 8),
+        separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (_, i) {
           final (label, type) = chips[i];
           final active = _selected == type;
@@ -435,7 +353,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                 boxShadow: active
                     ? const [
                         BoxShadow(
-                            color: Color(0x1F000000),
+                            color: AppColors.shadow,
                             blurRadius: 2,
                             offset: Offset(0, 1))
                       ]
@@ -491,7 +409,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
           borderRadius: BorderRadius.circular(12),
           boxShadow: const [
             BoxShadow(
-                color: Color(0x0F000000), blurRadius: 3, offset: Offset(0, 1)),
+                color: AppColors.shadow, blurRadius: 3, offset: Offset(0, 1)),
           ],
         ),
         child: Row(
@@ -580,7 +498,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
     if (n.actionFilled) {
       final done = n.confirmed;
       return Material(
-        color: done ? C.outline.withOpacity(0.75) : C.primaryContainer,
+        color: done ? C.outline.withValues(alpha: 0.75) : C.primaryContainer,
         borderRadius: BorderRadius.circular(4),
         elevation: 1,
         child: InkWell(
@@ -668,7 +586,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
               style: _t(12, 16, FontWeight.w600, C.outline)),
         ),
         Text('Capsee Intelligence Telemetry v2.4',
-            style: _t(10, 14, FontWeight.w700, C.outline.withOpacity(0.7))),
+            style: _t(10, 14, FontWeight.w700, C.outline.withValues(alpha: 0.7))),
         const SizedBox(height: 16),
       ],
     );

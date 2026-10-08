@@ -10,6 +10,7 @@ const Map<int, String> plantPhaseLabels = {
 
 /// Data lahan / petak kebun cabai yang diinput user.
 class LandData {
+  final String? id;
   final String name;
   final String province;
   final String city;
@@ -20,6 +21,7 @@ class LandData {
   final int fertilizeIntervalWeeks;
 
   const LandData({
+    this.id,
     required this.name,
     required this.province,
     required this.city,

@@ -3,13 +3,11 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/app_colors.dart';
-import '../models/land_data.dart';
-import '../widgets/auth_widgets.dart';
-import 'dashboard_screen.dart';
-import 'detail_lahan_screen.dart';
-import 'panduan_screen.dart';
-import 'tambah_lahan_page.dart';
+import '../../core/app_colors.dart';
+import '../../widgets/auth_widgets.dart';
+import '../bantuan/panduan_screen.dart';
+import '../home/dashboard_screen.dart';
+import '../lahan/tambah_lahan_page.dart';
 
 /// Data satu kartu fitur di onboarding.
 class _Feature {
@@ -39,16 +37,16 @@ const _features = [
   ),
   _Feature(
     icon: Icons.document_scanner_outlined,
-    iconBg: Color(0xFFDBEAFE),
-    iconColor: Color(0xFF1D4ED8),
+    iconBg: AppColors.infoSoft,
+    iconColor: AppColors.info,
     title: 'Deteksi Dini Hama & Daun',
     description:
         'Diagnosis otomatis bercak bakteri, antraknosa, dan thrips secara instan.',
   ),
   _Feature(
     icon: Icons.query_stats_rounded,
-    iconBg: Color(0xFFE0E7FF),
-    iconColor: Color(0xFF4338CA),
+    iconBg: AppColors.tertiaryFixed,
+    iconColor: AppColors.tertiary,
     title: 'Rekomendasi & Jadwal Panen',
     description:
         'Panduan dosis pupuk terukur dan prediksi tanggal panen puncak.',
@@ -57,12 +55,6 @@ const _features = [
 
 class OnboardingScreen extends StatelessWidget {
   const OnboardingScreen({super.key});
-
-  void _showTodo(BuildContext context, String message) {
-    ScaffoldMessenger.of(
-      context,
-    ).showSnackBar(SnackBar(content: Text(message)));
-  }
 
   @override
   Widget build(BuildContext context) {
@@ -245,7 +237,7 @@ class _HeroCard extends StatelessWidget {
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFFD1FAE5), Colors.white],
+          colors: [AppColors.primarySoft, Colors.white],
         ),
         boxShadow: const [
           BoxShadow(
@@ -313,7 +305,7 @@ class _HeroCard extends StatelessWidget {
                 width: 8,
                 height: 8,
                 decoration: const BoxDecoration(
-                  color: Color(0xFF4ADE80),
+                  color: AppColors.primaryFixed,
                   shape: BoxShape.circle,
                 ),
               ),

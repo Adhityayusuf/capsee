@@ -1,5 +1,8 @@
 import 'package:flutter/material.dart';
 
+import '../../core/app_colors.dart';
+import '../../services/services.dart';
+
 class TambahLahanPage extends StatefulWidget {
   const TambahLahanPage({super.key});
 
@@ -36,13 +39,13 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
     5: 'Fase Panen Berkala',
   };
 
-  // Warna sesuai tema Capsee
-  static const Color primaryGreen = Color(0xFF00652C);
-  static const Color lightGreenBg = Color(0xFFE8F5E9);
-  static const Color surfaceBg = Color(0xFFF9FAFD);
-  static const Color cardFieldBg = Color(0xFFF1F3F9);
-  static const Color textDark = Color(0xFF131B2E);
-  static const Color textMuted = Color(0xFF5E6A75);
+  // Warna mengacu ke palette kanonik Capsee.
+  static const Color primaryGreen = AppColors.primary;
+  static const Color lightGreenBg = AppColors.primarySoft;
+  static const Color surfaceBg = AppColors.background;
+  static const Color cardFieldBg = AppColors.chipBg;
+  static const Color textDark = AppColors.title;
+  static const Color textMuted = AppColors.subtitle;
 
   @override
   void dispose() {
@@ -52,33 +55,64 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
     super.dispose();
   }
 
-  void _simpanData() {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        backgroundColor: const Color(0xFF283044),
-        behavior: SnackBarBehavior.floating,
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-        content: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: const [
-            Icon(Icons.verified, color: Color(0xFF6BFF8F), size: 20),
-            SizedBox(width: 8),
-            Text(
-              'Data kebun berhasil diperbarui!',
-              style: TextStyle(
-                color: Colors.white,
-                fontWeight: FontWeight.w600,
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+  bool _isLoading = false;
 
-    // Pop dan kirimkan hasil true
-    Future.delayed(const Duration(milliseconds: 500), () {
-      if (mounted) Navigator.maybePop(context, true);
-    });
+  Future<void> _simpanData() async {
+    if (_namaLahanController.text.trim().isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(content: Text('Nama lahan tidak boleh kosong')),
+      );
+      return;
+    }
+
+    setState(() => _isLoading = true);
+
+    try {
+      await tambahLahan(
+        nama: _namaLahanController.text.trim(),
+        provinsi: _selectedProvince,
+        kota: _selectedCity,
+        kecamatan: _selectedDistrict,
+        umurTanamanBulan: _selectedAgeMonth,
+        intervalPupukMinggu: _selectedIntervalWeek,
+      );
+
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          backgroundColor: AppColors.inverseSurface,
+          behavior: SnackBarBehavior.floating,
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+          content: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: const [
+              Icon(Icons.verified, color: AppColors.secondaryContainer, size: 20),
+              SizedBox(width: 8),
+              Text(
+                'Data kebun berhasil ditambahkan!',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+      // Pop dan kirimkan hasil true agar dashboard merefresh data
+      Future.delayed(const Duration(milliseconds: 500), () {
+        if (mounted) Navigator.maybePop(context, true);
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menyimpan: $e')),
+      );
+    }
   }
 
   @override
@@ -145,7 +179,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFE8F5E9),
+                          color: AppColors.primarySoft,
                           borderRadius: BorderRadius.circular(12),
                         ),
                         child: const Icon(
@@ -306,7 +340,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
             _buildCardWrapper(
               title: 'Kondisi & Budidaya',
               sectionTag: 'Seksi 2/2',
-              tagColor: const Color(0xFFE8F5E9),
+              tagColor: AppColors.primarySoft,
               tagTextColor: primaryGreen,
               children: [
                 Row(
@@ -401,7 +435,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                   decoration: _buildInputDecoration(
                     prefixIcon: Icons.compost,
                     suffixTextBadge: '6 hari lalu',
-                    badgeBg: const Color(0xFFE2E7FF),
+                    badgeBg: AppColors.surfaceHigh,
                     badgeTextColor: textDark,
                   ),
                 ),
@@ -441,11 +475,17 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
               width: double.infinity,
               height: 52,
               child: ElevatedButton.icon(
-                onPressed: _simpanData,
-                icon: const Icon(Icons.task_alt, color: Colors.white),
-                label: const Text(
-                  'Simpan Data Lahan',
-                  style: TextStyle(
+                onPressed: _isLoading ? null : _simpanData,
+                icon: _isLoading 
+                    ? const SizedBox(
+                        width: 20, 
+                        height: 20, 
+                        child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2)
+                      )
+                    : const Icon(Icons.task_alt, color: Colors.white),
+                label: Text(
+                  _isLoading ? 'Menyimpan...' : 'Simpan Data Lahan',
+                  style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
                     color: Colors.white,
@@ -517,10 +557,10 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: Colors.black.withOpacity(0.06)),
+        border: Border.all(color: Colors.black.withValues(alpha: 0.06)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -608,7 +648,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                 const TextSpan(
                   text: ' *',
                   style: TextStyle(
-                    color: Colors.red,
+                    color: AppColors.error,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
@@ -634,7 +674,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
     required IconData prefixIcon,
     String? hint,
     String? suffixTextBadge,
-    Color badgeBg = const Color(0xFFC8E6C9),
+    Color badgeBg = AppColors.primaryFixedDim,
     Color badgeTextColor = primaryGreen,
   }) {
     return InputDecoration(
@@ -687,7 +727,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
     required ValueChanged<String?> onChanged,
   }) {
     return DropdownButtonFormField<String>(
-      value: value,
+      initialValue: value,
       items: items,
       onChanged: onChanged,
       icon: const Icon(Icons.expand_more, color: textMuted),
@@ -723,7 +763,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
           boxShadow: isSelected
               ? [
                   BoxShadow(
-                    color: primaryGreen.withOpacity(0.3),
+                    color: primaryGreen.withValues(alpha: 0.3),
                     blurRadius: 6,
                     offset: const Offset(0, 3),
                   ),

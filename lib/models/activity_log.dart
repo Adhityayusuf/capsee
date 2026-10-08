@@ -11,11 +11,11 @@ extension ActivityCategoryStyle on ActivityCategory {
       case ActivityCategory.scan:
         return AppColors.primary;
       case ActivityCategory.irrigation:
-        return const Color(0xFF2563EB);
+        return AppColors.info;
       case ActivityCategory.alert:
-        return const Color(0xFFDC2626);
+        return AppColors.error;
       case ActivityCategory.fertilizer:
-        return const Color(0xFF16A34A);
+        return AppColors.primary;
     }
   }
 
@@ -24,11 +24,11 @@ extension ActivityCategoryStyle on ActivityCategory {
       case ActivityCategory.scan:
         return AppColors.primarySoft;
       case ActivityCategory.irrigation:
-        return const Color(0xFFDBEAFE);
+        return AppColors.infoSoft;
       case ActivityCategory.alert:
-        return const Color(0xFFFEE2E2);
+        return AppColors.errorContainer;
       case ActivityCategory.fertilizer:
-        return const Color(0xFFDCFCE7);
+        return AppColors.primarySoft;
     }
   }
 }
