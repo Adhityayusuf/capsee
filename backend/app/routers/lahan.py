@@ -16,10 +16,11 @@ class TambahLahanRequest(BaseModel):
     provinsi: str = Field(min_length=1)
     kota: str = Field(min_length=1)
     kecamatan: str = Field(min_length=1)
-    umur_tanaman_bulan: int = Field(ge=0)
+    # Samakan dengan CHECK di DB: umur 1-5 bulan, interval pupuk 1-2 minggu.
+    umur_tanaman_bulan: int = Field(ge=1, le=5)
     tanggal_terakhir_siram: date | None = None
     tanggal_terakhir_pupuk: date | None = None
-    interval_pupuk_minggu: int = Field(ge=1)
+    interval_pupuk_minggu: int = Field(ge=1, le=2)
 
 
 class EditLahanRequest(BaseModel):
@@ -27,10 +28,10 @@ class EditLahanRequest(BaseModel):
     provinsi: str | None = Field(default=None, min_length=1)
     kota: str | None = Field(default=None, min_length=1)
     kecamatan: str | None = Field(default=None, min_length=1)
-    umur_tanaman_bulan: int | None = Field(default=None, ge=0)
+    umur_tanaman_bulan: int | None = Field(default=None, ge=1, le=5)
     tanggal_terakhir_siram: date | None = None
     tanggal_terakhir_pupuk: date | None = None
-    interval_pupuk_minggu: int | None = Field(default=None, ge=1)
+    interval_pupuk_minggu: int | None = Field(default=None, ge=1, le=2)
 
 
 # ─────────────────────────────────────────────────
