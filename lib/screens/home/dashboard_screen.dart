@@ -543,7 +543,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
       // Panggil backend: ini akan otomatis kompres, upload ke Cloudinary, dan simpan ke DB!
       final res = await uploadScan(
-        file: File(picked.path),
+        file: picked,
         idLahan: idLahanTarget,
         bagianTanaman: 'daun', // Default dari dashboard
       );

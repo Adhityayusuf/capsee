@@ -114,7 +114,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
 
     try {
       final res = await uploadScan(
-        file: File(pickedFile.path),
+        file: pickedFile,
         idLahan: widget.land.id ?? '', 
         bagianTanaman: _selectedOrgan == 'leaf' ? 'daun' : 'buah',
       );
