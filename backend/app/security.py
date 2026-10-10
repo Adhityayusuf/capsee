@@ -1,11 +1,12 @@
 import os
+from pathlib import Path
 import bcrypt
 import jwt
 from datetime import datetime, timedelta, timezone
 from fastapi import Header, HTTPException
 from dotenv import load_dotenv
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 JWT_SECRET = os.getenv("JWT_SECRET")
 
