@@ -201,22 +201,6 @@ class _LoginScreenState extends State<LoginScreen> {
               onPressed: _submit,
             ),
             const SizedBox(height: 20),
-
-            // ---------- Status model AI ----------
-            SizedBox(
-              width: double.infinity,
-              child: InfoChip(
-                leading: Container(
-                  width: 9,
-                  height: 9,
-                  decoration: const BoxDecoration(
-                    color: AppColors.primaryDark,
-                    shape: BoxShape.circle,
-                  ),
-                ),
-                text: 'Model AI Deteksi Capsicum v3.4 Aktif',
-              ),
-            ),
           ],
         ),
       ),
