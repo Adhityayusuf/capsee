@@ -214,6 +214,19 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 16),
               child: Row(
                 children: [
+                  if (Navigator.of(context).canPop()) ...[
+                    IconButton(
+                      tooltip: 'Kembali',
+                      onPressed: () => Navigator.of(context).maybePop(),
+                      icon: const Icon(Icons.arrow_back_rounded,
+                          size: 22, color: C.onSurface),
+                      style: IconButton.styleFrom(
+                        minimumSize: const Size(40, 40),
+                        shape: const CircleBorder(),
+                      ),
+                    ),
+                    const SizedBox(width: 4),
+                  ],
                   Container(
                     width: 36,
                     height: 36,

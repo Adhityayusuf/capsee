@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'api_client.dart';
 
 // ─────────────────────────────────────────────────────────
@@ -8,8 +7,8 @@ import 'api_client.dart';
 
 /// Ambil profil pengguna yang sedang login.
 Future<Map<String, dynamic>> getProfil() async {
-  final res = await http.get(
-    Uri.parse('$baseUrl/api/pengguna/me'),
+  final res = await apiGet(
+    '/api/pengguna/me',
     headers: await headerAuth(),
   );
   final body = parseResponse(res);
@@ -25,8 +24,8 @@ Future<Map<String, dynamic>> editProfil({
   if (nama != null) payload['nama'] = nama;
   if (nomorHp != null) payload['nomor_hp'] = nomorHp;
 
-  final res = await http.put(
-    Uri.parse('$baseUrl/api/pengguna/me'),
+  final res = await apiPut(
+    '/api/pengguna/me',
     headers: await headerAuth(),
     body: jsonEncode(payload),
   );
@@ -39,8 +38,8 @@ Future<void> gantiSandi({
   required String sandiLama,
   required String sandiBaru,
 }) async {
-  final res = await http.put(
-    Uri.parse('$baseUrl/api/pengguna/me/ganti-sandi'),
+  final res = await apiPut(
+    '/api/pengguna/me/ganti-sandi',
     headers: await headerAuth(),
     body: jsonEncode({'sandi_lama': sandiLama, 'sandi_baru': sandiBaru}),
   );

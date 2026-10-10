@@ -31,4 +31,11 @@ def kompres_gambar(
     # Simpan sebagai JPEG terkompresi ke memory (bukan ke disk)
     buffer = io.BytesIO()
     gambar.save(buffer, format="JPEG", quality=kualitas, optimize=True)
-    return buffer.getvalue()
+    
+    hasil_kompresi = buffer.getvalue()
+    
+    # Jangan gunakan hasil kompresi jika ukurannya malah lebih besar dari aslinya
+    if len(hasil_kompresi) > len(file_bytes):
+        return file_bytes
+        
+    return hasil_kompresi

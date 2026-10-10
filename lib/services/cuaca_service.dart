@@ -1,4 +1,3 @@
-import 'package:http/http.dart' as http;
 import 'api_client.dart';
 
 // ─────────────────────────────────────────────────────────
@@ -14,8 +13,8 @@ import 'api_client.dart';
 /// - 'prakiraan': list ringkasan cuaca per periode (suhu, kelembapan, cuaca, dll)
 /// - 'sumber': "BMKG"
 Future<Map<String, dynamic>> getCuacaLahan(String idLahan) async {
-  final res = await http.get(
-    Uri.parse('$baseUrl/api/cuaca/$idLahan'),
+  final res = await apiGet(
+    '/api/cuaca/$idLahan',
     headers: await headerAuth(),
   );
   return parseResponse(res);

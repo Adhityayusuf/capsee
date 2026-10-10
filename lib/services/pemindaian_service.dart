@@ -1,5 +1,5 @@
-import 'dart:io';
 import 'package:http/http.dart' as http;
+import 'package:image_picker/image_picker.dart';
 import 'api_client.dart';
 
 // ─────────────────────────────────────────────────────────
@@ -21,7 +21,7 @@ import 'api_client.dart';
 /// - 'langkah_tindakan': list langkah darurat
 /// - 'pencegahan': list tips pencegahan
 Future<Map<String, dynamic>> uploadScan({
-  required File file,
+  required XFile file,
   required String idLahan,
   required String bagianTanaman, // 'daun' atau 'buah'
 }) async {
@@ -31,22 +31,25 @@ Future<Map<String, dynamic>> uploadScan({
   final request = http.MultipartRequest('POST', uri)
     ..headers.addAll(headers)
     ..fields['id_lahan'] = idLahan
-    ..fields['bagian_tanaman'] = bagianTanaman
-    ..files.add(await http.MultipartFile.fromPath(
-      'gambar',
-      file.path,
-      // Backend yang mengatur kompresi — tidak perlu kompres di Flutter
-    ));
+    ..fields['bagian_tanaman'] = bagianTanaman;
 
-  final streamed = await request.send();
-  final res = await http.Response.fromStream(streamed);
+  // Membaca bytes secara langsung memungkinkan upload dari Flutter Web (browser)
+  // karena MultipartFile.fromPath tidak didukung di web (memerlukan dart:io).
+  final bytes = await file.readAsBytes();
+  request.files.add(http.MultipartFile.fromBytes(
+    'gambar',
+    bytes,
+    filename: file.name,
+  ));
+
+  final res = await apiSend(request);
   return parseResponse(res);
 }
 
 /// Ambil semua riwayat scan untuk satu lahan.
 Future<List<Map<String, dynamic>>> getRiwayatScan(String idLahan) async {
-  final res = await http.get(
-    Uri.parse('$baseUrl/api/pemindaian/lahan/$idLahan'),
+  final res = await apiGet(
+    '/api/pemindaian/lahan/$idLahan',
     headers: await headerAuth(),
   );
   final body = parseResponse(res);
@@ -56,8 +59,8 @@ Future<List<Map<String, dynamic>>> getRiwayatScan(String idLahan) async {
 /// Ambil detail satu hasil scan beserta penyakit, penanganan,
 /// langkah tindakan, dan pencegahan.
 Future<Map<String, dynamic>> getDetailScan(String idScan) async {
-  final res = await http.get(
-    Uri.parse('$baseUrl/api/pemindaian/$idScan'),
+  final res = await apiGet(
+    '/api/pemindaian/$idScan',
     headers: await headerAuth(),
   );
   return parseResponse(res);

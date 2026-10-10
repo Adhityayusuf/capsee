@@ -1,6 +1,5 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/app_colors.dart';
@@ -22,10 +21,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
   final _formKey = GlobalKey<FormState>();
   final _nameController = TextEditingController();
   final _emailController = TextEditingController();
-  final _phoneController = TextEditingController();
   final _passwordController = TextEditingController();
+  final _confirmController = TextEditingController();
 
   bool _obscurePassword = true;
+  bool _obscureConfirm = true;
   bool _agreed = false;
   bool _showTermsError = false;
   bool _isLoading = false;
@@ -56,8 +56,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
   void dispose() {
     _nameController.dispose();
     _emailController.dispose();
-    _phoneController.dispose();
     _passwordController.dispose();
+    _confirmController.dispose();
     _termsTap.dispose();
     _privacyTap.dispose();
     super.dispose();
@@ -71,18 +71,10 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      // Hilangkan +62 jika user input prefix, atau gunakan langsung
-      String phone = _phoneController.text.trim();
-      if (phone.startsWith('0')) {
-        phone = phone.substring(1);
-      }
-      final nomorHp = '+62$phone';
-
       await register(
         nama: _nameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
-        nomorHp: nomorHp,
       );
 
       if (!mounted) return;
@@ -92,7 +84,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
         const SnackBar(content: Text('Akun berhasil dibuat, silakan masuk')),
       );
 
-      // Setelah daftar, arahkan ke halaman login
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const LoginScreen()),
       );
@@ -110,196 +101,132 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return AuthScaffold(
       child: Column(
         children: [
-          const CapseeLogo(),
-          const SizedBox(height: 16),
-          _buildBadge(),
-          const SizedBox(height: 14),
-          const AuthHeader(
-            title: 'Daftar Akun Capsee',
-            subtitle: 'Mulai pantau & lindungi kebun cabai Anda dengan presisi AI',
+          const AuthTopBar(showBack: true),
+          const SizedBox(height: 20),
+          AuthCard(
+            child: Form(
+              key: _formKey,
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  const AuthHeader(title: 'Daftar Akun Capsee'),
+                  const SizedBox(height: 24),
+                  const FieldLabel('Nama Lengkap'),
+                  const SizedBox(height: 8),
+                  _buildNameField(),
+                  const SizedBox(height: 16),
+                  const FieldLabel('Email'),
+                  const SizedBox(height: 8),
+                  _buildEmailField(),
+                  const SizedBox(height: 16),
+                  const FieldLabel('Kata Sandi'),
+                  const SizedBox(height: 8),
+                  _buildPasswordField(),
+                  const SizedBox(height: 16),
+                  const FieldLabel('Konfirmasi Kata Sandi'),
+                  const SizedBox(height: 8),
+                  _buildConfirmField(),
+                  const SizedBox(height: 18),
+                  _buildTermsRow(),
+                  const SizedBox(height: 20),
+                  PrimaryButton(
+                    label: 'Daftar Sekarang',
+                    isLoading: _isLoading,
+                    onPressed: _submit,
+                  ),
+                  const SizedBox(height: 18),
+                  const OrDivider('Atau daftar dengan'),
+                  const SizedBox(height: 14),
+                  Center(
+                    child: SocialButton(
+                      onPressed: () {},
+                      child: const GoogleIcon(),
+                    ),
+                  ),
+                ],
+              ),
+            ),
           ),
-          const SizedBox(height: 24),
-          _buildFormCard(),
           const SizedBox(height: 24),
           _buildLoginRow(),
-          const SizedBox(height: 20),
-          const InfoChip(
-            radius: 30,
-            leading: Icon(
-              Icons.verified_user_rounded,
-              size: 16,
-              color: AppColors.primaryDark,
-            ),
-            text: 'Sistem Pertanian Presisi • Data Aman & Terenkripsi',
-          ),
         ],
       ),
     );
   }
 
-  // ---------------------------------------------------------------
-  // Badge "AGRI-TECH INTELLIGENCE"
-  // ---------------------------------------------------------------
-  Widget _buildBadge() {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-      decoration: BoxDecoration(
-        color: AppColors.primarySoft,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.eco_rounded, size: 14, color: AppColors.primaryDark),
-          const SizedBox(width: 6),
-          Text(
-            'AGRI-TECH INTELLIGENCE',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 11,
-              fontWeight: FontWeight.w800,
-              letterSpacing: 0.5,
-              color: AppColors.primaryDark,
-            ),
-          ),
-        ],
-      ),
+  Widget _buildNameField() {
+    return TextFormField(
+      controller: _nameController,
+      keyboardType: TextInputType.name,
+      textCapitalization: TextCapitalization.words,
+      textInputAction: TextInputAction.next,
+      decoration: capseeInputDecoration(hint: 'Nama lengkap Anda'),
+      validator: validateName,
     );
   }
 
-  // ---------------------------------------------------------------
-  // Kartu form
-  // ---------------------------------------------------------------
-  Widget _buildFormCard() {
-    return AuthCard(
-      child: Form(
-        key: _formKey,
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            // ---------- Nama lengkap ----------
-            const FieldLabel('Nama Lengkap'),
-            const SizedBox(height: 10),
-            TextFormField(
-              controller: _nameController,
-              keyboardType: TextInputType.name,
-              textCapitalization: TextCapitalization.words,
-              textInputAction: TextInputAction.next,
-              decoration: capseeInputDecoration(
-                hint: 'Nama lengkap Anda',
-                prefixIcon: Icons.person_outline_rounded,
-              ),
-              validator: validateName,
-            ),
-            const SizedBox(height: 18),
+  Widget _buildEmailField() {
+    return TextFormField(
+      controller: _emailController,
+      keyboardType: TextInputType.emailAddress,
+      textInputAction: TextInputAction.next,
+      decoration: capseeInputDecoration(hint: 'nama@email.com'),
+      validator: validateEmail,
+    );
+  }
 
-            // ---------- Email aktif ----------
-            const FieldLabel('Email Aktif'),
-            const SizedBox(height: 10),
-            TextFormField(
-              controller: _emailController,
-              keyboardType: TextInputType.emailAddress,
-              textInputAction: TextInputAction.next,
-              decoration: capseeInputDecoration(
-                hint: 'nama@email.com',
-                prefixIcon: Icons.mail_outline_rounded,
-              ),
-              validator: validateEmail,
-            ),
-            const SizedBox(height: 18),
-
-            // ---------- Nomor WhatsApp / HP ----------
-            const FieldLabel('Nomor WhatsApp / HP'),
-            const SizedBox(height: 10),
-            TextFormField(
-              controller: _phoneController,
-              keyboardType: TextInputType.phone,
-              textInputAction: TextInputAction.next,
-              inputFormatters: [FilteringTextInputFormatter.digitsOnly],
-              decoration: capseeInputDecoration(
-                hint: '812 3456 7890',
-                prefix: _buildPhonePrefix(),
-              ),
-              validator: validatePhone,
-            ),
-            const SizedBox(height: 18),
-
-            // ---------- Kata sandi ----------
-            const FieldLabel('Kata Sandi'),
-            const SizedBox(height: 10),
-            TextFormField(
-              controller: _passwordController,
-              obscureText: _obscurePassword,
-              textInputAction: TextInputAction.done,
-              decoration: capseeInputDecoration(
-                hint: 'Minimal 8 karakter',
-                prefixIcon: Icons.lock_outline_rounded,
-                suffix: IconButton(
-                  onPressed: () =>
-                      setState(() => _obscurePassword = !_obscurePassword),
-                  icon: Icon(
-                    _obscurePassword
-                        ? Icons.visibility_outlined
-                        : Icons.visibility_off_outlined,
-                    color: AppColors.icon,
-                  ),
-                ),
-              ),
-              validator: validatePassword,
-            ),
-            const SizedBox(height: 20),
-
-            // ---------- Persetujuan ----------
-            _buildTermsRow(),
-            const SizedBox(height: 22),
-
-            // ---------- Tombol daftar ----------
-            PrimaryButton(
-              label: 'Daftar Sekarang',
-              icon: Icons.arrow_forward_rounded,
-              iconAtEnd: true,
-              isLoading: _isLoading,
-              onPressed: _submit,
-            ),
-          ],
+  Widget _buildPasswordField() {
+    return TextFormField(
+      controller: _passwordController,
+      obscureText: _obscurePassword,
+      textInputAction: TextInputAction.next,
+      decoration: capseeInputDecoration(
+        hint: 'Minimal 8 karakter',
+        suffix: IconButton(
+          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
+          icon: Icon(
+            _obscurePassword
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+            color: AppColors.icon,
+          ),
         ),
       ),
+      validator: validatePassword,
     );
   }
 
-  // Prefix: [ikon telepon] +62 |
-  Widget _buildPhonePrefix() {
-    return Padding(
-      padding: const EdgeInsets.only(left: 14, right: 12),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          const Icon(Icons.phone_outlined, size: 22, color: AppColors.icon),
-          const SizedBox(width: 8),
-          Text(
-            '+62',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 15,
-              fontWeight: FontWeight.w700,
-              color: AppColors.title,
-            ),
+  Widget _buildConfirmField() {
+    return TextFormField(
+      controller: _confirmController,
+      obscureText: _obscureConfirm,
+      textInputAction: TextInputAction.done,
+      decoration: capseeInputDecoration(
+        hint: 'Ulangi kata sandi',
+        suffix: IconButton(
+          onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
+          icon: Icon(
+            _obscureConfirm
+                ? Icons.visibility_outlined
+                : Icons.visibility_off_outlined,
+            color: AppColors.icon,
           ),
-          const SizedBox(width: 10),
-          Container(width: 1, height: 22, color: AppColors.border),
-        ],
+        ),
       ),
+      validator: (value) =>
+          validateConfirmPassword(value, _passwordController.text),
     );
   }
 
-  // Checkbox custom + teks Syarat & Ketentuan
   Widget _buildTermsRow() {
     final baseStyle = GoogleFonts.plusJakartaSans(
-      fontSize: 14,
+      fontSize: 13,
       height: 1.4,
-      color: AppColors.title,
+      color: AppColors.subtitle,
     );
     final linkStyle = baseStyle.copyWith(
       fontWeight: FontWeight.w800,
-      color: AppColors.primaryDark,
+      color: AppColors.primary,
     );
 
     return Column(
@@ -315,24 +242,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
               }),
               child: AnimatedContainer(
                 duration: const Duration(milliseconds: 150),
-                width: 26,
-                height: 26,
+                width: 22,
+                height: 22,
                 decoration: BoxDecoration(
-                  color: _agreed ? AppColors.primaryDark : AppColors.chipBg,
-                  borderRadius: BorderRadius.circular(7),
+                  color: _agreed ? AppColors.primary : Colors.white,
+                  borderRadius: BorderRadius.circular(6),
                   border: Border.all(
                     color: _showTermsError
                         ? AppColors.error
-                        : (_agreed ? AppColors.primaryDark : AppColors.border),
+                        : (_agreed ? AppColors.primary : AppColors.border),
                   ),
                 ),
                 child: _agreed
                     ? const Icon(Icons.check_rounded,
-                        size: 18, color: Colors.white)
+                        size: 16, color: Colors.white)
                     : null,
               ),
             ),
-            const SizedBox(width: 12),
+            const SizedBox(width: 10),
             Expanded(
               child: Text.rich(
                 TextSpan(
@@ -359,7 +286,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
         ),
         if (_showTermsError)
           Padding(
-            padding: const EdgeInsets.only(top: 6, left: 38),
+            padding: const EdgeInsets.only(top: 6, left: 32),
             child: Text(
               'Anda harus menyetujui syarat & ketentuan',
               style: GoogleFonts.plusJakartaSans(
@@ -372,9 +299,6 @@ class _RegisterScreenState extends State<RegisterScreen> {
     );
   }
 
-  // ---------------------------------------------------------------
-  // "Sudah punya akun? Masuk"
-  // ---------------------------------------------------------------
   Widget _buildLoginRow() {
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
@@ -382,11 +306,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
         Text(
           'Sudah punya akun?',
           style: GoogleFonts.plusJakartaSans(
-            fontSize: 16,
-            color: AppColors.title,
+            fontSize: 14,
+            color: AppColors.subtitle,
           ),
         ),
-        const SizedBox(width: 8),
+        const SizedBox(width: 6),
         GestureDetector(
           onTap: () => Navigator.of(context).pushReplacement(
             MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -394,9 +318,9 @@ class _RegisterScreenState extends State<RegisterScreen> {
           child: Text(
             'Masuk',
             style: GoogleFonts.plusJakartaSans(
-              fontSize: 16,
+              fontSize: 14,
               fontWeight: FontWeight.w800,
-              color: AppColors.primaryDark,
+              color: AppColors.primary,
             ),
           ),
         ),

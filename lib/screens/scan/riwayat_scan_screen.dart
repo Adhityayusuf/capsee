@@ -1,5 +1,3 @@
-import 'dart:io';
-
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -105,7 +103,6 @@ class RiwayatScanScreen extends StatelessWidget {
   );
 
   Widget _card(ScanHistoryItem item) {
-    final file = File(item.imagePath);
     return Card(
       elevation: 1,
       color: Colors.white,
@@ -115,22 +112,21 @@ class RiwayatScanScreen extends StatelessWidget {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: file.existsSync()
-                  ? Image.file(
-                      file,
-                      width: 56,
-                      height: 56,
-                      fit: BoxFit.cover,
-                    )
-                  : Container(
-                      width: 56,
-                      height: 56,
-                      color: AppColors.chipBg,
-                      child: const Icon(
-                        Icons.image_not_supported_outlined,
-                        color: AppColors.icon,
-                      ),
-                    ),
+              child: Image.network(
+                item.imagePath,
+                width: 56,
+                height: 56,
+                fit: BoxFit.cover,
+                errorBuilder: (_, _, _) => Container(
+                  width: 56,
+                  height: 56,
+                  color: AppColors.chipBg,
+                  child: const Icon(
+                    Icons.image_not_supported_outlined,
+                    color: AppColors.icon,
+                  ),
+                ),
+              ),
             ),
             const SizedBox(width: 12),
             Expanded(
