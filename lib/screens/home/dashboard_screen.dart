@@ -1,13 +1,15 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/app_colors.dart';
-import '../../widgets/home_top_bar.dart';
-import '../../widgets/land_card.dart';
+import '../../core/app_theme.dart';
+import '../../core/theme_mode_scope.dart';
+import '../../models/land_data.dart';
 import '../akun/akun_screen.dart';
-import '../lahan/daftar_lahan_screen.dart';
 import '../lahan/detail_lahan_screen.dart';
+import '../lahan/lahan_page.dart';
 import '../lahan/tambah_lahan_page.dart';
 import '../notifikasi/notifikasi_screen.dart';
 import '../scan/hasil_scan_tidak_sehat.dart';
@@ -26,12 +28,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final ImagePicker _picker = ImagePicker();
   final List<ScanHistoryItem> _scanHistory = [];
 
-  final PageController _lahanPageController = PageController();
-  int _lahanPage = 0;
-
   Map<String, dynamic>? _profil;
   List<Map<String, dynamic>>? _lahanList;
-  int _unreadCount = 0;
   bool _isLoading = true;
 
   @override
@@ -40,28 +38,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadData();
   }
 
-  @override
-  void dispose() {
-    _lahanPageController.dispose();
-    super.dispose();
-  }
-
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
       final profil = await getProfil();
       final lahanList = await getDaftarLahan();
-      var unread = 0;
-      try {
-        unread = await getJumlahNotifikasiBelumDibaca();
-      } catch (_) {
-        unread = 0;
-      }
       if (mounted) {
         setState(() {
           _profil = profil;
           _lahanList = lahanList;
-          _unreadCount = unread;
           _isLoading = false;
         });
       }
@@ -77,32 +62,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final pages = [
       _buildDashboard(),
-      DaftarLahanScreen(
-        lahanList: _lahanList,
-        isLoading: _isLoading,
-        onRefresh: _loadData,
-        onAdd: _addLand,
-        onOpenDetail: _openLandDetail,
-        onEditLand: _openEditLahan,
-        onDeleteLand: _openDeleteLahan,
-        onScan: _openScan,
-        unreadCount: _unreadCount,
-        onNotifikasi: _openNotifikasi,
-        onAkun: _openAkun,
-      ),
+      RiwayatScanScreen(items: _scanHistory, onScan: _openScan),
+      const LahanPage(),
+      const NotifikasiScreen(),
+      const AkunScreen(),
     ];
 
     return Scaffold(
       body: IndexedStack(index: _tab, children: pages),
       bottomNavigationBar: _BottomNav(
-        selectedIndex: _tab,
-        onSelected: (index) => setState(() => _tab = index),
+        selectedIndex: _tab == 4 ? 3 : (_tab < 3 ? _tab : -1),
+        onSelected: (index) {
+          setState(() => _tab = index == 3 ? 4 : index);
+        },
         onScan: _openScan,
       ),
     );
   }
 
   Widget _buildDashboard() {
+    final p = context.palette;
+
     return SafeArea(
       bottom: false,
       child: CustomScrollView(
@@ -125,18 +105,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     children: [
                       Text(
                         'Lahan Anda',
-                        style: _style(18, AppColors.title, FontWeight.w700),
+                        style: _style(18, p.title, FontWeight.w700),
                       ),
                       const SizedBox(width: 8),
                       _badge(
                         '${_lahanList?.length ?? 0} Petak',
-                        AppColors.chipBg,
-                        AppColors.title,
+                        p.surfaceAlt,
+                        p.title,
+                      ),
+                      const Spacer(),
+                      TextButton.icon(
+                        onPressed: _addLand,
+                        icon: const Icon(Icons.add, size: 17),
+                        label: const Text('Tambah'),
                       ),
                     ],
                   ),
                   const SizedBox(height: 10),
-                  _lahanPreview(),
+                  if (_lahanList == null || _lahanList!.isEmpty)
+                    Padding(
+                      padding: const EdgeInsets.symmetric(vertical: 20),
+                      child: Center(
+                        child: Text(
+                          'Belum ada data lahan.',
+                          style: _style(13, p.subtitle, FontWeight.w400),
+                        ),
+                      ),
+                    )
+                  else
+                    for (final landMap in _lahanList!) ...[
+                      _landCard(landMap),
+                      const SizedBox(height: 14),
+                    ],
+                  OutlinedButton.icon(
+                    onPressed: _addLand,
+                    icon: const Icon(Icons.add_circle_outline_rounded),
+                    label: const Padding(
+                      padding: EdgeInsets.symmetric(vertical: 15),
+                      child: Text('Tambah Lahan Baru'),
+                    ),
+                  ),
                 ]),
               ),
             ),
@@ -145,289 +153,355 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  /// Cuplikan lahan di Beranda: maksimal 2 kartu per halaman.
-  /// Jika lebih dari 2, halaman bisa digeser (swipe) dengan indikator titik.
-  Widget _lahanPreview() {
-    final list = _lahanList ?? const <Map<String, dynamic>>[];
+  Widget _header() {
+    final p = context.palette;
 
-    if (list.isEmpty) {
-      return Container(
-        padding: const EdgeInsets.all(20),
-        decoration: BoxDecoration(
-          color: Colors.white,
-          borderRadius: BorderRadius.circular(16),
-          border: Border.all(color: AppColors.border),
-        ),
-        child: Column(
-          children: [
-            Icon(
-              Icons.eco_outlined,
-              size: 44,
-              color: AppColors.primary.withAlpha(120),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              'Belum ada data lahan.',
-              style: _style(14, AppColors.title, FontWeight.w700),
-            ),
-            const SizedBox(height: 6),
-            Text(
-              'Tambahkan petak lahan pertama Anda untuk mulai memantau.',
-              textAlign: TextAlign.center,
-              style: _style(
-                12,
-                AppColors.subtitle,
-                FontWeight.w400,
-                height: 1.4,
-              ),
-            ),
-            const SizedBox(height: 16),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: _addLand,
-                icon: const Icon(Icons.add_circle_outline_rounded),
-                label: const Text('Tambah Lahan'),
-              ),
-            ),
-          ],
-        ),
-      );
-    }
-
-    final pages = <List<Map<String, dynamic>>>[];
-    for (var i = 0; i < list.length; i += 2) {
-      pages.add(list.sublist(i, (i + 2).clamp(0, list.length)));
-    }
-
-    if (pages.length == 1) {
-      return _lahanPageContent(pages.first);
-    }
-
-    return Column(
-      children: [
-        SizedBox(
-          height: 540,
-          child: PageView.builder(
-            controller: _lahanPageController,
-            itemCount: pages.length,
-            onPageChanged: (i) => setState(() => _lahanPage = i),
-            itemBuilder: (_, i) => _lahanPageContent(pages[i]),
-          ),
-        ),
-        const SizedBox(height: 10),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            for (var i = 0; i < pages.length; i++)
-              AnimatedContainer(
-                duration: const Duration(milliseconds: 200),
-                margin: const EdgeInsets.symmetric(horizontal: 3),
-                width: _lahanPage == i ? 18 : 7,
-                height: 7,
-                decoration: BoxDecoration(
-                  color: _lahanPage == i
-                      ? AppColors.primary
-                      : AppColors.outlineVariant,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-              ),
-          ],
-        ),
-      ],
-    );
-  }
-
-  Widget _lahanPageContent(List<Map<String, dynamic>> page) {
-    return Column(
-      children: [
-        for (final land in page) ...[
-          LandCard(
-            land: land,
-            onDetail: () => _openLandDetail(land),
-            onScan: _openScan,
-          ),
-          const SizedBox(height: 14),
-        ],
-      ],
-    );
-  }
-
-  Widget _header() => HomeTopBar(
-    title: 'Dashboard',
-    unreadCount: _unreadCount,
-    onNotifikasi: _openNotifikasi,
-    onAkun: _openAkun,
-  );
-
-  Widget _greeting() => Column(
-    crossAxisAlignment: CrossAxisAlignment.start,
-    children: [
-      Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _badge(
-                  'Sistem Diagnostik Aktif',
-                  AppColors.primarySoft,
-                  AppColors.primary,
-                ),
-                const SizedBox(height: 5),
-                Text(
-                  'Selamat Pagi, ${_profil?['nama']?.split(' ')?.first ?? 'Pengguna'} 🌿',
-                  style: _style(21, AppColors.title, FontWeight.w700),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  'Pantau kondisi ${_lahanList?.length ?? 0} petak lahan cabai Anda hari ini',
-                  style: _style(12, AppColors.subtitle, FontWeight.w400),
-                ),
-              ],
-            ),
-          ),
-          IconButton.filledTonal(
-            onPressed: _openRiwayatScan,
-            icon: const Icon(Icons.document_scanner_rounded),
-            color: AppColors.primary,
-            tooltip: 'Riwayat pindaian',
-          ),
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      decoration: BoxDecoration(
+        color: p.surface,
+        boxShadow: [
+          BoxShadow(color: p.shadow, blurRadius: 8, offset: const Offset(0, 1)),
         ],
       ),
-      const SizedBox(height: 12),
-      Container(
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: AppColors.primary,
-          borderRadius: BorderRadius.circular(12),
-        ),
-        child: Row(
-          children: [
-            const Icon(
-              Icons.photo_camera_rounded,
-              color: Colors.white,
-              size: 26,
+      child: Row(
+        children: [
+          Container(
+            width: 32,
+            height: 32,
+            decoration: BoxDecoration(
+              color: p.primary,
+              borderRadius: BorderRadius.circular(8),
             ),
-            const SizedBox(width: 10),
+            child: const Icon(Icons.eco_rounded, color: Colors.white, size: 20),
+          ),
+          const SizedBox(width: 8),
+          Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'CAPSEE',
+                style: _style(10, p.accent, FontWeight.w800, letterSpacing: 1),
+              ),
+              Text(
+                'Dashboard',
+                style: _style(18, p.title, FontWeight.w700, height: 1),
+              ),
+            ],
+          ),
+          const Spacer(),
+          _headerAction(
+            tooltip: 'Buka notifikasi',
+            icon: Icons.notifications_rounded,
+            onPressed: () => setState(() => _tab = 3),
+            backgroundColor: p.primary,
+            foregroundColor: Colors.white,
+          ),
+          const SizedBox(width: 8),
+          _themeToggle(),
+        ],
+      ),
+    );
+  }
+
+  Widget _headerAction({
+    required String tooltip,
+    required IconData icon,
+    required VoidCallback onPressed,
+    required Color backgroundColor,
+    required Color foregroundColor,
+  }) => Tooltip(
+    message: tooltip,
+    child: Material(
+      color: backgroundColor,
+      shape: const CircleBorder(),
+      child: InkWell(
+        customBorder: const CircleBorder(),
+        onTap: onPressed,
+        child: SizedBox(
+          width: 36,
+          height: 36,
+          child: Icon(icon, color: foregroundColor, size: 20),
+        ),
+      ),
+    ),
+  );
+
+  Widget _themeToggle() {
+    final themeMode = ThemeModeScope.maybeOf(context);
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return _headerAction(
+      tooltip: isDark ? 'Ganti ke mode terang' : 'Ganti ke mode gelap',
+      icon: isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
+      onPressed: () {
+        if (themeMode != null) {
+          themeMode.value = isDark ? ThemeMode.light : ThemeMode.dark;
+        }
+      },
+      backgroundColor: Theme.of(context).colorScheme.surfaceContainerHighest,
+      foregroundColor: Theme.of(context).colorScheme.onSurface,
+    );
+  }
+
+  Widget _greeting() {
+    final p = context.palette;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
+                  _badge(
+                    'Sistem Diagnostik Aktif',
+                    p.accentSoft,
+                    p.onAccentSoft,
+                  ),
+                  const SizedBox(height: 5),
                   Text(
-                    'Deteksi Penyakit Instan',
-                    style: _style(14, Colors.white, FontWeight.w700),
+                    'Selamat Pagi, ${_profil?['nama']?.split(' ')?.first ?? 'Pengguna'}',
+                    style: _style(21, p.title, FontWeight.w700),
                   ),
                   const SizedBox(height: 3),
                   Text(
-                    'Arahkan kamera ke daun bercak atau layu',
-                    style: _style(11, Colors.white70, FontWeight.w400),
+                    'Pantau kondisi ${_lahanList?.length ?? 0} petak lahan cabai Anda hari ini',
+                    style: _style(12, p.subtitle, FontWeight.w400),
                   ),
                 ],
               ),
             ),
-            FilledButton(
-              onPressed: _openScan,
-              style: FilledButton.styleFrom(
-                backgroundColor: Colors.white,
-                foregroundColor: AppColors.primary,
+          ],
+        ),
+      ],
+    );
+  }
+
+  Widget _climateCard() {
+    final p = context.palette;
+
+    return Card(
+      elevation: 0,
+      color: p.surface,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Icon(Icons.location_on_rounded, color: p.accent, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'Lembang, Bandung Barat',
+                        style: _style(12, p.title, FontWeight.w700),
+                      ),
+                      Text(
+                        'Elevasi 1.240 mdpl',
+                        style: _style(11, p.subtitle, FontWeight.w400),
+                      ),
+                    ],
+                  ),
+                ),
+                Text(
+                  '24°C • Berawan',
+                  style: _style(11, p.title, FontWeight.w700),
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            const Row(
+              children: [
+                _Climate(
+                  icon: Icons.water_drop_rounded,
+                  title: 'Kelembapan',
+                  value: '78%',
+                ),
+                SizedBox(width: 7),
+                _Climate(
+                  icon: Icons.air_rounded,
+                  title: 'Angin',
+                  value: '12 km/j',
+                ),
+              ],
+            ),
+            const SizedBox(height: 14),
+            Container(
+              padding: const EdgeInsets.all(11),
+              decoration: BoxDecoration(
+                color: p.surfaceAlt,
+                borderRadius: BorderRadius.circular(8),
               ),
-              child: const Text('Buka Lensa'),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(Icons.lightbulb_rounded, color: p.accent, size: 19),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Kondisi ideal untuk penyemprotan nutrisi pagi ini sebelum pukul 10:00 WIB. Daun kering sempurna dan angin tenang.',
+                      style: _style(11, p.title, FontWeight.w400, height: 1.35),
+                    ),
+                  ),
+                ],
+              ),
             ),
           ],
         ),
       ),
-    ],
-  );
+    );
+  }
 
-  Widget _climateCard() => Card(
-    elevation: 0,
-    color: Colors.white,
-    child: Padding(
-      padding: const EdgeInsets.all(14),
-      child: Column(
-        children: [
-          Row(
-            children: [
-              const Icon(
-                Icons.location_on_rounded,
-                color: AppColors.primary,
-                size: 20,
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Lembang, Bandung Barat',
-                      style: _style(12, AppColors.title, FontWeight.w700),
-                    ),
-                    Text(
-                      'Elevasi 1.240 mdpl',
-                      style: _style(11, AppColors.subtitle, FontWeight.w400),
-                    ),
-                  ],
-                ),
-              ),
-              Text(
-                '24°C • Berawan',
-                style: _style(11, AppColors.title, FontWeight.w700),
-              ),
-            ],
-          ),
-          const SizedBox(height: 14),
-          const Row(
-            children: [
-              _Climate(
-                icon: Icons.water_drop_rounded,
-                title: 'Kelembapan',
-                value: '78%',
-              ),
-              SizedBox(width: 7),
-              _Climate(
-                icon: Icons.air_rounded,
-                title: 'Angin',
-                value: '12 km/j',
-              ),
+  Widget _landCard(Map<String, dynamic> land) {
+    final p = context.palette;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
 
-            ],
-          ),
-          const SizedBox(height: 14),
-          Container(
-            padding: const EdgeInsets.all(11),
-            decoration: BoxDecoration(
-              color: AppColors.chipBg,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Row(
+    final title = land['nama'] ?? 'Petak Lahan';
+    final location = '${land['kecamatan'] ?? ''}, ${land['kota'] ?? ''}'.trim();
+    final phase = '${land['umur_tanaman_bulan'] ?? 0} Bulan';
+    final category = 'BLOK HORTIKULTURA'; // Bisa dari API jika ada
+
+    // Status dummy karena detail status dan jadwal didapat dari endpoint lain
+    final status = 'Sedang Dipantau';
+    final statusDetail = 'Data Tersinkronisasi';
+    final notice =
+        'Interval pupuk tiap ${land['interval_pupuk_minggu']} minggu.';
+    final warning = false;
+
+    final color = warning ? p.error : p.accent;
+    final statusBg = warning
+        ? p.error.withAlpha(40)
+        : p.accentSoft.withAlpha(isDark ? 255 : 130);
+
+    return Card(
+      elevation: 1,
+      color: p.surface,
+      child: Padding(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const Icon(
-                  Icons.lightbulb_rounded,
-                  color: AppColors.primary,
-                  size: 19,
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: warning ? p.error.withAlpha(25) : p.accentSoft,
+                    borderRadius: BorderRadius.circular(8),
+                  ),
+                  child: Icon(Icons.eco_rounded, color: color, size: 30),
                 ),
-                const SizedBox(width: 8),
+                const SizedBox(width: 10),
                 Expanded(
-                  child: Text(
-                    'Kondisi ideal untuk penyemprotan nutrisi pagi ini sebelum pukul 10:00 WIB. Daun kering sempurna dan angin tenang.',
-                    style: _style(
-                      11,
-                      AppColors.title,
-                      FontWeight.w400,
-                      height: 1.35,
-                    ),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        category,
+                        style: _style(
+                          10,
+                          color,
+                          FontWeight.w700,
+                          letterSpacing: .4,
+                        ),
+                      ),
+                      const SizedBox(height: 3),
+                      Text(
+                        title,
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: _style(13, p.title, FontWeight.w700),
+                      ),
+                      Text(
+                        location,
+                        style: _style(11, p.subtitle, FontWeight.w400),
+                      ),
+                      Text(phase, style: _style(11, p.title, FontWeight.w600)),
+                    ],
                   ),
                 ),
               ],
             ),
-          ),
-        ],
+            const SizedBox(height: 11),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+              decoration: BoxDecoration(
+                color: statusBg,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.verified_rounded, color: color, size: 19),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      status,
+                      style: _style(12, color, FontWeight.w700),
+                    ),
+                  ),
+                  Text(statusDetail, style: _style(10, color, FontWeight.w600)),
+                ],
+              ),
+            ),
+            const SizedBox(height: 9),
+            Container(
+              padding: const EdgeInsets.all(9),
+              decoration: BoxDecoration(
+                color: p.surfaceAlt,
+                borderRadius: BorderRadius.circular(8),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    warning
+                        ? Icons.notification_important_rounded
+                        : Icons.event_available_rounded,
+                    color: color,
+                    size: 17,
+                  ),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      notice,
+                      style: _style(11, p.title, FontWeight.w400, height: 1.3),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 11),
+            Row(
+              children: [
+                Expanded(
+                  child: OutlinedButton(
+                    onPressed: () => _openLandDetail(land),
+                    child: const Text('Lihat Detail'),
+                  ),
+                ),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _openScan,
+                    icon: const Icon(Icons.photo_camera_rounded, size: 17),
+                    label: Text(warning ? 'Scan' : 'Scan'),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
       ),
-    ),
-  );
+    );
+  }
 
   Widget _badge(String label, Color background, Color foreground) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
@@ -440,7 +514,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _openScan() async {
     if (_lahanList == null || _lahanList!.isEmpty) {
-      _message('Buat lahan terlebih dahulu sebelum melakukan pemindaian.');
+      _message('Buat lahan terlebih dahulu sebelum melakukan scan.');
       return;
     }
 
@@ -459,8 +533,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
 
       // Panggil backend: ini akan otomatis kompres, upload ke Cloudinary, dan simpan ke DB!
-      await uploadScan(
-        file: picked,
+      final res = await uploadScan(
+        file: File(picked.path),
         idLahan: idLahanTarget,
         bagianTanaman: 'daun', // Default dari dashboard
       );
@@ -474,7 +548,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       await Navigator.of(context).push(
         MaterialPageRoute(builder: (_) => const HasilScanTidakSehatPage()),
       );
-      
+
       // Muat ulang data untuk memperbarui riwayat lahan
       _loadData();
     } catch (e) {
@@ -485,102 +559,40 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _addLand() async {
-    final result = await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const TambahLahanPage()),
-    );
-    if (result != null) {
+    final result = await Navigator.of(
+      context,
+    ).push(MaterialPageRoute(builder: (_) => const TambahLahanPage()));
+    if (result == true) {
       _loadData();
-    }
-  }
-
-  Future<void> _openEditLahan(Map<String, dynamic> land) async {
-    final id = land['id'] as String?;
-    if (id == null || id.isEmpty) {
-      _message('Data lahan belum tersinkron, tidak bisa diedit.');
-      return;
-    }
-    final result = await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) =>
-            TambahLahanPage(initial: landDataFromMap(land), idLahan: id),
-      ),
-    );
-    if (result != null) {
-      _loadData();
-    }
-  }
-
-  Future<void> _openDeleteLahan(Map<String, dynamic> land) async {
-    final id = land['id'] as String?;
-    if (id == null || id.isEmpty) {
-      _message('Data lahan belum tersinkron, tidak bisa dihapus.');
-      return;
-    }
-
-    final konfirmasi = await showDialog<bool>(
-      context: context,
-      builder: (dialogContext) => AlertDialog(
-        title: const Text('Hapus Lahan?'),
-        content: Text(
-          'Lahan "${land['nama'] ?? 'ini'}" beserta seluruh jadwal dan '
-          'riwayatnya akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.',
-        ),
-        actions: [
-          TextButton(
-            onPressed: () => Navigator.of(dialogContext).pop(false),
-            child: const Text('Batal'),
-          ),
-          FilledButton(
-            onPressed: () => Navigator.of(dialogContext).pop(true),
-            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
-            child: const Text('Hapus'),
-          ),
-        ],
-      ),
-    );
-
-    if (konfirmasi != true) return;
-
-    try {
-      await hapusLahan(id);
-      if (!mounted) return;
-      _message('Lahan berhasil dihapus.');
-      _loadData();
-    } catch (e) {
-      if (!mounted) return;
-      _message('Gagal menghapus lahan: $e');
     }
   }
 
   void _openLandDetail(Map<String, dynamic> land) {
-    Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => LandDetailScreen(land: landDataFromMap(land)),
-      ),
-    ).then((_) => _loadData()); // Muat ulang setelah kembali dari detail
-  }
-
-  Future<void> _openNotifikasi() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const NotifikasiScreen()),
-    );
-    // Sinkronkan badge setelah pengguna mungkin menandai notifikasi dibaca.
-    _loadData();
-  }
-
-  Future<void> _openAkun() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(builder: (_) => const AkunScreen()),
-    );
-    _loadData();
-  }
-
-  Future<void> _openRiwayatScan() async {
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => RiwayatScanScreen(items: _scanHistory, onScan: _openScan),
-      ),
-    );
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (_) => LandDetailScreen(
+              land: LandData(
+                id: land['id'] as String?,
+                name: land['nama'] ?? 'Lahan',
+                province: land['provinsi'] ?? '',
+                city: land['kota'] ?? '',
+                district: land['kecamatan'] ?? '',
+                plantAgeMonths: land['umur_tanaman_bulan'] ?? 1,
+                lastWatered: land['tanggal_terakhir_siram'] != null
+                    ? (DateTime.tryParse(land['tanggal_terakhir_siram']) ??
+                          DateTime.now())
+                    : DateTime.now(),
+                lastFertilized: land['tanggal_terakhir_pupuk'] != null
+                    ? (DateTime.tryParse(land['tanggal_terakhir_pupuk']) ??
+                          DateTime.now())
+                    : DateTime.now(),
+                fertilizeIntervalWeeks: land['interval_pupuk_minggu'] ?? 1,
+              ),
+            ),
+          ),
+        )
+        .then((_) => _loadData()); // Muat ulang setelah kembali dari detail
   }
 
   void _message(String message) => ScaffoldMessenger.of(
@@ -613,31 +625,39 @@ class _Climate extends StatelessWidget {
   });
 
   @override
-  Widget build(BuildContext context) => Expanded(
-    child: Container(
-      padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 2),
-      decoration: BoxDecoration(
-        color: AppColors.chipBg,
-        borderRadius: BorderRadius.circular(8),
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
+    return Expanded(
+      child: Container(
+        padding: const EdgeInsets.symmetric(vertical: 9, horizontal: 2),
+        decoration: BoxDecoration(
+          color: p.surfaceAlt,
+          borderRadius: BorderRadius.circular(8),
+        ),
+        child: Column(
+          children: [
+            Icon(
+              icon,
+              // Biru lebih terang di mode gelap supaya tetap terbaca
+              color: isDark ? const Color(0xFF60A5FA) : AppColors.tertiary,
+              size: 18,
+            ),
+            const SizedBox(height: 3),
+            Text(
+              title,
+              textAlign: TextAlign.center,
+              style: _style(9, p.subtitle, FontWeight.w400),
+            ),
+            const SizedBox(height: 2),
+            Text(value, style: _style(11, p.title, FontWeight.w700)),
+          ],
+        ),
       ),
-      child: Column(
-        children: [
-          Icon(icon, color: AppColors.tertiary, size: 18),
-          const SizedBox(height: 3),
-          Text(
-            title,
-            textAlign: TextAlign.center,
-            style: _style(9, AppColors.subtitle, FontWeight.w400),
-          ),
-          const SizedBox(height: 2),
-          Text(value, style: _style(11, AppColors.title, FontWeight.w700)),
-        ],
-      ),
-    ),
-  );
+    );
+  }
 }
-
-
 
 class _BottomNav extends StatelessWidget {
   final int selectedIndex;
@@ -652,14 +672,16 @@ class _BottomNav extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
+
     return Container(
-      decoration: const BoxDecoration(
-        color: Colors.white,
+      decoration: BoxDecoration(
+        color: p.surface,
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
+            color: p.shadow,
             blurRadius: 12,
-            offset: Offset(0, -2),
+            offset: const Offset(0, -2),
           ),
         ],
       ),
@@ -672,16 +694,54 @@ class _BottomNav extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  _tab(0, Icons.home_outlined, Icons.home_rounded, 'Beranda'),
-                  const SizedBox(width: 76),
-                  _tab(1, Icons.grass_outlined, Icons.grass_rounded, 'Lahan'),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        _tab(
+                          p,
+                          0,
+                          Icons.local_florist_outlined,
+                          Icons.local_florist,
+                          'Dashboard',
+                        ),
+                        _tab(
+                          p,
+                          1,
+                          Icons.history_outlined,
+                          Icons.history_rounded,
+                          'Riwayat',
+                        ),
+                      ],
+                    ),
+                  ),
+                  const SizedBox(width: 66),
+                  Expanded(
+                    child: Row(
+                      children: [
+                        _tab(
+                          p,
+                          2,
+                          Icons.add_location_alt_outlined,
+                          Icons.add_location_alt_rounded,
+                          'Lahan',
+                        ),
+                        _tab(
+                          p,
+                          3,
+                          Icons.manage_accounts_outlined,
+                          Icons.manage_accounts_rounded,
+                          'Akun',
+                        ),
+                      ],
+                    ),
+                  ),
                 ],
               ),
               Positioned(
                 top: -20,
                 left: 0,
                 right: 0,
-                child: Center(child: _scanButton()),
+                child: Center(child: _scanButton(p)),
               ),
             ],
           ),
@@ -690,9 +750,15 @@ class _BottomNav extends StatelessWidget {
     );
   }
 
-  Widget _tab(int index, IconData icon, IconData activeIcon, String label) {
+  Widget _tab(
+    AppPalette p,
+    int index,
+    IconData icon,
+    IconData activeIcon,
+    String label,
+  ) {
     final selected = selectedIndex == index;
-    final color = selected ? AppColors.primary : AppColors.icon;
+    final color = selected ? p.accent : p.icon;
     return Expanded(
       child: InkWell(
         onTap: () => onSelected(index),
@@ -703,8 +769,10 @@ class _BottomNav extends StatelessWidget {
             const SizedBox(height: 3),
             Text(
               label,
+              maxLines: 2,
+              textAlign: TextAlign.center,
               style: _style(
-                10,
+                8.5,
                 color,
                 selected ? FontWeight.w700 : FontWeight.w500,
               ),
@@ -715,7 +783,7 @@ class _BottomNav extends StatelessWidget {
     );
   }
 
-  Widget _scanButton() => Semantics(
+  Widget _scanButton(AppPalette p) => Semantics(
     button: true,
     label: 'Scan daun dengan kamera',
     child: GestureDetector(
@@ -725,7 +793,7 @@ class _BottomNav extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         children: [
           Material(
-            color: AppColors.primary,
+            color: p.primary,
             shape: const CircleBorder(),
             elevation: 4,
             shadowColor: AppColors.primaryShadow,
@@ -744,7 +812,7 @@ class _BottomNav extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 2),
-          Text('Scan', style: _style(10, AppColors.primary, FontWeight.w700)),
+          Text('Scan', style: _style(10, p.accent, FontWeight.w700)),
         ],
       ),
     ),

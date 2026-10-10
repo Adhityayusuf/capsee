@@ -1,28 +1,45 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import 'core/app_colors.dart';
-import 'screens/splash/splash_screen.dart';
+import 'core/app_theme.dart';
+import 'core/theme_mode_scope.dart';
+import 'screens/auth/register_screen.dart';
 
 void main() {
   runApp(const CapseeApp());
 }
 
-class CapseeApp extends StatelessWidget {
+class CapseeApp extends StatefulWidget {
   const CapseeApp({super.key});
 
   @override
+  State<CapseeApp> createState() => _CapseeAppState();
+}
+
+class _CapseeAppState extends State<CapseeApp> {
+  // Awal terang. Ganti ke ThemeMode.system kalau ingin mengikuti pengaturan HP.
+  final ValueNotifier<ThemeMode> _themeMode = ValueNotifier(ThemeMode.light);
+
+  @override
+  void dispose() {
+    _themeMode.dispose();
+    super.dispose();
+  }
+
+  @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'Capsee',
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        useMaterial3: true,
-        scaffoldBackgroundColor: AppColors.background,
-        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.primary),
-        textTheme: GoogleFonts.plusJakartaSansTextTheme(),
+    return ThemeModeScope(
+      notifier: _themeMode,
+      child: ValueListenableBuilder<ThemeMode>(
+        valueListenable: _themeMode,
+        builder: (context, themeMode, _) => MaterialApp(
+          title: 'Capsee',
+          debugShowCheckedModeBanner: false,
+          themeMode: themeMode,
+          theme: AppTheme.light(),
+          darkTheme: AppTheme.dark(),
+          home: const RegisterScreen(),
+        ),
       ),
-      home: const SplashScreen(),
     );
   }
 }

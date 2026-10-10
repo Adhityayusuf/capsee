@@ -70,138 +70,140 @@ class _LoginScreenState extends State<LoginScreen> {
     return AuthScaffold(
       child: Column(
         children: [
-          const AuthTopBar(),
-          const SizedBox(height: 20),
-          AuthCard(
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  const AuthHeader(title: 'Welcome to Capsee login now!'),
-                  const SizedBox(height: 24),
-                  const FieldLabel('Email'),
-                  const SizedBox(height: 8),
-                  _buildEmailField(),
-                  const SizedBox(height: 16),
-                  const FieldLabel('Kata Sandi'),
-                  const SizedBox(height: 8),
-                  _buildPasswordField(),
-                  const SizedBox(height: 14),
-                  _buildOptionsRow(),
-                  const SizedBox(height: 20),
-                  PrimaryButton(
-                    label: 'Masuk',
-                    isLoading: _isLoading,
-                    onPressed: _submit,
-                  ),
-                  const SizedBox(height: 18),
-                  const OrDivider('Atau masuk dengan'),
-                  const SizedBox(height: 14),
-                  Center(
-                    child: SocialButton(
-                      onPressed: () {},
-                      child: const GoogleIcon(),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ),
+          const CapseeLogo(),
           const SizedBox(height: 24),
+          const AuthHeader(
+            title: 'Masuk ke Capsee',
+            subtitle: 'Pantau kesehatan tanaman cabai Anda dengan presisi AI.',
+          ),
+          const SizedBox(height: 28),
+          _buildFormCard(),
+          const SizedBox(height: 28),
           _buildRegisterRow(),
+          const SizedBox(height: 28),
+          _buildFooter(),
         ],
       ),
     );
   }
 
-  Widget _buildEmailField() {
-    return TextFormField(
-      controller: _emailController,
-      keyboardType: TextInputType.emailAddress,
-      textInputAction: TextInputAction.next,
-      decoration: capseeInputDecoration(hint: 'nama@email.com'),
-      validator: validateEmail,
-    );
-  }
+  Widget _buildFormCard() {
+    return AuthCard(
+      child: Form(
+        key: _formKey,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // ---------- Email ----------
+            const FieldLabel('Email'),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: _emailController,
+              keyboardType: TextInputType.emailAddress,
+              textInputAction: TextInputAction.next,
+              decoration: capseeInputDecoration(
+                hint: 'nama@email.com',
+                prefixIcon: Icons.mail_outline_rounded,
+              ),
+              validator: validateEmail,
+            ),
+            const SizedBox(height: 20),
 
-  Widget _buildPasswordField() {
-    return TextFormField(
-      controller: _passwordController,
-      obscureText: _obscurePassword,
-      textInputAction: TextInputAction.done,
-      onFieldSubmitted: (_) => _submit(),
-      decoration: capseeInputDecoration(
-        hint: 'Masukkan kata sandi',
-        suffix: IconButton(
-          onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
-          icon: Icon(
-            _obscurePassword
-                ? Icons.visibility_outlined
-                : Icons.visibility_off_outlined,
-            color: AppColors.icon,
-          ),
+            // ---------- Kata sandi ----------
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                const FieldLabel('Kata Sandi'),
+                GestureDetector(
+                  onTap: () {
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder: (_) => LupaSandiScreen(
+                          onSubmit: (email) async {
+                            // Implement API
+                            await Future.delayed(const Duration(seconds: 1));
+                          },
+                        ),
+                      ),
+                    );
+                  },
+                  child: Text(
+                    'Lupa Kata Sandi?',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 13,
+                      fontWeight: FontWeight.w700,
+                      color: AppColors.primaryDark,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 10),
+            TextFormField(
+              controller: _passwordController,
+              obscureText: _obscurePassword,
+              textInputAction: TextInputAction.done,
+              onFieldSubmitted: (_) => _submit(),
+              decoration: capseeInputDecoration(
+                hint: 'Masukkan kata sandi',
+                prefixIcon: Icons.lock_outline_rounded,
+                suffix: IconButton(
+                  onPressed: () =>
+                      setState(() => _obscurePassword = !_obscurePassword),
+                  icon: Icon(
+                    _obscurePassword
+                        ? Icons.visibility_outlined
+                        : Icons.visibility_off_outlined,
+                    color: AppColors.icon,
+                  ),
+                ),
+              ),
+              validator: validatePassword,
+            ),
+            const SizedBox(height: 18),
+
+            // ---------- Ingat akun ----------
+            Row(
+              children: [
+                SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Checkbox(
+                    value: _rememberMe,
+                    activeColor: AppColors.primaryDark,
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(5),
+                    ),
+                    onChanged: (v) => setState(() => _rememberMe = v ?? false),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                GestureDetector(
+                  onTap: () => setState(() => _rememberMe = !_rememberMe),
+                  child: Text(
+                    'Ingat akun di perangkat ini',
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 14,
+                      color: AppColors.title,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 20),
+
+            // ---------- Tombol masuk ----------
+            PrimaryButton(
+              label: 'Masuk',
+              icon: Icons.login_rounded,
+              isLoading: _isLoading,
+              onPressed: _submit,
+            ),
+            const SizedBox(height: 20),
+          ],
         ),
       ),
-      validator: validatePassword,
-    );
-  }
-
-  Widget _buildOptionsRow() {
-    return Row(
-      children: [
-        GestureDetector(
-          onTap: () => setState(() => _rememberMe = !_rememberMe),
-          child: Row(
-            children: [
-              SizedBox(
-                width: 22,
-                height: 22,
-                child: Checkbox(
-                  value: _rememberMe,
-                  activeColor: AppColors.primary,
-                  side: const BorderSide(color: AppColors.border),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(5),
-                  ),
-                  onChanged: (v) => setState(() => _rememberMe = v ?? false),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Text(
-                'Ingat akun',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13.5,
-                  color: AppColors.title,
-                ),
-              ),
-            ],
-          ),
-        ),
-        const Spacer(),
-        GestureDetector(
-          onTap: () {
-            Navigator.push(
-              context,
-              MaterialPageRoute(
-                builder: (_) => LupaSandiScreen(
-                  onSubmit: (email) async {
-                    await Future.delayed(const Duration(seconds: 1));
-                  },
-                ),
-              ),
-            );
-          },
-          child: Text(
-            'Lupa Kata Sandi?',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 13.5,
-              fontWeight: FontWeight.w700,
-              color: AppColors.primary,
-            ),
-          ),
-        ),
-      ],
     );
   }
 
@@ -212,11 +214,11 @@ class _LoginScreenState extends State<LoginScreen> {
         Text(
           'Belum punya akun?',
           style: GoogleFonts.plusJakartaSans(
-            fontSize: 14,
-            color: AppColors.subtitle,
+            fontSize: 16,
+            color: AppColors.title,
           ),
         ),
-        const SizedBox(width: 6),
+        const SizedBox(width: 8),
         GestureDetector(
           onTap: () {
             Navigator.of(context).pushReplacement(
@@ -226,9 +228,30 @@ class _LoginScreenState extends State<LoginScreen> {
           child: Text(
             'Daftar',
             style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
+              fontSize: 16,
               fontWeight: FontWeight.w800,
-              color: AppColors.primary,
+              color: AppColors.primaryDark,
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildFooter() {
+    return Row(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        const Icon(Icons.view_agenda_outlined, size: 18, color: AppColors.icon),
+        const SizedBox(width: 8),
+        Flexible(
+          child: Text(
+            'SISTEM PERTANIAN PRESISI • TERENKRIPSI',
+            style: GoogleFonts.plusJakartaSans(
+              fontSize: 11,
+              fontWeight: FontWeight.w700,
+              letterSpacing: 0.3,
+              color: AppColors.icon,
             ),
           ),
         ),
