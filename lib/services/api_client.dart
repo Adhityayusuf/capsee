@@ -6,7 +6,18 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Satu-satunya tempat yang tahu alamat backend.
 /// Ganti ke URL Railway/Render/VPS saat production.
-const String baseUrl = 'http://10.77.80.35:8000';
+///
+/// Catatan penggunaan lokal:
+/// - Flutter Web (browser di laptop yang sama dengan backend):
+///     http://localhost:8000
+/// - Android Emulator:
+///     `http://10.0.2.2:8000`
+/// - HP fisik di WiFi yang sama:
+///     `http://<IPv4-laptop>:8000`  (cek via `ipconfig`, buka firewall 8000)
+const String baseUrl = 'http://localhost:8000';
+
+/// Timeout global untuk semua request HTTP (GET, POST, PUT, PATCH, DELETE, multipart).
+const apiTimeout = Duration(seconds: 30);
 
 /// Key untuk menyimpan token JWT di SharedPreferences.
 const String _tokenKey = 'auth_token';

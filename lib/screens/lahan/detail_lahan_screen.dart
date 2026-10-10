@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
+import 'package:image_picker/image_picker.dart';
 
 import '../../core/app_colors.dart';
 import '../../models/activity_log.dart';
@@ -9,8 +10,6 @@ import '../scan/hasil_scan_tidak_sehat.dart';
 import '../scan/treatment_recommendation_screen.dart';
 import 'tab_jadwal.dart';
 import 'tambah_lahan_page.dart';
-import 'dart:io';
-import 'package:image_picker/image_picker.dart';
 import '../../services/services.dart';
 
 class LandDetailScreen extends StatefulWidget {
@@ -190,14 +189,9 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
     });
 
     try {
-      final res = await uploadScan(
-<<<<<<< HEAD
+      await uploadScan(
         file: pickedFile,
-        idLahan: widget.land.id ?? '', 
-=======
-        file: File(pickedFile.path),
-        idLahan: _land.id ?? '', 
->>>>>>> 36cd82eef4001c67b35f49e0ae33d50dd2a6c051
+        idLahan: widget.land.id ?? '',
         bagianTanaman: _selectedOrgan == 'leaf' ? 'daun' : 'buah',
       );
 

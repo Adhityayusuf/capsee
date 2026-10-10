@@ -6,10 +6,5 @@ pyjwt==2.9.0
 bcrypt==4.2.0
 pillow>=10.4.0
 requests==2.32.3
-<<<<<<< HEAD
 python-multipart==0.0.9
 httpx==0.28.1
-=======
-httpx==0.28.1
-python-multipart==0.0.9
->>>>>>> 36cd82eef4001c67b35f49e0ae33d50dd2a6c051

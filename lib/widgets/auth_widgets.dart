@@ -230,14 +230,6 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final text = Text(
-      label,
-      style: GoogleFonts.plusJakartaSans(
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-      ),
-    );
-
     return SizedBox(
       width: double.infinity,
       height: 52,
@@ -263,13 +255,24 @@ class PrimaryButton extends StatelessWidget {
                 ),
               )
             : Row(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   if (icon != null && !iconAtEnd) ...[
                     Icon(icon, size: 20),
                     const SizedBox(width: 10),
                   ],
-                  text,
+                  Flexible(
+                    child: Text(
+                      label,
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w700,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
                   if (icon != null && iconAtEnd) ...[
                     const SizedBox(width: 10),
                     Icon(icon, size: 20),

@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -460,13 +459,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
 
       // Panggil backend: ini akan otomatis kompres, upload ke Cloudinary, dan simpan ke DB!
-<<<<<<< HEAD
-      final res = await uploadScan(
-        file: picked,
-=======
       await uploadScan(
-        file: File(picked.path),
->>>>>>> 36cd82eef4001c67b35f49e0ae33d50dd2a6c051
+        file: picked,
         idLahan: idLahanTarget,
         bagianTanaman: 'daun', // Default dari dashboard
       );
