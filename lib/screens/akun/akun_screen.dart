@@ -1,7 +1,7 @@
 // akun_screen.dart
 //
-// Memakai class warna `C` dari notifikasi_screen.dart (satu folder di lib/).
-// Dependensi: google_fonts (sama seperti layar Notifikasi).
+// Versi yang mendukung mode terang & gelap: semua warna diambil dari
+// `context.palette` (core/app_theme.dart), bukan konstanta `C` lagi.
 //
 // Pemakaian: home: const AkunScreen()
 
@@ -10,6 +10,7 @@ import 'dart:ui' show ImageFilter;
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/app_colors.dart';
+import '../../core/app_theme.dart';
 import '../auth/login_screen.dart';
 import '../bantuan/bantuan_faq_screen.dart';
 import '../legal/privasi_screen.dart';
@@ -83,42 +84,49 @@ class _AkunScreenState extends State<AkunScreen> {
     }
   }
 
-  List<_MenuItem> _getAccountItems(BuildContext context) => [
-    _MenuItem(
-      icon: Icons.badge_outlined,
-      iconColor: C.primary,
-      title: 'Edit Profil',
-      subtitle: 'Ubah identitas, foto profil, dan kontak lahan',
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const EditProfileScreen()),
-        );
-      },
-    ),
-    _MenuItem(
-      icon: Icons.lock_reset,
-      iconColor: C.primary,
-      title: 'Ubah Kata Sandi',
-      subtitle: 'Kelola keamanan dan pembaruan sandi akun',
-      onTap: () {
-        Navigator.of(context).push(
-          MaterialPageRoute(builder: (_) => const UbahKataSandiScreen()),
-        );
-      },
-    ),
-    const _MenuItem(
-      icon: Icons.tune,
-      iconColor: C.primary,
-      title: 'Notifikasi & Sensor Lapangan',
-      subtitle: 'Preferensi peringatan cuaca BMKG dan irigasi',
-    ),
-  ];
+  List<_MenuItem> _getAccountItems(BuildContext context) {
+    final p = context.palette;
+    return [
+      _MenuItem(
+        icon: Icons.badge_outlined,
+        iconColor: p.accent,
+        title: 'Edit Profil',
+        subtitle: 'Ubah identitas, foto profil, dan kontak lahan',
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+          );
+        },
+      ),
+      _MenuItem(
+        icon: Icons.lock_reset,
+        iconColor: p.accent,
+        title: 'Ubah Kata Sandi',
+        subtitle: 'Kelola keamanan dan pembaruan sandi akun',
+        onTap: () {
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const UbahKataSandiScreen()),
+          );
+        },
+      ),
+      _MenuItem(
+        icon: Icons.tune,
+        iconColor: p.accent,
+        title: 'Notifikasi & Sensor Lapangan',
+        subtitle: 'Preferensi peringatan cuaca BMKG dan irigasi',
+      ),
+    ];
+  }
 
   List<_MenuItem> _getHelpItems(BuildContext context) {
+    final p = context.palette;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return [
       _MenuItem(
         icon: Icons.menu_book,
-        iconColor: C.tertiary,
+        // Biru lebih terang di mode gelap supaya tetap terbaca
+        iconColor: isDark ? const Color(0xFF60A5FA) : C.tertiary,
         title: 'Panduan & FAQ Petani',
         subtitle: 'Solusi penyakit cabai, dosis pupuk, & tutorial',
         onTap: () {
@@ -127,10 +135,9 @@ class _AkunScreenState extends State<AkunScreen> {
           );
         },
       ),
-
       _MenuItem(
         icon: Icons.verified_user_outlined,
-        iconColor: C.onSurfaceVariant,
+        iconColor: p.icon,
         title: 'Syarat dan Ketentuan',
         subtitle: 'Ketentuan layanan aplikasi',
         onTap: () {
@@ -141,7 +148,7 @@ class _AkunScreenState extends State<AkunScreen> {
       ),
       _MenuItem(
         icon: Icons.privacy_tip_outlined,
-        iconColor: C.onSurfaceVariant,
+        iconColor: p.icon,
         title: 'Kebijakan Privasi',
         subtitle: 'Privasi data agrikultur Anda',
         onTap: () {
@@ -150,9 +157,9 @@ class _AkunScreenState extends State<AkunScreen> {
           );
         },
       ),
-      const _MenuItem(
+      _MenuItem(
         icon: Icons.info_outline,
-        iconColor: C.onSurfaceVariant,
+        iconColor: p.icon,
         title: 'Tentang Aplikasi',
         subtitle: 'Capsee v2.4.0 • AI-Powered Precision Agriculture',
       ),
@@ -165,8 +172,10 @@ class _AkunScreenState extends State<AkunScreen> {
       return const Center(child: CircularProgressIndicator());
     }
 
+    final p = context.palette;
+
     return Scaffold(
-      backgroundColor: C.surface,
+      backgroundColor: p.background,
       appBar: _buildAppBar(),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
@@ -177,11 +186,11 @@ class _AkunScreenState extends State<AkunScreen> {
           const SizedBox(height: 24),
           _buildSensorBanner(),
           const SizedBox(height: 24),
-          _buildSection('Pengaturan Akun', 'Preferensi', C.onSurfaceVariant,
+          _buildSection('Pengaturan Akun', 'Preferensi', p.subtitle,
               _getAccountItems(context)),
           const SizedBox(height: 24),
-          _buildSection(
-              'Bantuan & Informasi', 'Dukungan Lapangan', C.primary, _getHelpItems(context)),
+          _buildSection('Bantuan & Informasi', 'Dukungan Lapangan', p.accent,
+              _getHelpItems(context)),
           const SizedBox(height: 24),
           _buildLogout(context),
           const SizedBox(height: 24),
@@ -193,14 +202,16 @@ class _AkunScreenState extends State<AkunScreen> {
 
   // ───────── Header ─────────
   PreferredSizeWidget _buildAppBar() {
+    final p = context.palette;
+
     return PreferredSize(
       preferredSize: const Size.fromHeight(64),
       child: Container(
         decoration: BoxDecoration(
-          color: C.surface.withValues(alpha: 0.95),
-          boxShadow: const [
+          color: p.surface.withValues(alpha: 0.95),
+          boxShadow: [
             BoxShadow(
-                color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 1)),
+                color: p.shadow, blurRadius: 8, offset: const Offset(0, 1)),
           ],
         ),
         child: SafeArea(
@@ -219,11 +230,10 @@ class _AkunScreenState extends State<AkunScreen> {
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: C.primaryContainer.withValues(alpha: 0.1),
+                        color: p.accentSoft,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.eco,
-                          size: 20, color: C.primaryContainer),
+                      child: Icon(Icons.eco, size: 20, color: p.accent),
                     ),
                   ),
                   const SizedBox(width: 8),
@@ -232,34 +242,16 @@ class _AkunScreenState extends State<AkunScreen> {
                       mainAxisAlignment: MainAxisAlignment.center,
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        Text('CAPSEE AGRI',
-                            style: _ts(10, 14, FontWeight.w700, C.primary,
+                        Text('PROFIL & PENGATURAN',
+                            style: _ts(10, 14, FontWeight.w700, p.accent,
                                 letterSpacing: 1.0)),
-                        Text('Akun',
+                        Text('Akun Saya',
                             overflow: TextOverflow.ellipsis,
-                            style: _ts(18, 24, FontWeight.w600, C.onSurface)),
+                            style: _ts(18, 24, FontWeight.w600, p.title)),
                       ],
                     ),
                   ),
-                  IconButton(
-                    onPressed: () {},
-                    tooltip: 'Notifikasi',
-                    icon: const Icon(Icons.notifications_outlined,
-                        size: 22, color: C.onSurfaceVariant),
-                    style: IconButton.styleFrom(
-                      minimumSize: const Size(44, 44),
-                      shape: const CircleBorder(),
-                    ),
-                  ),
                   const SizedBox(width: 4),
-                  Container(
-                    width: 32,
-                    height: 32,
-                    decoration: const BoxDecoration(
-                        color: C.primary, shape: BoxShape.circle),
-                    child:
-                        const Icon(Icons.person, size: 18, color: C.onPrimary),
-                  ),
                 ],
               ),
             ),
@@ -271,51 +263,30 @@ class _AkunScreenState extends State<AkunScreen> {
 
   // ───────── Sapaan + badge terverifikasi ─────────
   Widget _buildGreeting() {
+    final p = context.palette;
+
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('PROFIL & PENGATURAN',
-                style: _ts(10, 14, FontWeight.w700, C.primary,
-                    letterSpacing: 1.0)),
-            Text('Akun Saya', style: _ts(22, 28, FontWeight.w700, C.onSurface)),
-          ],
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-          decoration: BoxDecoration(
-            color: AppColors.secondaryContainer.withValues(alpha: 0.3),
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              const Icon(Icons.verified, size: 16, color: C.primary),
-              const SizedBox(width: 6),
-              Text('Terverifikasi',
-                  style: _ts(10, 14, FontWeight.w700, C.primary)),
-            ],
-          ),
-        ),
       ],
     );
   }
 
   // ───────── Kartu profil ─────────
   Widget _buildProfileCard() {
+    final p = context.palette;
+
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: C.surfaceLowest,
+        color: p.surface,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-              color: AppColors.shadow,
+              color: p.shadow,
               blurRadius: 20,
               spreadRadius: -4,
-              offset: Offset(0, 4)),
+              offset: const Offset(0, 4)),
         ],
       ),
       child: Stack(
@@ -331,7 +302,7 @@ class _AkunScreenState extends State<AkunScreen> {
                   width: 144,
                   height: 144,
                   decoration: BoxDecoration(
-                    color: C.primaryFixed.withValues(alpha: 0.3),
+                    color: p.accentSoft,
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -352,18 +323,18 @@ class _AkunScreenState extends State<AkunScreen> {
                         children: [
                           Text(_profil?['nama'] ?? 'Pengguna',
                               overflow: TextOverflow.ellipsis,
-                              style: _ts(18, 24, FontWeight.w600, C.onSurface)),
+                              style: _ts(18, 24, FontWeight.w600, p.title)),
                           const SizedBox(height: 2),
                           Row(
                             children: [
-                              const Icon(Icons.eco, size: 15, color: C.primary),
+                              Icon(Icons.eco, size: 15, color: p.accent),
                               const SizedBox(width: 4),
                               Expanded(
                                 child: Text(
                                   'Mitra Tani Cabai Rawit • Jawa Timur',
                                   overflow: TextOverflow.ellipsis,
-                                  style: _ts(12, 16, FontWeight.w600,
-                                      C.onSurfaceVariant),
+                                  style: _ts(
+                                      12, 16, FontWeight.w600, p.subtitle),
                                 ),
                               ),
                             ],
@@ -373,7 +344,7 @@ class _AkunScreenState extends State<AkunScreen> {
                             padding: const EdgeInsets.symmetric(
                                 horizontal: 8, vertical: 2),
                             decoration: BoxDecoration(
-                              color: C.surfaceContainer,
+                              color: p.surfaceAlt,
                               borderRadius: BorderRadius.circular(999),
                             ),
                             child: Row(
@@ -382,14 +353,14 @@ class _AkunScreenState extends State<AkunScreen> {
                                 Container(
                                   width: 6,
                                   height: 6,
-                                  decoration: const BoxDecoration(
-                                      color: AppColors.secondary,
+                                  decoration: BoxDecoration(
+                                      color: p.accent,
                                       shape: BoxShape.circle),
                                 ),
                                 const SizedBox(width: 4),
                                 Text('Petani Komersial',
                                     style: _ts(10, 14, FontWeight.w600,
-                                        C.onSurfaceVariant)),
+                                        p.subtitle)),
                               ],
                             ),
                           ),
@@ -409,6 +380,8 @@ class _AkunScreenState extends State<AkunScreen> {
   }
 
   Widget _buildAvatar() {
+    final p = context.palette;
+
     return SizedBox(
       width: 64,
       height: 64,
@@ -418,12 +391,12 @@ class _AkunScreenState extends State<AkunScreen> {
           Positioned.fill(
             child: ClipOval(
               child: Container(
-                color: C.surfaceContainer,
+                color: p.surfaceAlt,
                 child: Image.network(
                   _kAvatarUrl,
                   fit: BoxFit.cover,
-                  errorBuilder: (_, _, _) => const Icon(Icons.person,
-                      size: 32, color: C.onSurfaceVariant),
+                  errorBuilder: (_, _, _) =>
+                      Icon(Icons.person, size: 32, color: p.icon),
                 ),
               ),
             ),
@@ -435,17 +408,17 @@ class _AkunScreenState extends State<AkunScreen> {
               label: 'Ubah foto profil',
               button: true,
               child: Material(
-                color: C.primary,
+                color: p.primary,
                 shape: const CircleBorder(),
                 elevation: 3,
                 child: InkWell(
                   customBorder: const CircleBorder(),
                   onTap: () {},
-                  child: const SizedBox(
+                  child: SizedBox(
                     width: 24,
                     height: 24,
                     child: Icon(Icons.photo_camera,
-                        size: 13, color: C.onPrimary),
+                        size: 13, color: p.onPrimary),
                   ),
                 ),
               ),
@@ -457,10 +430,12 @@ class _AkunScreenState extends State<AkunScreen> {
   }
 
   Widget _buildContactPanel() {
+    final p = context.palette;
+
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: C.surfaceLow.withValues(alpha: 0.7),
+        color: p.surfaceAlt,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Column(
@@ -471,16 +446,15 @@ class _AkunScreenState extends State<AkunScreen> {
               Expanded(
                 child: Row(
                   children: [
-                    const Icon(Icons.location_on, size: 18, color: C.primary),
+                    Icon(Icons.location_on, size: 18, color: p.accent),
                     const SizedBox(width: 8),
                     Text('Lahan Aktif',
-                        style:
-                            _ts(12, 16, FontWeight.w600, C.onSurfaceVariant)),
+                        style: _ts(12, 16, FontWeight.w600, p.subtitle)),
                   ],
                 ),
               ),
               Text('2 Petak Terdaftar',
-                  style: _ts(12, 16, FontWeight.w600, C.onSurface)),
+                  style: _ts(12, 16, FontWeight.w600, p.title)),
             ],
           ),
           const SizedBox(height: 8),
@@ -490,18 +464,18 @@ class _AkunScreenState extends State<AkunScreen> {
               Expanded(
                 child: Row(
                   children: [
-                    const Icon(Icons.mail_outline, size: 18, color: C.outline),
+                    Icon(Icons.mail_outline, size: 18, color: p.icon),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(_profil?['email'] ?? 'budi.santoso@agrimail.id',
+                      child: Text(
+                          _profil?['email'] ?? 'budi.santoso@agrimail.id',
                           overflow: TextOverflow.ellipsis,
-                          style: _ts(
-                              12, 16, FontWeight.w400, C.onSurfaceVariant)),
+                          style: _ts(12, 16, FontWeight.w400, p.subtitle)),
                     ),
                   ],
                 ),
               ),
-              const Icon(Icons.check_circle, size: 16, color: C.primary),
+              Icon(Icons.check_circle, size: 16, color: p.accent),
             ],
           ),
           const SizedBox(height: 8),
@@ -511,18 +485,17 @@ class _AkunScreenState extends State<AkunScreen> {
               Expanded(
                 child: Row(
                   children: [
-                    const Icon(Icons.phone_outlined, size: 18, color: C.outline),
+                    Icon(Icons.phone_outlined, size: 18, color: p.icon),
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(_profil?['nomor_hp'] ?? '+62 812-3456-7890',
                           overflow: TextOverflow.ellipsis,
-                          style: _ts(
-                              12, 16, FontWeight.w400, C.onSurfaceVariant)),
+                          style: _ts(12, 16, FontWeight.w400, p.subtitle)),
                     ),
                   ],
                 ),
               ),
-              Text('Aktif WA', style: _ts(10, 14, FontWeight.w600, C.primary)),
+              Text('Aktif WA', style: _ts(10, 14, FontWeight.w600, p.accent)),
             ],
           ),
         ],
@@ -532,54 +505,16 @@ class _AkunScreenState extends State<AkunScreen> {
 
   // ───────── Banner sensor ─────────
   Widget _buildSensorBanner() {
+    final p = context.palette;
     return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: C.surfaceLow,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-              color: AppColors.shadow, blurRadius: 3, offset: Offset(0, 1)),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: C.surfaceLowest,
-              borderRadius: BorderRadius.circular(8),
-              boxShadow: const [
-                BoxShadow(
-                    color: AppColors.shadow,
-                    blurRadius: 3,
-                    offset: Offset(0, 1)),
-              ],
-            ),
-            child: const Icon(Icons.sensors, size: 22, color: C.primary),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Sensor Lapangan Aktif',
-                    style: _ts(12, 16, FontWeight.w600, C.onSurface)),
-                Text('Blok A (98%) • Blok B (100%)',
-                    style: _ts(12, 16, FontWeight.w400, C.onSurfaceVariant)),
-              ],
-            ),
-          ),
-          const _PulseDot(color: AppColors.secondaryContainer, size: 10),
-        ],
-      ),
     );
   }
 
   // ───────── Section menu ─────────
   Widget _buildSection(String title, String trailing, Color trailingColor,
       List<_MenuItem> items) {
+    final p = context.palette;
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
@@ -589,22 +524,23 @@ class _AkunScreenState extends State<AkunScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(title.toUpperCase(),
-                  style: _ts(10, 14, FontWeight.w700, C.outline,
+                  style: _ts(10, 14, FontWeight.w700, p.icon,
                       letterSpacing: 1.0)),
-              Text(trailing, style: _ts(10, 14, FontWeight.w600, trailingColor)),
+              Text(trailing,
+                  style: _ts(10, 14, FontWeight.w600, trailingColor)),
             ],
           ),
         ),
         Container(
           clipBehavior: Clip.antiAlias,
           decoration: BoxDecoration(
-            color: C.surfaceLowest,
+            color: p.surface,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: const [
+            boxShadow: [
               BoxShadow(
-                  color: AppColors.shadow,
+                  color: p.shadow,
                   blurRadius: 12,
-                  offset: Offset(0, 2)),
+                  offset: const Offset(0, 2)),
             ],
           ),
           child: Column(
@@ -615,7 +551,7 @@ class _AkunScreenState extends State<AkunScreen> {
                   Container(
                     height: 1,
                     margin: const EdgeInsets.symmetric(horizontal: 16),
-                    color: C.surfaceContainer.withValues(alpha: 0.6),
+                    color: p.border,
                   ),
               ],
             ],
@@ -627,8 +563,11 @@ class _AkunScreenState extends State<AkunScreen> {
 
   // ───────── Tombol keluar ─────────
   Widget _buildLogout(BuildContext context) {
+    final p = context.palette;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+
     return Material(
-      color: C.errorContainer.withValues(alpha: 0.4),
+      color: p.error.withAlpha(isDark ? 40 : 26),
       borderRadius: BorderRadius.circular(12),
       child: InkWell(
         borderRadius: BorderRadius.circular(12),
@@ -640,10 +579,10 @@ class _AkunScreenState extends State<AkunScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
-                const Icon(Icons.logout, size: 20, color: C.error),
+                Icon(Icons.logout, size: 20, color: p.error),
                 const SizedBox(width: 8),
                 Text('Keluar dari Akun',
-                    style: _ts(14, 20, FontWeight.w700, C.error)),
+                    style: _ts(14, 20, FontWeight.w700, p.error)),
               ],
             ),
           ),
@@ -653,19 +592,21 @@ class _AkunScreenState extends State<AkunScreen> {
   }
 
   void _confirmLogout(BuildContext context) {
+    final p = context.palette;
+
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
-        backgroundColor: C.surfaceLowest,
+        backgroundColor: p.surface,
         title: Text('Keluar dari akun?',
-            style: _ts(18, 24, FontWeight.w600, C.onSurface)),
+            style: _ts(18, 24, FontWeight.w600, p.title)),
         content: Text('Anda perlu masuk lagi untuk memantau lahan.',
-            style: _ts(14, 20, FontWeight.w400, C.onSurfaceVariant)),
+            style: _ts(14, 20, FontWeight.w400, p.subtitle)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text('Batal',
-                style: _ts(14, 20, FontWeight.w600, C.onSurfaceVariant)),
+                style: _ts(14, 20, FontWeight.w600, p.subtitle)),
           ),
           TextButton(
             onPressed: () async {
@@ -678,7 +619,7 @@ class _AkunScreenState extends State<AkunScreen> {
                 );
               }
             },
-            child: Text('Keluar', style: _ts(14, 20, FontWeight.w700, C.error)),
+            child: Text('Keluar', style: _ts(14, 20, FontWeight.w700, p.error)),
           ),
         ],
       ),
@@ -686,15 +627,17 @@ class _AkunScreenState extends State<AkunScreen> {
   }
 
   Widget _buildBuildInfo() {
+    final p = context.palette;
+
     return Column(
       children: [
         Row(
           mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            const Icon(Icons.psychology_outlined, size: 16, color: C.outline),
+            Icon(Icons.psychology_outlined, size: 16, color: p.icon),
             const SizedBox(width: 6),
             Text('CAPSEE PRECISION AGRI',
-                style: _ts(10, 14, FontWeight.w600, C.outline,
+                style: _ts(10, 14, FontWeight.w600, p.icon,
                     letterSpacing: 1.0)),
           ],
         ),
@@ -702,13 +645,12 @@ class _AkunScreenState extends State<AkunScreen> {
         Text(
           'Versi 2.4.0 (Build 2024.11) • Sistem Terenkripsi',
           textAlign: TextAlign.center,
-          style: _ts(12, 16, FontWeight.w400,
-              C.onSurfaceVariant.withValues(alpha: 0.8)),
+          style:
+              _ts(12, 16, FontWeight.w400, p.subtitle.withValues(alpha: 0.8)),
         ),
       ],
     );
   }
-
 }
 
 // ─────────────────────────── Item menu ───────────────────────────
@@ -718,6 +660,8 @@ class _MenuTile extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
+
     return InkWell(
       onTap: item.onTap ?? () {},
       child: Padding(
@@ -728,7 +672,7 @@ class _MenuTile extends StatelessWidget {
               width: 40,
               height: 40,
               decoration: BoxDecoration(
-                color: C.surfaceLow,
+                color: p.surfaceAlt,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Icon(item.icon, size: 20, color: item.iconColor),
@@ -740,15 +684,15 @@ class _MenuTile extends StatelessWidget {
                 children: [
                   Text(item.title,
                       overflow: TextOverflow.ellipsis,
-                      style: _ts(14, 20, FontWeight.w600, C.onSurface)),
+                      style: _ts(14, 20, FontWeight.w600, p.title)),
                   Text(item.subtitle,
                       overflow: TextOverflow.ellipsis,
-                      style: _ts(12, 16, FontWeight.w400, C.onSurfaceVariant)),
+                      style: _ts(12, 16, FontWeight.w400, p.subtitle)),
                 ],
               ),
             ),
             const SizedBox(width: 8),
-            const Icon(Icons.chevron_right, size: 20, color: C.outline),
+            Icon(Icons.chevron_right, size: 20, color: p.icon),
           ],
         ),
       ),

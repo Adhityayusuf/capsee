@@ -3,7 +3,7 @@ import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/app_colors.dart';
+import '../../core/app_theme.dart';
 
 class ScanHistoryItem {
   final String imagePath;
@@ -24,36 +24,38 @@ class RiwayatScanScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
+
     return SafeArea(
       bottom: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _header(),
-          Expanded(child: items.isEmpty ? _empty() : _list()),
+          _header(p),
+          Expanded(child: items.isEmpty ? _empty(p) : _list(p)),
         ],
       ),
     );
   }
 
-  Widget _header() => Padding(
+  Widget _header(AppPalette p) => Padding(
     padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
     child: Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text('Riwayat Scan', style: _style(20, AppColors.title, FontWeight.w700)),
+        Text('Riwayat Scan', style: _style(20, p.title, FontWeight.w700)),
         const SizedBox(height: 3),
         Text(
           items.isEmpty
               ? 'Belum ada foto yang dipindai'
               : '${items.length} foto hasil pindai sesi ini',
-          style: _style(12, AppColors.subtitle, FontWeight.w400),
+          style: _style(12, p.subtitle, FontWeight.w400),
         ),
       ],
     ),
   );
 
-  Widget _empty() => Center(
+  Widget _empty(AppPalette p) => Center(
     child: Padding(
       padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
       child: Column(
@@ -63,25 +65,21 @@ class RiwayatScanScreen extends StatelessWidget {
             width: 72,
             height: 72,
             decoration: BoxDecoration(
-              color: AppColors.primarySoft,
+              color: p.accentSoft,
               borderRadius: BorderRadius.circular(16),
             ),
-            child: const Icon(
-              Icons.history_rounded,
-              color: AppColors.primary,
-              size: 36,
-            ),
+            child: Icon(Icons.history_rounded, color: p.accent, size: 36),
           ),
           const SizedBox(height: 16),
           Text(
             'Riwayat masih kosong',
-            style: _style(16, AppColors.title, FontWeight.w700),
+            style: _style(16, p.title, FontWeight.w700),
           ),
           const SizedBox(height: 6),
           Text(
             'Hasil pindai daun akan tampil di sini setelah Anda mengambil foto dengan kamera.',
             textAlign: TextAlign.center,
-            style: _style(12, AppColors.subtitle, FontWeight.w400, height: 1.4),
+            style: _style(12, p.subtitle, FontWeight.w400, height: 1.4),
           ),
           const SizedBox(height: 18),
           FilledButton.icon(
@@ -97,18 +95,18 @@ class RiwayatScanScreen extends StatelessWidget {
     ),
   );
 
-  Widget _list() => ListView.separated(
+  Widget _list(AppPalette p) => ListView.separated(
     padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
     itemCount: items.length,
     separatorBuilder: (_, _) => const SizedBox(height: 10),
-    itemBuilder: (context, index) => _card(items[index]),
+    itemBuilder: (context, index) => _card(items[index], p),
   );
 
-  Widget _card(ScanHistoryItem item) {
+  Widget _card(ScanHistoryItem item, AppPalette p) {
     final file = File(item.imagePath);
     return Card(
       elevation: 1,
-      color: Colors.white,
+      color: p.surface,
       child: Padding(
         padding: const EdgeInsets.all(10),
         child: Row(
@@ -125,10 +123,10 @@ class RiwayatScanScreen extends StatelessWidget {
                   : Container(
                       width: 56,
                       height: 56,
-                      color: AppColors.chipBg,
-                      child: const Icon(
+                      color: p.surfaceAlt,
+                      child: Icon(
                         Icons.image_not_supported_outlined,
-                        color: AppColors.icon,
+                        color: p.icon,
                       ),
                     ),
             ),
@@ -139,12 +137,12 @@ class RiwayatScanScreen extends StatelessWidget {
                 children: [
                   Text(
                     'Foto Daun',
-                    style: _style(13, AppColors.title, FontWeight.w700),
+                    style: _style(13, p.title, FontWeight.w700),
                   ),
                   const SizedBox(height: 3),
                   Text(
                     _format(item.scannedAt),
-                    style: _style(11, AppColors.subtitle, FontWeight.w400),
+                    style: _style(11, p.subtitle, FontWeight.w400),
                   ),
                 ],
               ),
@@ -152,12 +150,12 @@ class RiwayatScanScreen extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
               decoration: BoxDecoration(
-                color: AppColors.chipBg,
+                color: p.surfaceAlt,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
                 'Menunggu analisis',
-                style: _style(10, AppColors.subtitle, FontWeight.w600),
+                style: _style(10, p.subtitle, FontWeight.w600),
               ),
             ),
           ],
