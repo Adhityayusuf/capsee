@@ -119,7 +119,19 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
     );
   }
 
+  // Tambahkan variabel ini di bawah _selectedWaktu (di dalam State)
+  DateTimeRange? _customDateRange;
+
+  // Timpa fungsi _buildFilterSection yang lama dengan ini:
   Widget _buildFilterSection() {
+    // Teks yang tampil di dropdown waktu
+    String labelWaktu = _selectedWaktu;
+    if (_selectedWaktu == 'Pilih Tanggal...' && _customDateRange != null) {
+      final start = _customDateRange!.start;
+      final end = _customDateRange!.end;
+      labelWaktu = '${start.day}/${start.month} - ${end.day}/${end.month}';
+    }
+
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       child: Row(
@@ -127,6 +139,7 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
           Expanded(
             child: _buildDropdown(
               value: _selectedLahan,
+              displayValue: _selectedLahan, // Tampilan teks
               items: ['Semua Lahan', 'Petak Cabai Rawit Blok A', 'Lahan Samping Rumah'],
               icon: Icons.landscape_rounded,
               onChanged: (val) => setState(() => _selectedLahan = val!),
@@ -136,9 +149,41 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
           Expanded(
             child: _buildDropdown(
               value: _selectedWaktu,
-              items: ['Semua Waktu', 'Hari Ini', 'Minggu Ini', 'Bulan Ini'],
+              displayValue: labelWaktu, // Tampilan teks (bisa berubah jadi tanggal)
+              items: ['Semua Waktu', 'Hari Ini', 'Minggu Ini', 'Bulan Ini', 'Pilih Tanggal...'],
               icon: Icons.calendar_today_rounded,
-              onChanged: (val) => setState(() => _selectedWaktu = val!),
+              onChanged: (val) async {
+                if (val == 'Pilih Tanggal...') {
+                  // Munculkan Date Picker
+                  final picked = await showDateRangePicker(
+                    context: context,
+                    firstDate: DateTime(2020),
+                    lastDate: DateTime.now(),
+                    builder: (context, child) {
+                      return Theme(
+                        data: Theme.of(context).copyWith(
+                          colorScheme: const ColorScheme.light(
+                            primary: Color(0xFF2E7D32), // Warna hijau Capsee
+                          ),
+                        ),
+                        child: child!,
+                      );
+                    },
+                  );
+                  
+                  if (picked != null) {
+                    setState(() {
+                      _customDateRange = picked;
+                      _selectedWaktu = val!;
+                    });
+                  }
+                } else {
+                  setState(() {
+                    _selectedWaktu = val!;
+                    _customDateRange = null; // Reset custom date
+                  });
+                }
+              },
             ),
           ),
         ],
@@ -146,8 +191,10 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
     );
   }
 
+  // Timpa fungsi _buildDropdown yang lama dengan ini:
   Widget _buildDropdown({
     required String value,
+    required String displayValue, // Tambahan parameter untuk teks yang dirender
     required List<String> items,
     required IconData icon,
     required ValueChanged<String?> onChanged,
@@ -164,16 +211,16 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
           value: value,
           isExpanded: true,
           icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey),
-          items: items.map((String item) {
-            return DropdownMenuItem<String>(
-              value: item,
-              child: Row(
+          // Bagian ini yang tampil saat dropdown TERTUTUP
+          selectedItemBuilder: (BuildContext context) {
+            return items.map<Widget>((String item) {
+              return Row(
                 children: [
                   Icon(icon, size: 16, color: const Color(0xFF2E7D32)),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      item,
+                      displayValue, // Pakai displayValue agar format tanggal custom bisa tampil
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
@@ -183,6 +230,20 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
                     ),
                   ),
                 ],
+              );
+            }).toList();
+          },
+          // Bagian ini yang tampil saat dropdown TERBUKA (List pilihan)
+          items: items.map((String item) {
+            return DropdownMenuItem<String>(
+              value: item,
+              child: Text(
+                item,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 12,
+                  fontWeight: FontWeight.w500,
+                  color: const Color(0xFF1A1A1A),
+                ),
               ),
             );
           }).toList(),
@@ -192,6 +253,7 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
     );
   }
 
+  
   Widget _buildRiwayatList() {
     return ListView.separated(
       padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
