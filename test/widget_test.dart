@@ -3,12 +3,19 @@ import 'package:flutter_test/flutter_test.dart';
 
 import 'package:capsee/main.dart';
 import 'package:capsee/models/land_data.dart';
-import 'package:capsee/screens/land_detail_screen.dart';
-import 'package:capsee/screens/tambah_lahan_page.dart';
+import 'package:capsee/screens/lahan/detail_lahan_screen.dart';
+import 'package:capsee/screens/lahan/tambah_lahan_page.dart';
 
 void main() {
-  testWidgets('Capsee membuka halaman register', (tester) async {
+  testWidgets('Capsee membuka splash lalu halaman register', (tester) async {
     await tester.pumpWidget(const CapseeApp());
+
+    expect(find.text('Capsee'), findsOneWidget);
+    expect(find.text('Versi 1.0.0'), findsOneWidget);
+    expect(find.byType(CircularProgressIndicator), findsOneWidget);
+
+    await tester.pump(const Duration(seconds: 3));
+    await tester.pumpAndSettle();
 
     expect(find.text('Daftar Akun Capsee'), findsOneWidget);
   });

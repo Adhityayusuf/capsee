@@ -1,7 +1,34 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 
+import '../../core/app_colors.dart';
+import '../../core/app_text.dart';
+import '../../core/app_theme.dart';
+import '../../services/services.dart';
+import '../../widgets/popup_notifikasi.dart';
+import '../../widgets/ui_kit.dart';
+
+class _AdditionalSchedule {
+  const _AdditionalSchedule({
+    this.id,
+    required this.name,
+    required this.date,
+    required this.description,
+    this.status = 'pending',
+  });
+
+  final String? id;
+  final String name;
+  final DateTime date;
+  final String description;
+  final String status;
+}
+
 class TabJadwal extends StatefulWidget {
-  const TabJadwal({super.key});
+  final String idLahan;
+
+  const TabJadwal({super.key, required this.idLahan});
 
   @override
   State<TabJadwal> createState() => _TabJadwalState();
@@ -13,6 +40,16 @@ class _TabJadwalState extends State<TabJadwal> {
   bool activitySaved = false;
   bool syncing = false;
   String selectedPupuk = 'npk';
+  final Map<DateTime, Map<int, String>> _scheduleStatuses = {};
+  final List<_AdditionalSchedule> _additionalSchedules = [];
+  DateTime? _expandedScheduleDate;
+  Timer? _midnightTimer;
+
+  // ── State backend (jadwal asli per lahan) ──
+  bool _backendLoading = true;
+  String? _backendError;
+  List<Map<String, dynamic>> _siramList = [];
+  List<Map<String, dynamic>> _pupukList = [];
 
   final Map<String, Map<String, String>> pupukData = {
     'npk': {
@@ -36,6 +73,84 @@ class _TabJadwalState extends State<TabJadwal> {
   };
 
   @override
+  void initState() {
+    super.initState();
+    _scheduleMidnightRefresh();
+    _loadBackend();
+  }
+
+  Future<void> _loadBackend() async {
+    if (widget.idLahan.isEmpty) {
+      if (mounted) {
+        setState(() {
+          _backendLoading = false;
+          _backendError = 'ID lahan tidak tersedia.';
+        });
+      }
+      return;
+    }
+    if (mounted) {
+      setState(() {
+        _backendLoading = true;
+        _backendError = null;
+      });
+    }
+    try {
+      final results = await Future.wait([
+        getJadwalPenyiraman(widget.idLahan),
+        getJadwalPemupukan(widget.idLahan),
+        getJadwalKegiatan(widget.idLahan),
+      ]);
+      if (!mounted) return;
+      final kegiatan = (results[2] as List<Map<String, dynamic>>)
+          .map(
+            (e) => _AdditionalSchedule(
+              id: e['id'] as String?,
+              name: (e['nama_kegiatan'] ?? 'Kegiatan').toString(),
+              date:
+                  DateTime.tryParse((e['tanggal_jadwal'] ?? '').toString()) ??
+                  DateTime.now(),
+              description: (e['deskripsi'] ?? '').toString(),
+              status: (e['status'] ?? 'pending').toString(),
+            ),
+          )
+          .toList();
+      setState(() {
+        _siramList = results[0] as List<Map<String, dynamic>>;
+        _pupukList = results[1] as List<Map<String, dynamic>>;
+        _additionalSchedules
+          ..clear()
+          ..addAll(kegiatan);
+        _backendLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _backendLoading = false;
+        _backendError = e.toString();
+      });
+    }
+  }
+
+  @override
+  void dispose() {
+    _midnightTimer?.cancel();
+    super.dispose();
+  }
+
+  DateTime _dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
+
+  void _scheduleMidnightRefresh() {
+    final now = DateTime.now();
+    final nextMidnight = DateTime(now.year, now.month, now.day + 1);
+    _midnightTimer = Timer(nextMidnight.difference(now), () {
+      if (!mounted) return;
+      setState(() {});
+      _scheduleMidnightRefresh();
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     return SingleChildScrollView(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 28),
@@ -43,91 +158,278 @@ class _TabJadwalState extends State<TabJadwal> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _plotInfo(),
-          const SizedBox(height: 18),
           _wateringSection(),
-          const SizedBox(height: 18),
-          _fertilizerSection(),
-          const SizedBox(height: 18),
-          _sensorCard(),
-          const SizedBox(height: 12),
+          const SizedBox(height: 16),
+          _backendSection(),
+          const SizedBox(height: 16),
           _actions(),
         ],
       ),
     );
   }
 
-  Widget _plotInfo() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: _box(),
-      child: Row(
+  Widget _backendSection() {
+    final p = context.palette;
+    return CapseeCard(
+      padding: const EdgeInsets.all(AppSpace.tile),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _iconBox(Icons.local_florist, const Color(0xFFE7F5E9)),
-          const SizedBox(width: 10),
-          const Expanded(
-            child: Column(
+          Row(
+            children: [
+              Expanded(
+                child: Text(
+                  'Jadwal Lahan (Server)',
+                  style: AppText.subtitle(context),
+                ),
+              ),
+              IconButton(
+                tooltip: 'Muat ulang jadwal',
+                visualDensity: VisualDensity.compact,
+                icon: Icon(Icons.refresh, color: p.primary),
+                onPressed: _backendLoading ? null : _loadBackend,
+              ),
+            ],
+          ),
+          const Divider(height: 20, thickness: 1),
+          if (_backendLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 16),
+                child: CircularProgressIndicator(strokeWidth: 2),
+              ),
+            )
+          else if (_backendError != null)
+            Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text('Petak Rawit Blok A • Umur 3 Bln',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-                SizedBox(height: 2),
-                Text('Fase Berbuah Aktif (Generatif II)',
-                    style: TextStyle(fontSize: 12, color: Colors.grey)),
+                Text(
+                  'Gagal memuat jadwal: $_backendError',
+                  style: AppText.bodySm(context, color: p.error),
+                ),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: _loadBackend,
+                  icon: const Icon(Icons.refresh, size: 16),
+                  label: const Text('Coba lagi'),
+                ),
               ],
+            )
+          else ...[
+            _backendGroupTitle(
+              'Penyiraman (${_siramList.where((e) => e['status'] != 'selesai').length} pending)',
             ),
-          ),
-          _status('Optimal'),
+            if (_siramList.isEmpty)
+              Text(
+                'Belum ada jadwal siram.',
+                style: AppText.bodySm(context),
+              ),
+            for (final j in _siramList.take(5))
+              _backendTile(
+                icon: Icons.water_drop,
+                title: 'Siram • ${(j['tanggal_jadwal'] ?? '-').toString()}',
+                subtitle: 'Status: ${(j['status'] ?? '-').toString()}',
+                status: (j['status'] ?? '').toString(),
+                onSelesai: (j['status'] ?? '') == 'selesai'
+                    ? null
+                    : () => _selesaikanSiram((j['id'] ?? '').toString()),
+              ),
+            const SizedBox(height: 8),
+            _backendGroupTitle(
+              'Pemupukan (${_pupukList.where((e) => e['status'] != 'selesai').length} pending)',
+            ),
+            if (_pupukList.isEmpty)
+              Text(
+                'Belum ada jadwal pupuk.',
+                style: AppText.bodySm(context),
+              ),
+            for (final j in _pupukList.take(5))
+              _backendTile(
+                icon: Icons.science,
+                title:
+                    'Pupuk • ${(j['tanggal_jadwal'] ?? '-').toString()}${j['jenis_pupuk'] != null ? ' • ${j['jenis_pupuk']}' : ''}',
+                subtitle: 'Status: ${(j['status'] ?? '-').toString()}',
+                status: (j['status'] ?? '').toString(),
+                onSelesai: (j['status'] ?? '') == 'selesai'
+                    ? null
+                    : () => _selesaikanPupuk((j['id'] ?? '').toString()),
+              ),
+          ],
         ],
       ),
     );
   }
 
+  Widget _backendGroupTitle(String text) {
+    return Padding(
+      padding: const EdgeInsets.only(bottom: 4, top: 4),
+      child: Text(
+        text,
+        style: AppText.caption(context)
+            .copyWith(fontWeight: FontWeight.w700),
+      ),
+    );
+  }
+
+  Widget _backendTile({
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    required String status,
+    VoidCallback? onSelesai,
+  }) {
+    final p = context.palette;
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(AppSpace.tile),
+      decoration: BoxDecoration(
+        color: p.surfaceAlt,
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: p.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  title,
+                  style: AppText.bodySm(context, color: p.title)
+                      .copyWith(fontWeight: FontWeight.w700),
+                ),
+                Text(
+                  subtitle,
+                  style: AppText.caption(context),
+                ),
+              ],
+            ),
+          ),
+          if (onSelesai != null)
+            TextButton(
+              onPressed: onSelesai,
+              child: const Text('Selesai'),
+            )
+          else
+            const StatusBadge(
+              label: 'Selesai',
+              kind: BadgeKind.success,
+            ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _selesaikanSiram(String idJadwal) async {
+    try {
+      await selesaiPenyiraman(widget.idLahan, idJadwal);
+      if (!mounted) return;
+      showSuccessPopup(context, 'Jadwal siram ditandai selesai.');
+      await _loadBackend();
+    } catch (e) {
+      if (!mounted) return;
+      showErrorPopup(context, 'Gagal menyelesaikan siram: ${pesanError(e)}');
+    }
+  }
+
+  Future<void> _selesaikanPupuk(String idJadwal) async {
+    try {
+      await selesaiPemupukan(widget.idLahan, idJadwal);
+      if (!mounted) return;
+      showSuccessPopup(context, 'Jadwal pupuk ditandai selesai.');
+      await _loadBackend();
+    } catch (e) {
+      if (!mounted) return;
+      showErrorPopup(context, 'Gagal menyelesaikan pupuk: ${pesanError(e)}');
+    }
+  }
+
+  Widget _plotInfo() {
+    return CapseeCard(
+      padding: const EdgeInsets.all(AppSpace.tile),
+      child: Row(
+        children: [
+          _iconBox(Icons.local_florist, context.palette.accentSoft),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Petak Rawit Blok A • Umur 3 Bln',
+                  style: AppText.bodySm(context,
+                          color: context.palette.title)
+                      .copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  'Fase Berbuah Aktif (Generatif II)',
+                  style: AppText.bodySm(context),
+                ),
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
   Widget _wateringSection() {
+    final today = _dateOnly(DateTime.now());
+    final weekStart = today.subtract(Duration(days: today.weekday - 1));
+    final upcomingAdditionalSchedules = _additionalSchedules.where((schedule) {
+      final scheduleDate = _dateOnly(schedule.date);
+      return !scheduleDate.isBefore(today) &&
+          !scheduleDate.isAfter(today.add(const Duration(days: 7)));
+    }).toList()..sort((first, second) => first.date.compareTo(second.date));
+    const scheduleDetails = [
+      '3 Kegiatan',
+      '3 Kegiatan',
+      '2 Kegiatan',
+      '4 Kegiatan',
+      '3 Kegiatan',
+      '5 Kegiatan',
+      '4 Kegiatan',
+    ];
+
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final bmkgBg =
+        isDark ? const Color(0xFF0F2A3A) : AppColors.tertiaryFixed;
+    final bmkgTitle = isDark ? const Color(0xFF7DD3FC) : AppColors.tertiary;
+    final bmkgBody = isDark ? context.palette.title : const Color(0xFF1B2B34);
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        _sectionTitle(
-          Icons.water_drop,
-          'Jadwal Penyiraman Mingguan',
-          'Prediksi debit irigasi presisi integrasi BMKG',
-          color: const Color(0xFF0075B1),
-        ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 16),
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpace.tile),
           decoration: BoxDecoration(
-            color: const Color(0xFFEFF6FA),
-            borderRadius: BorderRadius.circular(12),
+            color: bmkgBg,
+            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
           ),
-          child: const Row(
+          child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.cloud, color: Color(0xFF005B8C)),
-              SizedBox(width: 10),
+              Icon(Icons.cloud, color: bmkgTitle),
+              const SizedBox(width: 10),
               Expanded(
                 child: Text.rich(
                   TextSpan(
                     children: [
                       TextSpan(
                         text: 'SINKRONISASI BMKG AKTIF\n',
-                        style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF005B8C)),
+                        style: AppText.bodySm(context, color: bmkgTitle)
+                            .copyWith(fontWeight: FontWeight.w800),
                       ),
                       TextSpan(
                         text: 'Hujan lebat diprediksi terjadi ',
-                        style: TextStyle(fontSize: 12),
+                        style: AppText.bodySm(context, color: bmkgBody),
                       ),
                       TextSpan(
-                        text: 'Rabu & Sabtu',
-                        style: TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w700),
-                      ),
-                      TextSpan(
-                        text:
-                            '. Lengas tanah tercukupi (86%), penyiraman otomatis dilewati guna mencegah infeksi busuk akar.',
-                        style: TextStyle(fontSize: 12),
+                        text: 'hari Rabu & Sabtu',
+                        style: AppText.bodySm(context, color: bmkgBody)
+                            .copyWith(fontWeight: FontWeight.w700),
                       ),
                     ],
                   ),
@@ -136,286 +438,495 @@ class _TabJadwalState extends State<TabJadwal> {
             ],
           ),
         ),
-        const SizedBox(height: 10),
-        Container(
-          padding: const EdgeInsets.all(8),
-          decoration: _box(),
+        const SizedBox(height: 12),
+        CapseeCard(
+          padding: const EdgeInsets.all(AppSpace.tile),
           child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _scheduleRow('SEN', '28', '06:30 WIB • 1.2 L/m²',
-                  'Lengas tanah: 68% (Stabil)', 'Selesai'),
-              _scheduleRow('SEL', '29', 'Hari Ini: 2x Penyiraman',
-                  '06:30 & 16:30 WIB (Total 1.5 L/m²)', 'Aktif',
-                  active: true),
-              _scheduleRow('RAB', '30', '06:30 WIB • 1.2 L/m²',
-                  'Presipitasi Lebat 85%', 'Dilewati', skipped: true),
-              _scheduleRow('KAM', '31', '06:30 WIB • 1.2 L/m²',
-                  'Sensor lengas tanah otomatis', 'Terjadwal'),
-              _scheduleRow('JUM', '01', '06:30 WIB • 1.2 L/m²',
-                  'Irigasi mikro tetes', 'Terjadwal'),
-              _scheduleRow('SAB', '02', '06:30 WIB • 1.2 L/m²',
-                  'Hujan Ringan BMKG 70%', 'Dilewati', skipped: true),
-              _scheduleRow('MIN', '03', '06:30 WIB • 1.2 L/m²',
-                  'Evaluasi kelembapan tanah', 'Terjadwal'),
+              const SectionHeader(
+                icon: Icons.water_drop,
+                title: 'Jadwal Mingguan',
+              ),
+              const Divider(height: 20, thickness: 1),
+              Align(
+                alignment: Alignment.centerRight,
+                child: IconButton(
+                  tooltip: 'Tambah jadwal tambahan',
+                  visualDensity: VisualDensity.compact,
+                  icon: const Icon(Icons.add, color: AppColors.primary),
+                  onPressed: _showAddScheduleDialog,
+                ),
+              ),
+              for (var index = 0; index < scheduleDetails.length; index++)
+                _scheduleRow(
+                  scheduledDate: weekStart.add(Duration(days: index)),
+                  title: scheduleDetails[index],
+                ),
+              if (upcomingAdditionalSchedules.isNotEmpty) ...[
+                const SizedBox(height: 8),
+                const Divider(height: 1),
+                const SizedBox(height: 8),
+                Text(
+                  'Jadwal tambahan mendekat',
+                  style: AppText.caption(context)
+                      .copyWith(fontWeight: FontWeight.w700),
+                ),
+                for (final schedule in upcomingAdditionalSchedules)
+                  _additionalScheduleTile(schedule),
+              ],
             ],
           ),
         ),
-        const SizedBox(height: 10),
+      ],
+    );
+  }
+
+  Future<void> _showAddScheduleDialog() async {
+    final nameController = TextEditingController();
+    final descriptionController = TextEditingController();
+    var selectedDate = _dateOnly(DateTime.now());
+    var saving = false;
+
+    final confirmed = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => StatefulBuilder(
+        builder: (context, setDialogState) => AlertDialog(
+          title: const Text('Jadwal Tambahan'),
+          content: SingleChildScrollView(
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                TextField(
+                  controller: nameController,
+                  textCapitalization: TextCapitalization.sentences,
+                  decoration: const InputDecoration(
+                    labelText: 'Nama kegiatan',
+                    border: OutlineInputBorder(),
+                  ),
+                  onChanged: (_) => setDialogState(() {}),
+                ),
+                const SizedBox(height: 12),
+                SizedBox(
+                  width: double.infinity,
+                  child: OutlinedButton.icon(
+                    onPressed: saving
+                        ? null
+                        : () async {
+                            final pickedDate = await showDatePicker(
+                              context: dialogContext,
+                              initialDate: selectedDate,
+                              firstDate: _dateOnly(DateTime.now()),
+                              lastDate: DateTime(2100),
+                            );
+                            if (pickedDate != null) {
+                              setDialogState(() {
+                                selectedDate = _dateOnly(pickedDate);
+                              });
+                            }
+                          },
+                    icon: const Icon(Icons.calendar_month),
+                    label: Text(_formatDate(selectedDate)),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                TextField(
+                  controller: descriptionController,
+                  textCapitalization: TextCapitalization.sentences,
+                  minLines: 2,
+                  maxLines: 4,
+                  decoration: const InputDecoration(
+                    labelText: 'Deskripsi',
+                    alignLabelWithHint: true,
+                    border: OutlineInputBorder(),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          actions: [
+            TextButton(
+              onPressed:
+                  saving ? null : () => Navigator.pop(dialogContext, false),
+              child: const Text('Batal'),
+            ),
+            FilledButton(
+              onPressed:
+                  nameController.text.trim().isEmpty || saving
+                  ? null
+                  : () async {
+                      setDialogState(() => saving = true);
+                      try {
+                        final iso =
+                            '${selectedDate.year.toString().padLeft(4, '0')}-'
+                            '${selectedDate.month.toString().padLeft(2, '0')}-'
+                            '${selectedDate.day.toString().padLeft(2, '0')}';
+                        await tambahJadwalKegiatan(
+                          idLahan: widget.idLahan,
+                          namaKegiatan: nameController.text.trim(),
+                          tanggalJadwal: iso,
+                          deskripsi: descriptionController.text.trim(),
+                        );
+                        if (dialogContext.mounted) {
+                          Navigator.pop(dialogContext, true);
+                        }
+                      } catch (e) {
+                        setDialogState(() => saving = false);
+                        if (dialogContext.mounted) {
+                          showErrorPopup(
+                            dialogContext,
+                            'Gagal menambah jadwal: ${pesanError(e)}',
+                          );
+                        }
+                      }
+                    },
+              child: Text(saving ? 'Menyimpan…' : 'Tambah'),
+            ),
+          ],
+        ),
+      ),
+    );
+
+    nameController.dispose();
+    descriptionController.dispose();
+    if (confirmed != true || !mounted) return;
+    showSuccessPopup(context, 'Jadwal kegiatan tersimpan.');
+    await _loadBackend();
+  }
+
+  Widget _additionalScheduleTile(_AdditionalSchedule schedule) {
+    final isDone = schedule.status == 'selesai';
+    final p = context.palette;
+    return Container(
+      margin: const EdgeInsets.only(top: 8),
+      padding: const EdgeInsets.all(AppSpace.tile),
+      decoration: BoxDecoration(
+        color: p.accentSoft,
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+      ),
+      child: Row(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Icon(Icons.event_note, size: 18, color: p.primary),
+          const SizedBox(width: 8),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  schedule.name,
+                  style: AppText.bodySm(context, color: p.title)
+                      .copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  '${_formatDate(schedule.date)} • ${schedule.status}',
+                  style: AppText.micro(context),
+                ),
+                if (schedule.description.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    schedule.description,
+                    style: AppText.caption(context, color: p.title),
+                  ),
+                ],
+                if (schedule.id != null && !isDone) ...[
+                  const SizedBox(height: 6),
+                  Row(
+                    children: [
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                        onPressed: () => _selesaikanKegiatan(schedule.id!),
+                        child: Text(
+                          'Selesai',
+                          style:
+                              AppText.caption(context, color: p.primary),
+                        ),
+                      ),
+                      TextButton(
+                        style: TextButton.styleFrom(
+                          visualDensity: VisualDensity.compact,
+                          padding: const EdgeInsets.symmetric(horizontal: 8),
+                        ),
+                        onPressed: () => _hapusKegiatan(schedule.id!),
+                        child: Text(
+                          'Hapus',
+                          style: AppText.caption(context,
+                              color: context.palette.error),
+                        ),
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _selesaikanKegiatan(String idJadwal) async {
+    try {
+      await selesaiJadwalKegiatan(widget.idLahan, idJadwal);
+      if (!mounted) return;
+      showSuccessPopup(context, 'Kegiatan ditandai selesai.');
+      await _loadBackend();
+    } catch (e) {
+      if (!mounted) return;
+      showErrorPopup(context, 'Gagal menyelesaikan kegiatan: ${pesanError(e)}');
+    }
+  }
+
+  Future<void> _hapusKegiatan(String idJadwal) async {
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus jadwal?'),
+        content: const Text('Jadwal kegiatan ini akan dihapus permanen.'),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(
+                backgroundColor: context.palette.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+    try {
+      await hapusJadwalKegiatan(widget.idLahan, idJadwal);
+      if (!mounted) return;
+      showSuccessPopup(context, 'Jadwal dihapus.');
+      await _loadBackend();
+    } catch (e) {
+      if (!mounted) return;
+      showErrorPopup(context, 'Gagal menghapus: ${pesanError(e)}');
+    }
+  }
+
+  String _formatDate(DateTime date) {
+    const monthNames = [
+      'Januari',
+      'Februari',
+      'Maret',
+      'April',
+      'Mei',
+      'Juni',
+      'Juli',
+      'Agustus',
+      'September',
+      'Oktober',
+      'November',
+      'Desember',
+    ];
+    return '${date.day} ${monthNames[date.month - 1]} ${date.year}';
+  }
+
+  Widget _scheduleRow({
+    required DateTime scheduledDate,
+    required String title,
+  }) {
+    final date = _dateOnly(scheduledDate);
+    final today = _dateOnly(DateTime.now());
+    final isPast = date.isBefore(today);
+    final isToday = date == today;
+    final activityStatuses = _scheduleStatuses[date] ?? const <int, String>{};
+    final activities = [
+      'Penyiraman sesuai jadwal',
+      'Pemeriksaan kondisi tanah dan cuaca',
+      'Catat kondisi tanaman dan hasil perawatan',
+    ];
+    final allActivitiesDone = List.generate(
+      activities.length,
+      (index) => activityStatuses[index] == 'selesai',
+    ).every((done) => done);
+    final status = isPast
+        ? allActivitiesDone
+            ? 'selesai'
+            : 'terlewatkan'
+        : activityStatuses[0] ?? 'belum';
+    final isExpanded = _expandedScheduleDate == date;
+    const dayLabels = ['SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB', 'MIN'];
+    final p = context.palette;
+
+    return Column(
+      children: [
         Container(
-          padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+          margin: EdgeInsets.only(bottom: isExpanded ? 0 : 4),
+          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           decoration: BoxDecoration(
-            color: const Color(0xFFEAF5EC),
-            borderRadius: BorderRadius.circular(12),
+            color: isToday ? p.accentSoft : Colors.transparent,
+            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
           ),
           child: Row(
             children: [
-              const Icon(Icons.eco, color: Color(0xFF00652C), size: 20),
-              const SizedBox(width: 8),
-              const Expanded(
-                child: Text('Mode Hemat Air (Adaptif Cuaca)',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-              ),
-              Switch(
-                value: hematAir,
-                onChanged: (v) => setState(() => hematAir = v),
-              ),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _scheduleRow(
-    String day,
-    String date,
-    String title,
-    String subtitle,
-    String status, {
-    bool active = false,
-    bool skipped = false,
-  }) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 4),
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
-      decoration: BoxDecoration(
-        color: active
-            ? const Color(0xFFE8F5E9)
-            : skipped
-                ? const Color(0xFFF0F1F1)
-                : Colors.transparent,
-        borderRadius: BorderRadius.circular(9),
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: active
-                  ? const Color(0xFF15803D)
-                  : const Color(0xFFF0F3F0),
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Column(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Text(day,
-                    style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        color: active ? Colors.white : Colors.grey)),
-                Text(date,
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: active ? Colors.white : Colors.black87)),
-              ],
-            ),
-          ),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(title,
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: skipped ? Colors.grey : Colors.black87,
-                      decoration:
-                          skipped ? TextDecoration.lineThrough : null,
-                    )),
-                const SizedBox(height: 2),
-                Text(subtitle,
-                    style: TextStyle(
-                        fontSize: 11,
-                        color: skipped
-                            ? const Color(0xFF0075B1)
-                            : Colors.grey)),
-              ],
-            ),
-          ),
-          _status(status, active: active),
-        ],
-      ),
-    );
-  }
-
-  Widget _fertilizerSection() {
-    final data = pupukData[selectedPupuk]!;
-
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _sectionTitle(
-          Icons.science,
-          'Jadwal Nutrisi & Pemupukan',
-          'Interval 1 minggu fase pematangan buah',
-        ),
-        const SizedBox(height: 10),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: _box(),
-          child: const Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text('APLIKASI BERIKUTNYA',
-                  style: TextStyle(
-                      fontSize: 10,
-                      color: Color(0xFF00652C),
-                      fontWeight: FontWeight.w800)),
-              SizedBox(height: 4),
-              Text('Kamis, 31 Okt 2024',
-                  style: TextStyle(fontSize: 18, fontWeight: FontWeight.w800)),
-              Text('3 hari lagi • Pukul 07:00 - 09:00 WIB',
-                  style: TextStyle(fontSize: 12, color: Colors.grey)),
-              Divider(height: 22),
-              Text('Terakhir dipupuk: 24 Okt 2024 (Selesai)',
-                  style: TextStyle(fontSize: 12, fontWeight: FontWeight.w600)),
-            ],
-          ),
-        ),
-        const SizedBox(height: 10),
-        Container(
-          padding: const EdgeInsets.all(16),
-          decoration: _box(),
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                children: [
-                  const Icon(Icons.recommend,
-                      color: Color(0xFF00652C), size: 20),
-                  const SizedBox(width: 8),
-                  const Expanded(
-                    child: Text('Rekomendasi Formula AI',
-                        style: TextStyle(
-                            fontSize: 14, fontWeight: FontWeight.w800)),
-                  ),
-                  TextButton.icon(
-                    onPressed: () => setState(
-                        () => showPupukOptions = !showPupukOptions),
-                    icon: Icon(showPupukOptions
-                        ? Icons.expand_less
-                        : Icons.expand_more),
-                    label: const Text('Ganti Jenis'),
-                  ),
-                ],
-              ),
               Container(
-                padding: const EdgeInsets.all(12),
+                width: 36,
+                height: 36,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFF0F5F0),
-                  borderRadius: BorderRadius.circular(12),
+                  color: isToday ? p.primary : p.surfaceAlt,
+                  borderRadius:
+                      BorderRadius.circular(AppSpace.radiusTile),
                 ),
                 child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    Text(data['name']!,
-                        style: const TextStyle(
-                            color: Color(0xFF00652C),
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700)),
-                    const SizedBox(height: 6),
-                    Text(data['desc']!,
-                        style: const TextStyle(fontSize: 12, color: Colors.grey)),
-                    const SizedBox(height: 8),
-                    Text('Dosis: ${data['dose']}',
-                        style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w700)),
+                    Text(
+                      dayLabels[date.weekday - 1],
+                      style: AppText.micro(context,
+                              color:
+                                  isToday ? p.onPrimary : p.subtitle)
+                          .copyWith(fontWeight: FontWeight.w700),
+                    ),
+                    Text(
+                      date.day.toString().padLeft(2, '0'),
+                      style: AppText.bodySm(context,
+                              color: isToday ? p.onPrimary : p.title)
+                          .copyWith(fontWeight: FontWeight.w800),
+                    ),
                   ],
                 ),
               ),
-              if (showPupukOptions) ...[
-                const SizedBox(height: 10),
-                ...pupukData.entries.map(
-                  (entry) => RadioListTile<String>(
-                    value: entry.key,
-                    groupValue: selectedPupuk,
-                    contentPadding: EdgeInsets.zero,
-                    title: Text(entry.value['name']!,
-                        style: const TextStyle(
-                            fontSize: 12, fontWeight: FontWeight.w700)),
-                    subtitle: Text('Dosis: ${entry.value['dose']}',
-                        style: const TextStyle(fontSize: 11)),
-                    onChanged: (value) {
-                      if (value != null) {
-                        setState(() => selectedPupuk = value);
-                      }
-                    },
-                  ),
-                ),
-                SizedBox(
-                  width: double.infinity,
-                  child: ElevatedButton(
-                    onPressed: () => setState(() => showPupukOptions = false),
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF15803D),
-                      foregroundColor: Colors.white,
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      title,
+                      style: AppText.bodySm(context,
+                              color: status == 'terlewatkan'
+                                  ? p.subtitle
+                                  : p.title)
+                          .copyWith(
+                        fontWeight: FontWeight.w700,
+                        decoration: status == 'terlewatkan'
+                            ? TextDecoration.lineThrough
+                            : null,
+                      ),
                     ),
-                    child: const Text('Terapkan Jenis Pupuk Terpilih'),
-                  ),
+                  ],
                 ),
-              ],
+              ),
+              IconButton(
+                tooltip: isExpanded ? 'Tutup keterangan' : 'Lihat keterangan',
+                visualDensity: VisualDensity.compact,
+                icon: Icon(
+                  isExpanded ? Icons.menu_open : Icons.menu,
+                  color: p.primary,
+                ),
+                onPressed: () {
+                  setState(() {
+                    _expandedScheduleDate = isExpanded ? null : date;
+                  });
+                },
+              ),
             ],
           ),
         ),
+        if (isExpanded)
+          Container(
+            margin: const EdgeInsets.only(left: 54, right: 8, bottom: 8),
+            padding: const EdgeInsets.all(AppSpace.tile),
+            decoration: BoxDecoration(
+              color: p.surfaceAlt,
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Keterangan kegiatan',
+                  style: AppText.micro(context, color: p.subtitle)
+                      .copyWith(fontWeight: FontWeight.w700),
+                ),
+                const SizedBox(height: 4),
+                for (var index = 0; index < activities.length; index++) ...[
+                  if (index > 0) const Divider(height: 12),
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          activities[index],
+                          style: AppText.micro(context, color: p.title),
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      _scheduleStatusControl(
+                        date: date,
+                        activityIndex: index,
+                        isPast: isPast,
+                      ),
+                    ],
+                  ),
+                ],
+              ],
+            ),
+          ),
       ],
     );
   }
 
-  Widget _sensorCard() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: _box(),
-      child: const Row(
-        children: [
-          Icon(Icons.sensors, color: Color(0xFF00652C)),
-          SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('Sensor Lengas Tanah IoT #C4',
-                    style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700)),
-                Text('Kapasitas Lapang: 74% • Suhu Media: 27.8°C',
-                    style: TextStyle(fontSize: 11, color: Colors.grey)),
-              ],
-            ),
+  Widget _scheduleStatusControl({
+    required DateTime date,
+    required int activityIndex,
+    required bool isPast,
+  }) {
+    final selectedStatus = _scheduleStatuses[date]?[activityIndex] ?? 'belum';
+
+    if (isPast) {
+      final isDone = selectedStatus == 'selesai';
+      return StatusBadge(
+        label: isDone ? 'Selesai' : 'Terlewatkan',
+        kind: isDone ? BadgeKind.success : BadgeKind.error,
+      );
+    }
+
+    return DropdownButtonHideUnderline(
+      child: DropdownButton<String>(
+        value: selectedStatus,
+        isDense: true,
+        style: AppText.micro(context,
+            color: context.palette.title),
+        dropdownColor: context.palette.surface,
+        iconSize: 18,
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+        items: [
+          DropdownMenuItem(
+            value: 'belum',
+            child: Text('Belum',
+                style: AppText.micro(context,
+                    color: context.palette.title)),
           ),
-          Row(
-            children: [
-              Icon(Icons.circle, size: 9, color: Color(0xFF15803D)),
-              SizedBox(width: 4),
-              Text('Sinkron',
-                  style: TextStyle(
-                      color: Color(0xFF00652C),
-                      fontSize: 10,
-                      fontWeight: FontWeight.w700)),
-            ],
+          DropdownMenuItem(
+            value: 'proses',
+            child: Text('Proses',
+                style: AppText.micro(context,
+                    color: context.palette.title)),
+          ),
+          DropdownMenuItem(
+            value: 'selesai',
+            child: Text('Selesai',
+                style: AppText.micro(context,
+                    color: context.palette.title)),
           ),
         ],
+        onChanged: (value) {
+          if (value == null) return;
+          setState(() {
+            _scheduleStatuses.putIfAbsent(date, () => {})[activityIndex] =
+                value;
+          });
+        },
       ),
     );
   }
@@ -428,24 +939,24 @@ class _TabJadwalState extends State<TabJadwal> {
           child: ElevatedButton.icon(
             onPressed: () {
               setState(() => activitySaved = true);
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(content: Text('Tersimpan di Jurnal Petani!')),
-              );
+              showSuccessPopup(context, 'Tersimpan di Jurnal Petani!');
             },
-            icon: Icon(activitySaved
-                ? Icons.done_all
-                : Icons.assignment_turned_in),
-            label: Text(activitySaved
-                ? 'Tersimpan di Jurnal Petani!'
-                : 'Catat Realisasi Pupuk / Siram'),
+            icon: Icon(
+              activitySaved ? Icons.done_all : Icons.assignment_turned_in,
+            ),
+            label: Text(
+              activitySaved
+                  ? 'Tersimpan di Jurnal Petani!'
+                  : 'Catat Realisasi Pupuk / Siram',
+            ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFF15803D),
-              foregroundColor: Colors.white,
+              backgroundColor: context.palette.primary,
+              foregroundColor: context.palette.onPrimary,
               padding: const EdgeInsets.symmetric(vertical: 14),
             ),
           ),
         ),
-        const SizedBox(height: 10),
+        const SizedBox(height: 16),
         Row(
           children: [
             Expanded(
@@ -467,89 +978,25 @@ class _TabJadwalState extends State<TabJadwal> {
                 label: const Text('Sinkronkan Ulang BMKG'),
               ),
             ),
-            const SizedBox(width: 8),
-            OutlinedButton.icon(
-              onPressed: () => ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                    content: Text('Jadwal siap untuk dibagikan.')),
-              ),
-              icon: const Icon(Icons.ios_share),
-              label: const Text('Ekspor'),
-            ),
           ],
         ),
-        const SizedBox(height: 8),
-        const Text(
-          'Data sensor lengas tanah & prediksi presipitasi BMKG diperbarui otomatis tiap 3 jam.',
-          textAlign: TextAlign.center,
-          style: TextStyle(fontSize: 10, color: Colors.grey),
-        ),
       ],
     );
   }
 
-  Widget _sectionTitle(IconData icon, String title, String subtitle,
-      {Color color = const Color(0xFF00652C)}) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        _iconBox(icon, color.withValues(alpha: .12), iconColor: color),
-        const SizedBox(width: 10),
-        Expanded(
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(title,
-                  style: const TextStyle(
-                      fontSize: 18, fontWeight: FontWeight.w700)),
-              Text(subtitle,
-                  style: const TextStyle(fontSize: 11, color: Colors.grey)),
-            ],
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _iconBox(IconData icon, Color background,
-      {Color iconColor = const Color(0xFF00652C)}) {
+  Widget _iconBox(
+    IconData icon,
+    Color background, {
+    Color? iconColor,
+  }) {
     return Container(
       width: 36,
       height: 36,
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       ),
-      child: Icon(icon, color: iconColor, size: 21),
+      child: Icon(icon, color: iconColor ?? context.palette.primary, size: 21),
     );
   }
-
-  Widget _status(String text, {bool active = false}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(
-        color: active
-            ? const Color(0xFF15803D)
-            : const Color(0xFFEAF5EC),
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(text,
-          style: TextStyle(
-              fontSize: 10,
-              fontWeight: FontWeight.w700,
-              color: active ? Colors.white : const Color(0xFF00652C))),
-    );
-  }
-
-  BoxDecoration _box() => BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: const [
-          BoxShadow(
-            color: Color(0x10000000),
-            blurRadius: 5,
-            offset: Offset(0, 2),
-          ),
-        ],
-      );
 }

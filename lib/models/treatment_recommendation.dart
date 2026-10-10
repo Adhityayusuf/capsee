@@ -148,8 +148,8 @@ const sampleTreatmentOptions = [
     recommended: false,
     title: 'Fungisida Kimiawi (Klorotalonil / Mankozeb)',
     badge: 'Perhatikan Dosis',
-    badgeColor: Color(0xFFFFEDD5),
-    badgeTextColor: Color(0xFFC2410C),
+    badgeColor: AppColors.warningSoft,
+    badgeTextColor: AppColors.warning,
     description:
         'Fungisida kontak berspektrum luas untuk menekan penyebaran '
         'spora secara cepat pada kasus infeksi yang meluas.',
@@ -166,8 +166,8 @@ const sampleTreatmentOptions = [
     recommended: false,
     title: 'Trichoderma harzianum + Pseudomonas fluorescens',
     badge: 'Agen Hayati',
-    badgeColor: Color(0xFFE0F2FE),
-    badgeTextColor: Color(0xFF0369A1),
+    badgeColor: AppColors.infoSoft,
+    badgeTextColor: AppColors.info,
     description:
         'Kombinasi mikroba antagonis untuk menekan perkembangan jamur dan '
         'mendukung ketahanan alami tanaman secara bertahap.',

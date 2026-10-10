@@ -1,10 +1,12 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import '../core/app_colors.dart';
+import '../core/app_info.dart';
+import '../core/app_text.dart';
+import '../core/app_theme.dart';
+import 'ui_kit.dart';
 
 /// ---------------------------------------------------------------
-/// Kerangka halaman auth: background + cahaya hijau + scroll + center
+/// Kerangka halaman auth: background terang + scroll + center.
 /// ---------------------------------------------------------------
 class AuthScaffold extends StatelessWidget {
   final Widget child;
@@ -12,36 +14,63 @@ class AuthScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Scaffold(
-      backgroundColor: AppColors.background,
-      body: Stack(
-        children: [
-          // Cahaya hijau lembut di bagian atas
-          Positioned(
-            top: -120,
-            left: 0,
-            right: 0,
-            child: Container(
-              height: 340,
-              decoration: const BoxDecoration(
-                gradient: RadialGradient(
-                  radius: 0.6,
-                  colors: [AppColors.glow, Color(0x00F7F7FF)],
-                ),
-              ),
+      backgroundColor: p.background,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(AppSpace.page),
+            child: ConstrainedBox(
+              constraints: const BoxConstraints(maxWidth: 420),
+              child: child,
             ),
           ),
-          SafeArea(
-            child: Center(
-              child: SingleChildScrollView(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 24, vertical: 24),
-                child: ConstrainedBox(
-                  constraints: const BoxConstraints(maxWidth: 420),
-                  child: child,
+        ),
+      ),
+    );
+  }
+}
+
+/// ---------------------------------------------------------------
+/// Bar atas halaman auth: tombol back opsional + nama aplikasi di tengah.
+/// ---------------------------------------------------------------
+class AuthTopBar extends StatelessWidget {
+  final bool showBack;
+  const AuthTopBar({super.key, this.showBack = false});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return SizedBox(
+      height: 44,
+      child: Stack(
+        alignment: Alignment.center,
+        children: [
+          if (showBack)
+            Align(
+              alignment: Alignment.centerLeft,
+              child: GestureDetector(
+                onTap: () => Navigator.of(context).maybePop(),
+                child: Container(
+                  width: 38,
+                  height: 38,
+                  decoration: BoxDecoration(
+                    color: p.surface,
+                    shape: BoxShape.circle,
+                    border: Border.all(color: p.border),
+                  ),
+                  child: Icon(
+                    Icons.arrow_back_ios_new_rounded,
+                    size: 16,
+                    color: p.title,
+                  ),
                 ),
               ),
             ),
+          Text(
+            AppInfo.name,
+            style: AppText.display(context, color: p.accent),
           ),
         ],
       ),
@@ -55,70 +84,47 @@ class AuthScaffold extends StatelessWidget {
 /// punya file logo cabai (daftarkan di pubspec.yaml).
 /// ---------------------------------------------------------------
 class CapseeLogo extends StatelessWidget {
-  const CapseeLogo({super.key});
+  final double size;
+  final bool onPrimary;
+  const CapseeLogo({super.key, this.size = 88, this.onPrimary = false});
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
+    final scale = size / 88;
+    if (onPrimary) {
+      return Icon(
+        Icons.eco_rounded,
+        size: size * 0.75,
+        color: p.onPrimary,
+      );
+    }
     return Container(
-      width: 88,
-      height: 88,
-      padding: const EdgeInsets.all(10),
+      width: size,
+      height: size,
+      padding: EdgeInsets.all(10 * scale),
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(22),
-        boxShadow: const [
+        color: p.surface,
+        borderRadius: BorderRadius.circular(22 * scale),
+        boxShadow: [
           BoxShadow(
-            color: AppColors.primaryShadow,
+            color: p.shadow,
             blurRadius: 24,
-            offset: Offset(0, 8),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.primarySoft,
-          borderRadius: BorderRadius.circular(16),
+          color: p.accentSoft,
+          borderRadius: BorderRadius.circular(16 * scale),
         ),
-        child: const Icon(
+        child: Icon(
           Icons.eco_rounded,
-          size: 40,
-          color: AppColors.primary,
+          size: 40 * scale,
+          color: p.onAccentSoft,
         ),
       ),
-    );
-  }
-}
-
-/// Judul + subjudul di bawah logo.
-class AuthHeader extends StatelessWidget {
-  final String title;
-  final String subtitle;
-  const AuthHeader({super.key, required this.title, required this.subtitle});
-
-  @override
-  Widget build(BuildContext context) {
-    return Column(
-      children: [
-        Text(
-          title,
-          textAlign: TextAlign.center,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 28,
-            fontWeight: FontWeight.w800,
-            color: AppColors.title,
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          subtitle,
-          textAlign: TextAlign.center,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 16,
-            height: 1.4,
-            color: AppColors.subtitle,
-          ),
-        ),
-      ],
     );
   }
 }
@@ -130,179 +136,219 @@ class AuthCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 20,
-            offset: Offset(0, 8),
+    return CapseeCard(child: child);
+  }
+}
+
+/// Judul halaman auth.
+class AuthHeader extends StatelessWidget {
+  final String title;
+  final String? subtitle;
+  const AuthHeader({super.key, required this.title, this.subtitle});
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      children: [
+        Text(
+          title,
+          textAlign: TextAlign.center,
+          style: AppText.display(context),
+        ),
+        if (subtitle != null) ...[
+          const SizedBox(height: 8),
+          Text(
+            subtitle!,
+            textAlign: TextAlign.center,
+            style: AppText.body(context),
           ),
         ],
-      ),
-      child: child,
+      ],
     );
   }
 }
 
-/// Label di atas field ("Email", "Kata Sandi", dst).
+/// Label kecil di atas field.
 class FieldLabel extends StatelessWidget {
   final String text;
   const FieldLabel(this.text, {super.key});
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Text(
       text,
-      style: GoogleFonts.plusJakartaSans(
-        fontSize: 14,
-        fontWeight: FontWeight.w700,
-        color: AppColors.title,
-      ),
+      style: AppText.subtitle(context).copyWith(color: p.subtitle),
     );
   }
 }
 
-/// Tombol hijau utama.
+/// Tombol hijau utama (full-width, sudut membulat).
 class PrimaryButton extends StatelessWidget {
   final String label;
-  final IconData icon;
+  final IconData? icon;
   final bool iconAtEnd;
   final bool isLoading;
+  final double radius;
   final VoidCallback onPressed;
 
   const PrimaryButton({
     super.key,
     required this.label,
-    required this.icon,
     required this.onPressed,
+    this.icon,
     this.iconAtEnd = false,
     this.isLoading = false,
+    this.radius = 26,
   });
 
   @override
   Widget build(BuildContext context) {
-    final text = Text(
-      label,
-      style: GoogleFonts.plusJakartaSans(
-        fontSize: 16,
-        fontWeight: FontWeight.w700,
-      ),
-    );
-    final iconWidget = Icon(icon, size: 20);
-
+    final p = context.palette;
     return SizedBox(
       width: double.infinity,
       height: 52,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: AppColors.primaryDisabled,
-          disabledForegroundColor: Colors.white,
+          backgroundColor: p.primary,
+          foregroundColor: p.onPrimary,
+          disabledBackgroundColor: p.primary.withValues(alpha: 0.6),
+          disabledForegroundColor: p.onPrimary,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(radius),
           ),
         ),
         child: isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 width: 22,
                 height: 22,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  color: Colors.white,
+                  color: p.onPrimary,
                 ),
               )
             : Row(
+                mainAxisSize: MainAxisSize.min,
                 mainAxisAlignment: MainAxisAlignment.center,
-                children: iconAtEnd
-                    ? [text, const SizedBox(width: 10), iconWidget]
-                    : [iconWidget, const SizedBox(width: 10), text],
+                children: [
+                  if (icon != null && !iconAtEnd) ...[
+                    Icon(icon, size: 20),
+                    const SizedBox(width: 10),
+                  ],
+                  Flexible(
+                    child: Text(
+                      label,
+                      style: AppText.subtitle(context)
+                          .copyWith(color: p.onPrimary),
+                      overflow: TextOverflow.ellipsis,
+                      textAlign: TextAlign.center,
+                    ),
+                  ),
+                  if (icon != null && iconAtEnd) ...[
+                    const SizedBox(width: 10),
+                    Icon(icon, size: 20),
+                  ],
+                ],
               ),
       ),
     );
   }
 }
 
-/// Chip kecil berlatar lavender di bagian bawah (status / info keamanan).
-class InfoChip extends StatelessWidget {
-  final Widget leading;
-  final String text;
-  final double radius;
-
-  const InfoChip({
-    super.key,
-    required this.leading,
-    required this.text,
-    this.radius = 12,
-  });
+/// Tombol sosial bulat (UI-only).
+class SocialButton extends StatelessWidget {
+  final VoidCallback? onPressed;
+  final Widget child;
+  const SocialButton({super.key, required this.child, this.onPressed});
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
-      decoration: BoxDecoration(
-        color: AppColors.chipBg,
-        borderRadius: BorderRadius.circular(radius),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          leading,
-          const SizedBox(width: 10),
-          Flexible(
-            child: Text(
-              text,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
-                color: AppColors.title,
-              ),
+    final p = context.palette;
+    return GestureDetector(
+      onTap: onPressed,
+      child: Container(
+        width: 52,
+        height: 52,
+        alignment: Alignment.center,
+        decoration: BoxDecoration(
+          color: p.surface,
+          shape: BoxShape.circle,
+          border: Border.all(color: p.border),
+          boxShadow: [
+            BoxShadow(
+              color: p.shadow,
+              blurRadius: 10,
+              offset: const Offset(0, 4),
             ),
-          ),
-        ],
+          ],
+        ),
+        child: child,
       ),
     );
   }
 }
 
-/// Dekorasi input yang dipakai ulang di semua TextFormField.
-InputDecoration capseeInputDecoration({
-  required String hint,
+/// Ikon Google sederhana (UI-only) untuk tombol sosial.
+class GoogleIcon extends StatelessWidget {
+  const GoogleIcon({super.key, this.size = 22});
+
+  final double size;
+  @override
+  Widget build(BuildContext context) {
+    return Text(
+      'G',
+      style: AppText.title(context).copyWith(
+        fontSize: size,
+        color: const Color(0xFF4285F4),
+      ),
+    );
+  }
+}
+
+/// Teks pemisah "Atau masuk dengan".
+class OrDivider extends StatelessWidget {
+  final String text;
+  const OrDivider(this.text, {super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    final p = context.palette;
+    return Text(
+      text,
+      textAlign: TextAlign.center,
+      style: AppText.body(context, color: p.hint),
+    );
+  }
+}
+
+/// Dekorasi input: field abu-abu terisi, tanpa border tebal.
+InputDecoration capseeInputDecoration(
+  BuildContext context, {
+  String? hint,
   IconData? prefixIcon,
-  Widget? prefix,
   Widget? suffix,
 }) {
-  OutlineInputBorder border(Color color) => OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide(color: color),
+  final p = context.palette;
+  OutlineInputBorder border(Color color, {double width = 1}) =>
+      OutlineInputBorder(
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+        borderSide: BorderSide(color: color, width: width),
       );
 
   return InputDecoration(
     hintText: hint,
-    hintStyle: GoogleFonts.plusJakartaSans(
-      fontSize: 16,
-      color: AppColors.hint,
-    ),
-    prefixIcon: prefix ??
-        (prefixIcon != null ? Icon(prefixIcon, color: AppColors.icon) : null),
-    prefixIconConstraints: prefix != null
-        ? const BoxConstraints(minWidth: 0, minHeight: 0)
-        : null,
+    hintStyle: AppText.body(context, color: p.hint),
+    prefixIcon:
+        prefixIcon != null ? Icon(prefixIcon, color: p.icon) : null,
     suffixIcon: suffix,
     filled: true,
-    fillColor: Colors.white,
-    contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 12),
-    enabledBorder: border(AppColors.border),
-    focusedBorder: border(AppColors.primary),
-    errorBorder: border(AppColors.error),
-    focusedErrorBorder: border(AppColors.error),
+    fillColor: p.surfaceAlt,
+    contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
+    enabledBorder: border(const Color(0x00000000)),
+    focusedBorder: border(p.primary, width: 1.5),
+    errorBorder: border(p.error),
+    focusedErrorBorder: border(p.error, width: 1.5),
   );
 }

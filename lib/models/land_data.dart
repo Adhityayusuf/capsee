@@ -10,6 +10,7 @@ const Map<int, String> plantPhaseLabels = {
 
 /// Data lahan / petak kebun cabai yang diinput user.
 class LandData {
+  final String? id;
   final String name;
   final String province;
   final String city;
@@ -18,8 +19,10 @@ class LandData {
   final DateTime lastWatered;
   final DateTime lastFertilized;
   final int fertilizeIntervalWeeks;
+  final int wateringIntervalWeeks;
 
   const LandData({
+    this.id,
     required this.name,
     required this.province,
     required this.city,
@@ -28,6 +31,7 @@ class LandData {
     required this.lastWatered,
     required this.lastFertilized,
     required this.fertilizeIntervalWeeks,
+    this.wateringIntervalWeeks = 1,
   });
 
   /// Dipakai nanti saat mengirim data ke API.
@@ -40,5 +44,6 @@ class LandData {
         'last_watered': lastWatered.toIso8601String(),
         'last_fertilized': lastFertilized.toIso8601String(),
         'fertilize_interval_weeks': fertilizeIntervalWeeks,
+        'watering_interval_weeks': wateringIntervalWeeks,
       };
 }

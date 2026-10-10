@@ -33,6 +33,15 @@ migrate_working_dir/
 /build/
 /coverage/
 
+# Flutter generated plugin files
+**/flutter/generated_plugin_registrant.cc
+**/flutter/generated_plugin_registrant.h
+**/flutter/generated_plugins.cmake
+**/Flutter/GeneratedPluginRegistrant.swift
+**/Flutter/GeneratedPluginRegistrant.h
+**/Flutter/GeneratedPluginRegistrant.m
+pubspec.lock
+
 # Symbolication related
 app.*.symbols
 
@@ -43,21 +52,32 @@ app.*.map.json
 /android/app/debug
 /android/app/profile
 /android/app/release
+/android/build/
 
 # Widget Preview related
 .widget_preview/
+
+# Environment / secrets
 .env
+.env.*
+!.env.example
+serviceAccountKey.json
+google-services.json
+GoogleService-Info.plist
+
+# Python backend
 venv/
+.venv/
+env/
 __pycache__/
+*.egg-info/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+cek_db.py
 
-
-# Generated plugin registrants (Mac, Linux, Windows, iOS)
-linux/flutter/generated_plugin_registrant.cc
-linux/flutter/generated_plugin_registrant.h
-linux/flutter/generated_plugins.cmake
-macos/Flutter/GeneratedPluginRegistrant.swift
-windows/flutter/generated_plugin_registrant.cc
-windows/flutter/generated_plugin_registrant.h
-windows/flutter/generated_plugins.cmake
-ios/Runner/GeneratedPluginRegistrant.h
-ios/Runner/GeneratedPluginRegistrant.m
+# OS & database files
+Thumbs.db
+desktop.ini
+*.db
+*.sqlite3

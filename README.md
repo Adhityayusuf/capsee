@@ -1,107 +1,90 @@
 # Capsee
 
-Capsee adalah aplikasi mobile untuk membantu petani memantau kondisi kebun cabai secara lebih teratur. Aplikasi ini menggabungkan pencatatan data lahan, pemantauan kondisi tanaman, riwayat aktivitas, jadwal perawatan, serta hasil analisis kesehatan tanaman.
+Aplikasi mobile untuk membantu petani memantau kondisi kebun cabai secara lebih
+teratur. Capsee menggabungkan pencatatan data lahan, pemantauan kondisi tanaman,
+riwayat aktivitas, jadwal perawatan, serta hasil analisis kesehatan tanaman.
 
-Project ini dikembangkan menggunakan Flutter sebagai bagian dari kegiatan PBL.
+Dikembangkan menggunakan Flutter, dengan backend FastAPI di folder `backend/`,
+sebagai bagian dari kegiatan PBL.
 
-## Tentang Capsee
+## UI Design
 
-Pengelolaan kebun cabai membutuhkan pemantauan rutin, terutama terhadap kelembapan, jadwal penyiraman, pemupukan, serta gejala penyakit pada daun dan buah. Capsee dirancang untuk membantu petani menyimpan informasi lahan dan mendapatkan ringkasan kondisi kebun dalam satu aplikasi.
+[![Buka di Figma](https://img.shields.io/badge/Figma-Design-blue)](https://www.figma.com/design/l8uP3WlKO9h2eBlMCQ3nN0/PBL---Capsee?node-id=0-1&t=4mYiw0519STWqdEU-1)
 
-Versi saat ini masih menggunakan data dummy untuk mensimulasikan alur penggunaan aplikasi. Struktur aplikasi telah disiapkan agar nantinya dapat dihubungkan dengan backend, sensor IoT, kamera, dan model machine learning.
+Pratinjau setiap layar tersedia di [design/README.md](design/README.md).
 
-## Fitur Utama
+## Fitur
 
-### Autentikasi
+Daftar fitur lengkap per modul ada di [docs/fitur.md](docs/fitur.md).
 
-- Registrasi akun petani
-- Login akun
-- Validasi email, nomor WhatsApp, dan kata sandi
-- Persetujuan syarat dan kebijakan privasi
+- **Autentikasi** — registrasi, login, validasi, dan persetujuan syarat
+- **Dashboard** — ringkasan kebun, cuaca, rekomendasi, daftar lahan
+- **Data Lahan** — tambah, ubah, dan hapus lahan beserta riwayat perawatan
+- **Detail Lahan** — scan kesehatan, jadwal perawatan, riwayat aktivitas
+- **Scan Tanaman** — analisis kesehatan, hama, penyakit, dan data sensor
+- **Riwayat Aktivitas** — kronologi kebun dengan filter jenis aktivitas
+- **Jadwal Perawatan** — penyiraman, pemupukan, dan sinkronisasi cuaca
+- **Rekomendasi Penanganan** — langkah penanganan dan pencegahan penyakit
+- **Notifikasi** — pemberitahuan cuaca dan kondisi tanaman
+- **Akun** — profil, keamanan, panduan, dan halaman legal
 
-### Dashboard
+## Test Case
 
-- Ringkasan kondisi kebun
-- Sapaan dan status sistem diagnostik
-- Informasi lokasi dan kondisi cuaca
-- Data kelembapan dan kecepatan angin
-- Rekomendasi agronomi
-- Daftar lahan yang terdaftar
-- Status kesehatan setiap lahan
+Skenario pengujian otomatis dan manual ada di
+[docs/test-case.md](docs/test-case.md).
 
-### Data Lahan
+## Download Aplikasi
 
-- Menambahkan data lahan baru
-- Mengisi nama lahan dan lokasi kebun
-- Memilih provinsi, kota/kabupaten, dan kecamatan
-- Mengatur umur tanaman
-- Mencatat tanggal penyiraman terakhir
-- Mencatat tanggal pemupukan terakhir
-- Mengatur interval pemupukan
+APK akan tersedia melalui tautan distribusi Relay dan GitHub Releases setelah
+build rilis disiapkan.
 
-### Detail Lahan
+<!-- TODO: ganti bagian ini dengan link Relay dan GitHub Releases
+- Relay: <link>
+- GitHub Releases: <link>
+-->
 
-Setiap lahan memiliki halaman detail dengan beberapa bagian:
+## Menjalankan Proyek
 
-- Scan kesehatan tanaman
-- Jadwal penyiraman dan pemupukan
-- Riwayat aktivitas kebun
+### Aplikasi (Flutter)
 
-### Scan Tanaman
+```
+flutter pub get
+flutter run
+```
 
-Data dummy hasil scan menampilkan:
+Membangun APK rilis:
 
-- Status kesehatan tanaman
-- Tingkat akurasi AI
-- Kondisi klorofil
-- Status jamur dan hama
-- Data suhu udara
-- Data kelembapan
-- Tingkat kebasahan daun
-- Hasil diagnosis penyakit
+```
+flutter build apk --release
+```
 
-### Riwayat Aktivitas
+Hasil build berada di `build/app/outputs/flutter-apk/app-release.apk`.
 
-Riwayat lahan berisi beberapa jenis aktivitas:
+### Backend (FastAPI)
 
-- Diagnosa scan AI
-- Penyiraman
-- Pemupukan
-- Peringatan penyakit
-- Diagnosa buah
-- Tindakan perawatan
+Petunjuk lengkap ada di [backend/README.md](backend/README.md).
 
-Riwayat juga dilengkapi filter berdasarkan jenis aktivitas agar informasi lebih mudah dicari.
+```
+cd backend
+pip install -r requirements.txt
+uvicorn app.main:app --reload --port 8000
+```
 
-### Jadwal Perawatan
+## Struktur Repo
 
-- Jadwal penyiraman mingguan
-- Informasi prediksi cuaca
-- Sinkronisasi data BMKG dalam bentuk simulasi
-- Jadwal pemupukan
-- Rekomendasi formula pupuk
-- Data sensor kelembapan tanah
-- Pencatatan realisasi penyiraman dan pemupukan
+```
+capsee/
+├── README.md      # halaman utama
+├── docs/          # fitur dan test case
+├── design/        # link Figma dan pratinjau UI
+├── lib/           # kode aplikasi Flutter
+├── android/       # konfigurasi Android
+├── backend/       # API FastAPI
+└── test/          # widget test
+```
 
-### Rekomendasi Penanganan
+## Pengujian
 
-Aplikasi menyediakan data dummy rekomendasi untuk penyakit tanaman, meliputi:
-
-- Ringkasan diagnosis
-- Tingkat keparahan penyakit
-- Akurasi model AI
-- Langkah penanganan segera
-- Rekomendasi organik
-- Rekomendasi fungisida kimia
-- Rekomendasi agen hayati
-- Dosis dan waktu aplikasi
-- Tips pencegahan jangka panjang
-
-### Notifikasi dan Akun
-
-- Daftar notifikasi cuaca dan kondisi tanaman
-- Pengaturan profil petani
-- Pengaturan keamanan akun
-- Informasi lahan aktif
-- Informasi sensor lapangan
-- Panduan dan FAQ
+```
+flutter test
+```
