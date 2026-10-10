@@ -9,6 +9,7 @@ import '../../core/theme_mode_scope.dart';
 import '../../models/land_data.dart';
 import '../akun/akun_screen.dart';
 import '../lahan/detail_lahan_screen.dart';
+import '../lahan/lahan_page.dart';
 import '../lahan/tambah_lahan_page.dart';
 import '../notifikasi/notifikasi_screen.dart';
 import '../scan/hasil_scan_tidak_sehat.dart';
@@ -62,6 +63,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final pages = [
       _buildDashboard(),
       RiwayatScanScreen(items: _scanHistory, onScan: _openScan),
+      const LahanPage(),
       const NotifikasiScreen(),
       const AkunScreen(),
     ];
@@ -69,13 +71,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return Scaffold(
       body: IndexedStack(index: _tab, children: pages),
       bottomNavigationBar: _BottomNav(
-        selectedIndex: _tab == 3 ? 3 : (_tab < 2 ? _tab : -1),
+        selectedIndex: _tab == 4 ? 3 : (_tab < 3 ? _tab : -1),
         onSelected: (index) {
-          if (index == 2) {
-            _addLand();
-          } else {
-            setState(() => _tab = index == 3 ? 3 : index);
-          }
+          setState(() => _tab = index == 3 ? 4 : index);
         },
         onScan: _openScan,
       ),
@@ -163,11 +161,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       decoration: BoxDecoration(
         color: p.surface,
         boxShadow: [
-          BoxShadow(
-            color: p.shadow,
-            blurRadius: 8,
-            offset: const Offset(0, 1),
-          ),
+          BoxShadow(color: p.shadow, blurRadius: 8, offset: const Offset(0, 1)),
         ],
       ),
       child: Row(
@@ -187,12 +181,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
             children: [
               Text(
                 'CAPSEE',
-                style: _style(
-                  10,
-                  p.accent,
-                  FontWeight.w800,
-                  letterSpacing: 1,
-                ),
+                style: _style(10, p.accent, FontWeight.w800, letterSpacing: 1),
               ),
               Text(
                 'Dashboard',
@@ -204,7 +193,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _headerAction(
             tooltip: 'Buka notifikasi',
             icon: Icons.notifications_rounded,
-            onPressed: () => setState(() => _tab = 2),
+            onPressed: () => setState(() => _tab = 3),
             backgroundColor: p.primary,
             foregroundColor: Colors.white,
           ),
@@ -357,12 +346,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Expanded(
                     child: Text(
                       'Kondisi ideal untuk penyemprotan nutrisi pagi ini sebelum pukul 10:00 WIB. Daun kering sempurna dan angin tenang.',
-                      style: _style(
-                        11,
-                        p.title,
-                        FontWeight.w400,
-                        height: 1.35,
-                      ),
+                      style: _style(11, p.title, FontWeight.w400, height: 1.35),
                     ),
                   ),
                 ],
@@ -440,10 +424,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         location,
                         style: _style(11, p.subtitle, FontWeight.w400),
                       ),
-                      Text(
-                        phase,
-                        style: _style(11, p.title, FontWeight.w600),
-                      ),
+                      Text(phase, style: _style(11, p.title, FontWeight.w600)),
                     ],
                   ),
                 ),
@@ -491,12 +472,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Expanded(
                     child: Text(
                       notice,
-                      style: _style(
-                        11,
-                        p.title,
-                        FontWeight.w400,
-                        height: 1.3,
-                      ),
+                      style: _style(11, p.title, FontWeight.w400, height: 1.3),
                     ),
                   ),
                 ],
