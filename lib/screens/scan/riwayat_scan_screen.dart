@@ -12,7 +12,7 @@ class ScanHistoryItem {
   const ScanHistoryItem({required this.imagePath, required this.scannedAt});
 }
 
-class RiwayatScanScreen extends StatelessWidget {
+class RiwayatScanScreen extends StatefulWidget {
   final List<ScanHistoryItem> items;
   final VoidCallback onScan;
 
@@ -23,84 +23,307 @@ class RiwayatScanScreen extends StatelessWidget {
   });
 
   @override
+  State<RiwayatScanScreen> createState() => _RiwayatScanScreenState();
+}
+
+class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
+  static const _waktuOptions = [
+    'Semua Waktu',
+    'Hari Ini',
+    'Minggu Ini',
+    'Bulan Ini',
+    'Pilih Tanggal...',
+  ];
+
+  String _selectedWaktu = 'Semua Waktu';
+  DateTimeRange? _customDateRange;
+
+  List<ScanHistoryItem> get _filteredItems {
+    final now = DateTime.now();
+    final today = DateTime(now.year, now.month, now.day);
+    return widget.items.where((item) {
+      final d = item.scannedAt;
+      switch (_selectedWaktu) {
+        case 'Hari Ini':
+          return d.year == now.year && d.month == now.month && d.day == now.day;
+        case 'Minggu Ini':
+          // 7 hari terakhir termasuk hari ini.
+          return !d.isBefore(today.subtract(const Duration(days: 6)));
+        case 'Bulan Ini':
+          return d.year == now.year && d.month == now.month;
+        case 'Pilih Tanggal...':
+          if (_customDateRange == null) return true;
+          final start = DateTime(
+            _customDateRange!.start.year,
+            _customDateRange!.start.month,
+            _customDateRange!.start.day,
+          );
+          final end = DateTime(
+            _customDateRange!.end.year,
+            _customDateRange!.end.month,
+            _customDateRange!.end.day,
+            23,
+            59,
+            59,
+          );
+          return !d.isBefore(start) && !d.isAfter(end);
+        default:
+          return true;
+      }
+    }).toList();
+  }
+
+  String get _labelWaktu {
+    if (_selectedWaktu == 'Pilih Tanggal...' && _customDateRange != null) {
+      final s = _customDateRange!.start;
+      final e = _customDateRange!.end;
+      return '${s.day}/${s.month}/${s.year} - ${e.day}/${e.month}/${e.year}';
+    }
+    return _selectedWaktu;
+  }
+
+  Future<void> _onWaktuChanged(String? val) async {
+    if (val == null) return;
+    if (val == 'Pilih Tanggal...') {
+      final p = context.palette;
+      final picked = await showDateRangePicker(
+        context: context,
+        firstDate: DateTime(2020),
+        lastDate: DateTime.now(),
+        builder: (context, child) {
+          return Theme(
+            data: Theme.of(context).copyWith(
+              colorScheme: ColorScheme.light(
+                primary: p.primary,
+                onPrimary: p.onPrimary,
+                surface: p.surface,
+                onSurface: p.title,
+              ),
+            ),
+            child: child!,
+          );
+        },
+      );
+      if (picked != null) {
+        setState(() {
+          _customDateRange = picked;
+          _selectedWaktu = val;
+        });
+      }
+    } else {
+      setState(() {
+        _selectedWaktu = val;
+        _customDateRange = null;
+      });
+    }
+  }
+
+  void _resetFilter() {
+    setState(() {
+      _selectedWaktu = 'Semua Waktu';
+      _customDateRange = null;
+    });
+  }
+
+  @override
   Widget build(BuildContext context) {
     final p = context.palette;
+    final filtered = _filteredItems;
+    final isFiltering =
+        _selectedWaktu != 'Semua Waktu' || _customDateRange != null;
 
     return SafeArea(
       bottom: false,
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          _header(p),
-          Expanded(child: items.isEmpty ? _empty(p) : _list(p)),
+          _header(p, filtered.length, isFiltering),
+          if (widget.items.isNotEmpty) _filterSection(p),
+          Expanded(
+            child: widget.items.isEmpty
+                ? _empty(p)
+                : filtered.isEmpty
+                    ? _emptyFiltered(p)
+                    : _list(p, filtered),
+          ),
         ],
       ),
     );
   }
 
-  Widget _header(AppPalette p) => Padding(
-    padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
-    child: Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text('Riwayat Scan', style: _style(20, p.title, FontWeight.w700)),
-        const SizedBox(height: 3),
-        Text(
-          items.isEmpty
-              ? 'Belum ada foto yang dipindai'
-              : '${items.length} foto hasil pindai sesi ini',
-          style: _style(12, p.subtitle, FontWeight.w400),
+  Widget _header(AppPalette p, int count, bool isFiltering) => Padding(
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text('Riwayat Scan', style: _style(20, p.title, FontWeight.w700)),
+            const SizedBox(height: 3),
+            Text(
+              widget.items.isEmpty
+                  ? 'Belum ada foto yang dipindai'
+                  : isFiltering
+                      ? '$count dari ${widget.items.length} foto (filter: $_labelWaktu)'
+                      : '$count foto hasil pindai sesi ini',
+              style: _style(12, p.subtitle, FontWeight.w400),
+            ),
+          ],
         ),
-      ],
-    ),
-  );
+      );
+
+  Widget _filterSection(AppPalette p) {
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 4, 16, 8),
+      child: _buildDropdown(
+        p: p,
+        value: _selectedWaktu,
+        displayValue: _labelWaktu,
+        items: _waktuOptions,
+        icon: Icons.calendar_today_rounded,
+        onChanged: _onWaktuChanged,
+      ),
+    );
+  }
+
+  Widget _buildDropdown({
+    required AppPalette p,
+    required String value,
+    required String displayValue,
+    required List<String> items,
+    required IconData icon,
+    required ValueChanged<String?> onChanged,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+      decoration: BoxDecoration(
+        color: p.surface,
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: p.border),
+      ),
+      child: DropdownButtonHideUnderline(
+        child: DropdownButton<String>(
+          value: value,
+          isExpanded: true,
+          dropdownColor: p.surface,
+          icon: Icon(Icons.keyboard_arrow_down_rounded, color: p.icon),
+          selectedItemBuilder: (BuildContext context) {
+            return items.map<Widget>((String item) {
+              return Row(
+                children: [
+                  Icon(icon, size: 16, color: p.accent),
+                  const SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      displayValue,
+                      style: _style(12, p.title, FontWeight.w600),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
+              );
+            }).toList();
+          },
+          items: items.map((String item) {
+            return DropdownMenuItem<String>(
+              value: item,
+              child: Text(
+                item,
+                style: _style(12, p.title, FontWeight.w500),
+              ),
+            );
+          }).toList(),
+          onChanged: onChanged,
+        ),
+      ),
+    );
+  }
 
   Widget _empty(AppPalette p) => Center(
-    child: Padding(
-      padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
-      child: Column(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Container(
-            width: 72,
-            height: 72,
-            decoration: BoxDecoration(
-              color: p.accentSoft,
-              borderRadius: BorderRadius.circular(16),
-            ),
-            child: Icon(Icons.history_rounded, color: p.accent, size: 36),
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: p.accentSoft,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(Icons.history_rounded, color: p.accent, size: 36),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Riwayat masih kosong',
+                style: _style(16, p.title, FontWeight.w700),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Hasil pindai daun akan tampil di sini setelah Anda mengambil foto dengan kamera.',
+                textAlign: TextAlign.center,
+                style: _style(12, p.subtitle, FontWeight.w400, height: 1.4),
+              ),
+              const SizedBox(height: 18),
+              FilledButton.icon(
+                onPressed: widget.onScan,
+                icon: const Icon(Icons.photo_camera_rounded, size: 18),
+                label: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10),
+                  child: Text('Scan Sekarang'),
+                ),
+              ),
+            ],
           ),
-          const SizedBox(height: 16),
-          Text(
-            'Riwayat masih kosong',
-            style: _style(16, p.title, FontWeight.w700),
-          ),
-          const SizedBox(height: 6),
-          Text(
-            'Hasil pindai daun akan tampil di sini setelah Anda mengambil foto dengan kamera.',
-            textAlign: TextAlign.center,
-            style: _style(12, p.subtitle, FontWeight.w400, height: 1.4),
-          ),
-          const SizedBox(height: 18),
-          FilledButton.icon(
-            onPressed: onScan,
-            icon: const Icon(Icons.photo_camera_rounded, size: 18),
-            label: const Padding(
-              padding: EdgeInsets.symmetric(vertical: 10),
-              child: Text('Scan Sekarang'),
-            ),
-          ),
-        ],
-      ),
-    ),
-  );
+        ),
+      );
 
-  Widget _list(AppPalette p) => ListView.separated(
-    padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-    itemCount: items.length,
-    separatorBuilder: (_, _) => const SizedBox(height: 10),
-    itemBuilder: (context, index) => _card(items[index], p),
-  );
+  Widget _emptyFiltered(AppPalette p) => Center(
+        child: Padding(
+          padding: const EdgeInsets.fromLTRB(32, 0, 32, 32),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 72,
+                height: 72,
+                decoration: BoxDecoration(
+                  color: p.surfaceAlt,
+                  borderRadius: BorderRadius.circular(16),
+                ),
+                child: Icon(Icons.search_off_rounded, color: p.icon, size: 36),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                'Tidak ada hasil',
+                style: _style(16, p.title, FontWeight.w700),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Tidak ada pindaian pada rentang "$_labelWaktu".',
+                textAlign: TextAlign.center,
+                style: _style(12, p.subtitle, FontWeight.w400, height: 1.4),
+              ),
+              const SizedBox(height: 18),
+              OutlinedButton.icon(
+                onPressed: _resetFilter,
+                icon: const Icon(Icons.filter_alt_off_rounded, size: 18),
+                label: const Padding(
+                  padding: EdgeInsets.symmetric(vertical: 10),
+                  child: Text('Reset Filter'),
+                ),
+              ),
+            ],
+          ),
+        ),
+      );
+
+  Widget _list(AppPalette p, List<ScanHistoryItem> items) =>
+      ListView.separated(
+        padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+        itemCount: items.length,
+        separatorBuilder: (_, _) => const SizedBox(height: 10),
+        itemBuilder: (context, index) => _card(items[index], p),
+      );
 
   Widget _card(ScanHistoryItem item, AppPalette p) {
     final file = File(item.imagePath);
@@ -175,9 +398,10 @@ TextStyle _style(
   Color color,
   FontWeight weight, {
   double? height,
-}) => GoogleFonts.plusJakartaSans(
-  fontSize: size,
-  color: color,
-  fontWeight: weight,
-  height: height,
-);
+}) =>
+    GoogleFonts.plusJakartaSans(
+      fontSize: size,
+      color: color,
+      fontWeight: weight,
+      height: height,
+    );
