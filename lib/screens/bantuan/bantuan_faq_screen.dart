@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import '../../core/app_colors.dart';
+import '../../core/app_text.dart';
+import '../../core/app_theme.dart';
+import '../../widgets/ui_kit.dart';
 import 'panduan_screen.dart';
 
 class BantuanFaqScreen extends StatefulWidget {
@@ -27,39 +28,45 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
       'category': 'Pemindaian Daun',
       'icon': Icons.center_focus_strong,
       'question': 'Bagaimana cara melakukan pemindaian (scan) daun cabai yang benar?',
-      'answer': 'Untuk memperoleh akurasi model machine learning yang maksimal di atas 95%, ikuti langkah standar lapangan berikut:\n\n• Jarak Ideal: Tempatkan lensa kamera 10–15 cm dari helai daun.\n• Pencahayaan: Gunakan sinar matahari pagi atau alami, hindari bayangan tubuh menutupi daun.\n• Fokus: Arahkan tepat pada bercak daun dan pastikan tanaman tidak bergoyang tertiup angin kencang.',
+      'answer':
+          'Untuk memperoleh akurasi model machine learning yang maksimal di atas 95%, ikuti langkah standar lapangan berikut:\n\n• Jarak Ideal: Tempatkan lensa kamera 10–15 cm dari helai daun.\n• Pencahayaan: Gunakan sinar matahari pagi atau alami, hindari bayangan tubuh menutupi daun.\n• Fokus: Arahkan tepat pada bercak daun dan pastikan tanaman tidak bergoyang tertiup angin kencang.',
     },
     {
       'category': 'Hasil Diagnosis',
       'icon': Icons.analytics,
       'question': 'Bagaimana cara membaca hasil diagnosis & tingkat keparahan penyakit?',
-      'answer': 'Setelah proses inferensi neural network selesai, kartu diagnosis memaparkan 3 parameter utama:\n\n• Persentase Akurasi: Menunjukkan derajat kepastian AI terhadap pola gejala visual (contoh: 98.4%).\n• Patogen Terdeteksi: Klasifikasi spesifik seperti Bercak Daun Cercospora, Antraknosa, atau Virus Kuning (Gemini).\n• Tingkat Keparahan: Diukur dari rasio nekrosis daun dalam skala Ringan (tindakan preventif), Sedang (fungisida terarah), hingga Kritis (isolasi tanaman).',
+      'answer':
+          'Setelah proses inferensi neural network selesai, kartu diagnosis memaparkan 3 parameter utama:\n\n• Persentase Akurasi: Menunjukkan derajat kepastian AI terhadap pola gejala visual (contoh: 98.4%).\n• Patogen Terdeteksi: Klasifikasi spesifik seperti Bercak Daun Cercospora, Antraknosa, atau Virus Kuning (Gemini).\n• Tingkat Keparahan: Diukur dari rasio nekrosis daun dalam skala Ringan (tindakan preventif), Sedang (fungisida terarah), hingga Kritis (isolasi tanaman).',
     },
     {
       'category': 'Jadwal & Cuaca',
       'icon': Icons.calendar_month,
       'question': 'Bagaimana cara mengatur dan mengubah jadwal penyiraman serta pemupukan?',
-      'answer': 'Masuk ke menu Jadwal Tani pada navigasi utama. Anda dapat menyesuaikan formulasi pupuk (NPK Mutiara, POC, atau Pupuk Kandang terfermentasi) serta menetapkan rotasi 7 hari atau 14 hari sekali.\n\nAlgoritma Capsee otomatis memundurkan pengingat penyiraman jika radar mikro BMKG mendeteksi anomali cuaca di koordinat kebun Anda.',
+      'answer':
+          'Masuk ke menu Jadwal Tani pada navigasi utama. Anda dapat menyesuaikan formulasi pupuk (NPK Mutiara, POC, atau Pupuk Kandang terfermentasi) serta menetapkan rotasi 7 hari atau 14 hari sekali.\n\nAlgoritma Capsee otomatis memundurkan pengingat penyiraman jika radar mikro BMKG mendeteksi anomali cuaca di koordinat kebun Anda.',
     },
     {
       'category': 'Pemindaian Daun',
       'icon': Icons.warning,
-      'question': 'Mengapa hasil pemindaian menampilkan status \'Kondisi Tidak Terdefinisi\'?',
-      'answer': 'Status ini terjadi sebagai mekanisme pengaman (fail-safe) saat model visi komputer tidak memperoleh kepastian minimum (di bawah ambang 65%). Faktor penyebab umumnya meliputi:\n\n• Lensa kamera buram atau mengalami goncangan saat rana ditekan.\n• Silau cahaya matahari langsung (overexposure) yang menghapus kontras urat daun.\n• Objek bukan merupakan dedaunan famili solanaceae / tanaman cabai.',
+      'question':
+          'Mengapa hasil pemindaian menampilkan status \'Kondisi Tidak Terdefinisi\'?',
+      'answer':
+          'Status ini terjadi sebagai mekanisme pengaman (fail-safe) saat model visi komputer tidak memperoleh kepastian minimum (di bawah ambang 65%). Faktor penyebab umumnya meliputi:\n\n• Lensa kamera buram atau mengalami goncangan saat rana ditekan.\n• Silau cahaya matahari langsung (overexposure) yang menghapus kontras urat daun.\n• Objek bukan merupakan dedaunan famili solanaceae / tanaman cabai.',
     },
     {
       'category': 'Akun & Sensor',
       'icon': Icons.verified_user,
       'question': 'Apakah data lahan dan foto tanaman saya aman dan rahasia?',
-      'answer': 'Sangat aman. Seluruh data koordinat geospasial blok lahan, foto daun, serta riwayat panen dienkripsi dengan standar TLS 1.3 saat transmisi dan AES-256 saat disimpan di server Cloud.\n\nKedaulatan kepemilikan data 100% berada di bawah kendali Anda sesuai Perjanjian Privasi Petani Capsee dan tidak diperjualbelikan kepada pihak ketiga.',
+      'answer':
+          'Sangat aman. Seluruh data koordinat geospasial blok lahan, foto daun, serta riwayat panen dienkripsi dengan standar TLS 1.3 saat transmisi dan AES-256 saat disimpan di server Cloud.\n\nKedaulatan kepemilikan data 100% berada di bawah kendali Anda sesuai Perjanjian Privasi Petani Capsee dan tidak diperjualbelikan kepada pihak ketiga.',
     },
-
   ];
 
   List<Map<String, dynamic>> get _filteredFaqs {
     return _faqs.where((faq) {
-      final matchesCategory = _selectedCategory == 'Semua' || faq['category'] == _selectedCategory;
-      final matchesSearch = _searchQuery.isEmpty || 
+      final matchesCategory =
+          _selectedCategory == 'Semua' || faq['category'] == _selectedCategory;
+      final matchesSearch = _searchQuery.isEmpty ||
           faq['question'].toString().toLowerCase().contains(_searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     }).toList();
@@ -67,57 +74,54 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Scaffold(
-      backgroundColor: C.surface,
+      backgroundColor: p.background,
       appBar: AppBar(
-        backgroundColor: C.surface,
+        backgroundColor: p.surface,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: C.onSurface),
+          icon: Icon(Icons.arrow_back, color: p.title),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
           'Bantuan & Faq',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 18,
-            fontWeight: FontWeight.w600,
-            color: C.onSurface,
-          ),
+          style: AppText.headline(context),
         ),
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 16),
+            padding: const EdgeInsets.only(right: AppSpace.page),
             child: CircleAvatar(
-              backgroundColor: C.primary,
+              backgroundColor: p.primary,
               radius: 16,
-              child: const Icon(Icons.person, size: 18, color: C.onPrimary),
+              child: Icon(Icons.person, size: 18, color: p.onPrimary),
             ),
           ),
         ],
       ),
       body: ListView(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+        padding: const EdgeInsets.all(AppSpace.page),
         children: [
           // Search Bar
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            padding: const EdgeInsets.symmetric(horizontal: AppSpace.page),
             decoration: BoxDecoration(
-              color: C.surfaceHigh,
-              borderRadius: BorderRadius.circular(12),
+              color: p.surfaceAlt,
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             ),
             child: TextField(
               onChanged: (val) => setState(() => _searchQuery = val),
+              style: AppText.body(context, color: p.title),
               decoration: InputDecoration(
-                icon: const Icon(Icons.search, color: C.outline),
+                icon: Icon(Icons.search, color: p.icon),
                 hintText: 'Cari topik bantuan atau pertanyaan...',
-                hintStyle: GoogleFonts.plusJakartaSans(color: C.onSurfaceVariant),
+                hintStyle: AppText.bodySm(context),
                 border: InputBorder.none,
               ),
-              style: GoogleFonts.plusJakartaSans(color: C.onSurface, fontSize: 14),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpace.gapLg),
 
           // Categories
           SingleChildScrollView(
@@ -126,118 +130,85 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
               children: _categories.map((category) {
                 final isSelected = _selectedCategory == category;
                 return Padding(
-                  padding: const EdgeInsets.only(right: 8),
+                  padding: const EdgeInsets.only(right: AppSpace.gapSm),
                   child: FilterChip(
                     label: Text(
                       category,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: isSelected ? C.onPrimary : C.onSurface,
+                      style: AppText.caption(context).copyWith(
+                        color: isSelected ? p.onPrimary : p.title,
+                        fontWeight: FontWeight.w700,
                       ),
                     ),
                     selected: isSelected,
                     onSelected: (_) => setState(() => _selectedCategory = category),
-                    backgroundColor: C.surfaceHigh,
-                    selectedColor: C.primaryContainer,
+                    backgroundColor: p.surfaceAlt,
+                    selectedColor: p.primary,
                     shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(20),
+                      borderRadius: BorderRadius.circular(AppSpace.radiusPill),
                     ),
                   ),
                 );
               }).toList(),
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpace.gapLg),
 
           // Panduan Cepat Banner
-          InkWell(
+          CapseeCard(
             onTap: () {
               Navigator.of(context).push(
                 MaterialPageRoute(builder: (_) => const PanduanScreen()),
               );
             },
-            borderRadius: BorderRadius.circular(12),
-            child: Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: C.surfaceHigh.withValues(alpha: 0.5),
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Row(
-                children: [
-                  Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: C.primary.withValues(alpha: 0.1),
-                      borderRadius: BorderRadius.circular(8),
-                    ),
-                    child: const Icon(Icons.psychology_alt, color: C.primary, size: 26),
+            child: Row(
+              children: [
+                Container(
+                  width: 48,
+                  height: 48,
+                  decoration: BoxDecoration(
+                    color: p.accentSoft,
+                    borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                   ),
-                  const SizedBox(width: 16),
-                  Expanded(
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text(
-                          'PANDUAN CEPAT CAPSEE',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w700,
-                            color: C.primary,
-                            letterSpacing: 0.5,
-                          ),
-                        ),
-                        Text(
-                          'Solusi Tani Cerdas',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 16,
-                            fontWeight: FontWeight.w700,
-                            color: C.onSurface,
-                          ),
-                        ),
-                        Text(
-                          'Temukan jawaban akurat seputar kecerdasan buatan & kesehatan cabai Anda.',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12,
-                            color: C.onSurfaceVariant,
-                          ),
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ],
-                    ),
-                  )
-                ],
-              ),
+                  child: Icon(Icons.psychology_alt, color: p.onAccentSoft, size: 26),
+                ),
+                const SizedBox(width: AppSpace.page),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      Text(
+                        'PANDUAN CEPAT CAPSEE',
+                        style: AppText.overline(context, color: p.accent),
+                      ),
+                      Text(
+                        'Solusi Tani Cerdas',
+                        style: AppText.title(context),
+                      ),
+                      Text(
+                        'Temukan jawaban akurat seputar kecerdasan buatan & kesehatan cabai Anda.',
+                        style: AppText.bodySm(context),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                      ),
+                    ],
+                  ),
+                )
+              ],
             ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpace.gapLg),
 
           // FAQ List
           if (_filteredFaqs.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(32),
-              child: Column(
-                children: [
-                  const Icon(Icons.search_off, size: 48, color: C.outline),
-                  const SizedBox(height: 16),
-                  Text(
-                    'Topik tidak ditemukan',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w600,
-                      color: C.onSurface,
-                    ),
-                  ),
-                ],
-              ),
+            const EmptyState(
+              icon: Icons.search_off,
+              title: 'Topik tidak ditemukan',
+              message: 'Coba kata kunci lain atau pilih kategori berbeda.',
             )
           else
             ..._filteredFaqs.map((faq) => _buildFaqItem(faq)),
 
-          const SizedBox(height: 24),
+          const SizedBox(height: AppSpace.gapXl),
           _buildContactSection(),
         ],
       ),
@@ -245,154 +216,93 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
   }
 
   Widget _buildFaqItem(Map<String, dynamic> faq) {
-    return Container(
-      margin: const EdgeInsets.only(bottom: 8),
-      decoration: BoxDecoration(
-        color: C.surface,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          )
-        ],
-      ),
-      child: Theme(
-        data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
-        child: ExpansionTile(
-          iconColor: C.onSurfaceVariant,
-          collapsedIconColor: C.onSurfaceVariant,
-          tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          leading: Icon(faq['icon'] as IconData, color: C.primary, size: 22),
-          title: Text(
-            faq['question'],
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w600,
-              color: C.onSurface,
+    final p = context.palette;
+    return Padding(
+      padding: const EdgeInsets.only(bottom: AppSpace.gapSm),
+      child: CapseeCard(
+        padding: EdgeInsets.zero,
+        child: Theme(
+          data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
+          child: ExpansionTile(
+            iconColor: p.subtitle,
+            collapsedIconColor: p.subtitle,
+            tilePadding:
+                const EdgeInsets.symmetric(horizontal: AppSpace.page, vertical: 4),
+            leading: Icon(faq['icon'] as IconData, color: p.accent, size: 22),
+            title: Text(
+              faq['question'],
+              style: AppText.subtitle(context),
             ),
-          ),
-          children: [
-            Padding(
-              padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
-              child: Text(
-                faq['answer'],
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  height: 1.5,
-                  color: C.onSurfaceVariant,
+            children: [
+              Padding(
+                padding: const EdgeInsets.fromLTRB(
+                    AppSpace.page, 0, AppSpace.page, AppSpace.page),
+                child: Text(
+                  faq['answer'],
+                  style: AppText.body(context),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
   }
 
   Widget _buildContactSection() {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: C.surface,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
-            blurRadius: 4,
-            offset: const Offset(0, 1),
-          )
-        ],
-      ),
+    final p = context.palette;
+    return CapseeCard(
       child: Column(
         children: [
-          Row(
-            children: [
-              Container(
-                width: 40,
-                height: 40,
-                decoration: const BoxDecoration(
-                  color: AppColors.secondaryContainer,
-                  shape: BoxShape.circle,
-                ),
-                child: const Icon(Icons.forum, color: AppColors.onSecondaryContainer, size: 22),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'Masih membutuhkan bantuan?',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                        color: C.onSurface,
-                      ),
-                    ),
-                    Text(
-                      'Tim ahli agronomis kami siap mendampingi lahan Anda.',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
-                        color: C.onSurfaceVariant,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ],
+          SectionHeader(
+            icon: Icons.forum,
+            title: 'Masih membutuhkan bantuan?',
+            subtitle: 'Tim ahli agronomis kami siap mendampingi lahan Anda.',
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpace.page),
 
           _buildContactCard(
             icon: Icons.mail,
-            iconColor: C.tertiary,
+            iconColor: p.accent,
             title: 'Email Dukungan Teknis',
             subtitle: 'bantuan@capsee.id',
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpace.page),
           SizedBox(
             width: double.infinity,
             height: 48,
             child: ElevatedButton.icon(
               onPressed: () {},
-              icon: const Icon(Icons.send, size: 20),
+              icon: Icon(Icons.send, size: 20, color: p.onPrimary),
               label: Text(
                 'Hubungi Tim Ahli Agronomis',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: AppText.subtitle(context, color: p.onPrimary),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: C.primaryContainer,
-                foregroundColor: C.onPrimary,
+                backgroundColor: p.primary,
+                foregroundColor: p.onPrimary,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                 ),
               ),
             ),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: AppSpace.gapSm),
           SizedBox(
             width: double.infinity,
             height: 48,
             child: TextButton(
               onPressed: () => Navigator.of(context).pop(),
               style: TextButton.styleFrom(
-                backgroundColor: C.surfaceHigh,
-                foregroundColor: C.onSurface,
+                backgroundColor: p.surfaceAlt,
+                foregroundColor: p.title,
                 shape: RoundedRectangleBorder(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                 ),
               ),
               child: Text(
                 'Kembali ke Akun & Bantuan',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w600,
-                ),
+                style: AppText.subtitle(context),
               ),
             ),
           ),
@@ -407,11 +317,12 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
     required String title,
     required String subtitle,
   }) {
+    final p = context.palette;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpace.radiusTile),
       decoration: BoxDecoration(
-        color: C.surfaceHigh,
-        borderRadius: BorderRadius.circular(8),
+        color: p.surfaceAlt,
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       ),
       child: Row(
         children: [
@@ -424,30 +335,23 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
             ),
             child: Icon(icon, color: iconColor, size: 18),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpace.gapMd),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   title,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                    color: C.onSurface,
-                  ),
+                  style: AppText.subtitle(context),
                 ),
                 Text(
                   subtitle,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    color: C.onSurfaceVariant,
-                  ),
+                  style: AppText.bodySm(context),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right, color: C.outline, size: 20),
+          Icon(Icons.chevron_right, color: p.icon, size: 20),
         ],
       ),
     );

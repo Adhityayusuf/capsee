@@ -15,11 +15,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/app_colors.dart';
-
-const _secondary = AppColors.secondary;
-const _secondaryFixed = AppColors.secondaryContainer;
-const _onSecondaryFixed = AppColors.onPrimaryFixed;
+import '../../core/app_text.dart';
+import '../../core/app_theme.dart';
+import '../../widgets/ui_kit.dart';
 
 TextStyle _ts(double size, double height, FontWeight w, Color color,
         {double? letterSpacing}) =>
@@ -30,10 +28,6 @@ TextStyle _ts(double size, double height, FontWeight w, Color color,
       color: color,
       letterSpacing: letterSpacing,
     );
-
-const _softShadow = [
-  BoxShadow(color: AppColors.shadow, blurRadius: 3, offset: Offset(0, 1)),
-];
 
 class PrivasiScreen extends StatefulWidget {
   /// Dipanggil saat pengguna menyetujui (checkbox tercentang). Layar lalu ditutup.
@@ -103,18 +97,17 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: C.surface,
+      backgroundColor: context.palette.background,
       appBar: _buildAppBar(context),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        padding: const EdgeInsets.all(AppSpace.page),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
             _buildMetaChips(),
             const SizedBox(height: 16),
             Text('Kebijakan Privasi Capsee',
-                style: _ts(22, 28, FontWeight.w700, C.onSurface,
-                    letterSpacing: -0.2)),
+                style: AppText.display(context)),
             const SizedBox(height: 12),
             _buildIntro(),
             const SizedBox(height: 20),
@@ -145,10 +138,10 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
       preferredSize: const Size.fromHeight(56),
       child: Container(
         decoration: BoxDecoration(
-          color: C.surface.withValues(alpha: 0.95),
-          boxShadow: const [
+          color: context.palette.surface.withValues(alpha: 0.95),
+          boxShadow: [
             BoxShadow(
-                color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 1)),
+                color: context.palette.shadow, blurRadius: 8, offset: const Offset(0, 1)),
           ],
         ),
         child: SafeArea(
@@ -162,8 +155,8 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
                   IconButton(
                     tooltip: 'Kembali',
                     onPressed: () => Navigator.maybePop(context),
-                    icon: const Icon(Icons.arrow_back,
-                        size: 24, color: C.onSurface),
+                    icon: Icon(Icons.arrow_back,
+                        size: 24, color: context.palette.title),
                     style: IconButton.styleFrom(
                         minimumSize: const Size(44, 44),
                         shape: const CircleBorder()),
@@ -175,8 +168,7 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
                         'Kebijakan Privasi',
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis,
-                        style: _ts(18, 24, FontWeight.w700, C.onSurface,
-                            letterSpacing: -0.2),
+                        style: AppText.headline(context),
                       ),
                     ),
                   ),
@@ -191,34 +183,13 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
 
   // ───────── Chip metadata ─────────
   Widget _buildMetaChips() {
-    Widget chip(IconData icon, Color iconColor, String text, Color bg,
-        Color fg) {
-      return Container(
-        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-        decoration: BoxDecoration(
-          color: bg,
-          borderRadius: BorderRadius.circular(999),
-        ),
-        child: Row(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Icon(icon, size: 16, color: iconColor),
-            const SizedBox(width: 6),
-            Text(text, style: _ts(12, 16, FontWeight.w600, fg)),
-          ],
-        ),
-      );
-    }
-
-    return Wrap(
+    return const Wrap(
       spacing: 8,
       runSpacing: 8,
       children: [
-        chip(Icons.verified, C.primary, 'Versi Dokumen: 2.1.0', C.surfaceHigh,
-            C.onSurface),
-        chip(Icons.schedule, C.onSurfaceVariant,
-            'Terakhir diperbarui: 18 Mei 2024', C.surfaceLow,
-            C.onSurfaceVariant),
+        StatusBadge(label: 'Versi Dokumen: 2.1.0', kind: BadgeKind.success),
+        StatusBadge(
+            label: 'Terakhir diperbarui: 18 Mei 2024', kind: BadgeKind.info),
       ],
     );
   }
@@ -226,11 +197,11 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
   // ───────── Intro ─────────
   Widget _buildIntro() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpace.page),
       decoration: BoxDecoration(
-        color: C.surfaceLow,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: _softShadow,
+        color: context.palette.surfaceAlt,
+        borderRadius: BorderRadius.circular(AppSpace.radiusCard),
+        boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -239,11 +210,11 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: C.primaryContainer,
-              borderRadius: BorderRadius.circular(8),
+              color: context.palette.primary,
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             ),
-            child: const Icon(Icons.verified_user,
-                size: 24, color: AppColors.onPrimaryContainer),
+            child: Icon(Icons.verified_user,
+                size: 24, color: context.palette.onPrimary),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -251,11 +222,11 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Komitmen Kedaulatan & Keamanan Data Petani',
-                    style: _ts(14, 20, FontWeight.w700, C.onSurface)),
+                    style: AppText.subtitle(context)),
                 const SizedBox(height: 4),
                 Text(
                   'Di Capsee, kami menghargai privasi dan kepercayaan Anda sebagai penggerak pertanian cabai. Dokumen ini menjelaskan bagaimana kami mengumpulkan, mengelola, serta melindungi data kebun dan privasi akun Anda secara transparan.',
-                  style: _ts(12, 19, FontWeight.w400, C.onSurfaceVariant),
+                  style: AppText.bodySm(context),
                 ),
               ],
             ),
@@ -275,16 +246,17 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
         itemCount: _navLabels.length,
         separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (_, i) => Material(
-          color: C.surfaceContainer,
-          borderRadius: BorderRadius.circular(999),
+          color: context.palette.surfaceAlt,
+          borderRadius: BorderRadius.circular(AppSpace.radiusPill),
           child: InkWell(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(AppSpace.radiusPill),
             onTap: () => _jumpTo(i),
             child: Container(
               alignment: Alignment.center,
               padding: const EdgeInsets.symmetric(horizontal: 14),
               child: Text(_navLabels[i],
-                  style: _ts(12, 16, FontWeight.w600, C.onSurface)),
+                  style: AppText.bodySm(context, color: context.palette.title)
+                      .copyWith(fontWeight: FontWeight.w600)),
             ),
           ),
         ),
@@ -297,49 +269,57 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
     required int index,
     required String title,
     required List<Widget> children,
-    Color bg = C.surfaceLowest,
-    Color badgeBg = C.surfaceContainer,
+    Color? bg,
+    Color? badgeBg,
     double gap = 14,
   }) {
-    return Container(
-      key: _keys[index],
-      padding: const EdgeInsets.all(20),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: _softShadow,
-      ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.stretch,
-        children: [
-          Row(
-            children: [
-              Container(
-                width: 28,
-                height: 28,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: badgeBg,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text('${index + 1}',
-                    style: _ts(12, 16, FontWeight.w700, C.primary)),
-              ),
-              const SizedBox(width: 10),
-              Expanded(
-                child: Text(title,
-                    style: _ts(18, 24, FontWeight.w600, C.onSurface)),
-              ),
-            ],
+    final content = Column(
+      crossAxisAlignment: CrossAxisAlignment.stretch,
+      children: [
+        SectionHeader(
+          icon: Icons.privacy_tip_outlined,
+          title: title,
+          trailing: Container(
+            width: 28,
+            height: 28,
+            alignment: Alignment.center,
+            decoration: BoxDecoration(
+              color: badgeBg ?? context.palette.surfaceAlt,
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+            ),
+            child: Text('${index + 1}',
+                style: AppText.caption(context, color: context.palette.accent)
+                    .copyWith(fontWeight: FontWeight.w800)),
           ),
-          SizedBox(height: gap),
-          ...children,
-        ],
-      ),
+        ),
+        SizedBox(height: gap),
+        ...children,
+      ],
+    );
+    if (bg != null) {
+      return Container(
+        key: _keys[index],
+        padding: const EdgeInsets.all(AppSpace.page),
+        decoration: BoxDecoration(
+          color: bg,
+          borderRadius: BorderRadius.circular(AppSpace.radiusCard),
+          boxShadow: [
+            BoxShadow(
+                color: context.palette.shadow,
+                blurRadius: 3,
+                offset: const Offset(0, 1))
+          ],
+        ),
+        child: content,
+      );
+    }
+    return CapseeCard(
+      key: _keys[index],
+      child: content,
     );
   }
 
-  TextStyle get _small => _ts(12, 19, FontWeight.w400, C.onSurfaceVariant);
+  TextStyle get _small => _ts(12, 19, FontWeight.w400, context.palette.subtitle);
 
   // ───────── 1. Data dikumpulkan ─────────
   Widget _sec1() {
@@ -381,17 +361,17 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
           width: 24,
           height: 24,
           margin: const EdgeInsets.only(top: 2),
-          decoration: const BoxDecoration(
-              color: _secondaryFixed, shape: BoxShape.circle),
-          child: Icon(icon, size: 16, color: _onSecondaryFixed),
+          decoration: BoxDecoration(
+              color: context.palette.accentSoft, shape: BoxShape.circle),
+          child: Icon(icon, size: 16, color: context.palette.onAccentSoft),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: _ts(14, 20, FontWeight.w700, C.onSurface)),
-              Text(body, style: _small),
+              Text(title, style: AppText.subtitle(context)),
+              Text(body, style: AppText.bodySm(context)),
             ],
           ),
         ),
@@ -429,9 +409,9 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(top: 2),
-          child: Icon(Icons.check_circle_outline, size: 18, color: C.primary),
+        Padding(
+          padding: const EdgeInsets.only(top: 2),
+          child: Icon(Icons.check_circle_outline, size: 18, color: context.palette.accent),
         ),
         const SizedBox(width: 10),
         Expanded(
@@ -440,8 +420,10 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
               children: [
                 TextSpan(
                     text: label,
-                    style: _ts(12, 19, FontWeight.w700, C.onSurface)),
-                TextSpan(text: body, style: _small),
+                    style: AppText.bodySm(context,
+                            color: context.palette.title)
+                        .copyWith(fontWeight: FontWeight.w700)),
+                TextSpan(text: body, style: AppText.bodySm(context)),
               ],
             ),
           ),
@@ -455,20 +437,20 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
     return _section(
       index: 2,
       title: 'Keamanan & Enkripsi Data',
-      bg: C.surfaceLow,
+      bg: context.palette.surfaceAlt,
       gap: 12,
       children: [
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpace.page),
           decoration: BoxDecoration(
-            color: C.surfaceLowest,
-            borderRadius: BorderRadius.circular(8),
+            color: context.palette.surface,
+            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
           ),
           child: Column(
             children: [
               _secureItem(
                 Icons.lock_outline,
-                C.primary,
+                context.palette.primary,
                 'Standar Enkripsi End-to-End & AES-256',
                 'Seluruh transmisi foto lahan dan data agrikultur dilindungi enkripsi standar industri saat transit maupun at-rest di server awan berstandar ISO 27001.',
               ),
@@ -477,7 +459,7 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
                 padding: const EdgeInsets.only(top: 8),
                 child: _secureItem(
                   Icons.gavel,
-                  _secondary,
+                  context.palette.primary,
                   'Kedaulatan Kepemilikan Data',
                   'Hak cipta dan kepemilikan atas foto kebun serta riwayat plot budidaya sepenuhnya tetap berada di tangan Petani. Capsee tidak pernah memperjualbelikan data lahan Anda kepada pihak ketiga untuk kepentingan periklanan komersial.',
                 ),
@@ -497,16 +479,16 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
           width: 32,
           height: 32,
           decoration: BoxDecoration(color: bg, shape: BoxShape.circle),
-          child: Icon(icon, size: 18, color: C.onPrimary),
+          child: Icon(icon, size: 18, color: context.palette.onPrimary),
         ),
         const SizedBox(width: 12),
         Expanded(
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(title, style: _ts(14, 20, FontWeight.w700, C.onSurface)),
+              Text(title, style: AppText.subtitle(context)),
               const SizedBox(height: 2),
-              Text(body, style: _small),
+              Text(body, style: AppText.bodySm(context)),
             ],
           ),
         ),
@@ -541,13 +523,13 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
           style: _small,
         ),
         const SizedBox(height: 12),
-        _rightItem(Icons.download_outlined, C.primary,
+        _rightItem(Icons.download_outlined, context.palette.accent,
             'Hak mengunduh salinan riwayat plot lahan (ekspor PDF/CSV).'),
         const SizedBox(height: 8),
-        _rightItem(Icons.edit_note, C.primary,
+        _rightItem(Icons.edit_note, context.palette.accent,
             'Hak memperbarui atau mengoreksi data profil sewaktu-waktu.'),
         const SizedBox(height: 8),
-        _rightItem(Icons.delete_forever_outlined, C.error,
+        _rightItem(Icons.delete_forever_outlined, context.palette.error,
             'Hak menghapus akun dan data kebun secara permanen.'),
       ],
     );
@@ -555,10 +537,10 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
 
   Widget _rightItem(IconData icon, Color color, String text) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpace.radiusTile),
       decoration: BoxDecoration(
-        color: C.surfaceLow,
-        borderRadius: BorderRadius.circular(8),
+        color: context.palette.surfaceAlt,
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       ),
       child: Row(
         children: [
@@ -566,7 +548,8 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
           const SizedBox(width: 10),
           Expanded(
             child: Text(text,
-                style: _ts(12, 19, FontWeight.w500, C.onSurface)),
+                style: AppText.bodySm(context, color: context.palette.title)
+                    .copyWith(fontWeight: FontWeight.w600)),
           ),
         ],
       ),
@@ -578,8 +561,8 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
     return _section(
       index: 5,
       title: 'Kontak Petugas Perlindungan Data (DPO)',
-      bg: C.surfaceContainer,
-      badgeBg: C.surfaceHighest,
+      bg: context.palette.surfaceAlt,
+      badgeBg: context.palette.surfaceAlt,
       gap: 12,
       children: [
         Text(
@@ -590,8 +573,8 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
         Container(
           padding: const EdgeInsets.all(14),
           decoration: BoxDecoration(
-            color: C.surfaceLowest,
-            borderRadius: BorderRadius.circular(8),
+            color: context.palette.surface,
+            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
           ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -601,9 +584,8 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
                 spacing: 10,
                 runSpacing: 2,
                 children: [
-                  const Icon(Icons.mail_outline, size: 20, color: C.primary),
-                  Text('Email:',
-                      style: _ts(12, 16, FontWeight.w700, C.onSurface)),
+                  Icon(Icons.mail_outline, size: 20, color: context.palette.accent),
+                  Text('Email:', style: AppText.subtitle(context)),
                   InkWell(
                     onTap: () async {
                       await Clipboard.setData(
@@ -616,9 +598,10 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
                     },
                     child: Text(
                       'privasi@capsee.id',
-                      style: _ts(12, 16, FontWeight.w400, C.primary).copyWith(
+                      style: AppText.bodySm(context, color: context.palette.accent)
+                          .copyWith(
                         decoration: TextDecoration.underline,
-                        decorationColor: C.primary,
+                        decorationColor: context.palette.accent,
                       ),
                     ),
                   ),
@@ -630,12 +613,10 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
                 spacing: 10,
                 runSpacing: 2,
                 children: [
-                  const Icon(Icons.schedule, size: 20, color: C.primary),
-                  Text('Layanan respons:',
-                      style: _ts(12, 16, FontWeight.w700, C.onSurface)),
+                  Icon(Icons.schedule, size: 20, color: context.palette.accent),
+                  Text('Layanan respons:', style: AppText.subtitle(context)),
                   Text('Senin – Sabtu, 08:00 – 17:00 WIB',
-                      style:
-                          _ts(12, 16, FontWeight.w400, C.onSurfaceVariant)),
+                      style: AppText.bodySm(context)),
                 ],
               ),
             ],
@@ -654,13 +635,13 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
           key: _consentKey,
           duration: const Duration(milliseconds: 200),
           decoration: BoxDecoration(
-            color: _flash ? C.errorContainer : C.surfaceLow,
-            borderRadius: BorderRadius.circular(12),
+            color: _flash ? context.palette.error.withValues(alpha: 0.12) : context.palette.surfaceAlt,
+            borderRadius: BorderRadius.circular(AppSpace.radiusCard),
           ),
           child: Material(
             color: Colors.transparent,
             child: InkWell(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppSpace.radiusCard),
               onTap: () => setState(() => _consent = !_consent),
               child: Padding(
                 padding: const EdgeInsets.all(14),
@@ -676,7 +657,7 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
                           value: _consent,
                           onChanged: (v) =>
                               setState(() => _consent = v ?? false),
-                          activeColor: C.primaryContainer,
+                          activeColor: context.palette.primary,
                           materialTapTargetSize:
                               MaterialTapTargetSize.shrinkWrap,
                           visualDensity: VisualDensity.compact,
@@ -689,7 +670,8 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
                     Expanded(
                       child: Text(
                         'Saya telah memahami Kebijakan Privasi dan menyetujui pengelolaan data sesuai ketentuan di atas.',
-                        style: _ts(12, 17, FontWeight.w400, C.onSurface),
+                        style: AppText.bodySm(context,
+                            color: context.palette.title),
                       ),
                     ),
                   ],
@@ -703,21 +685,22 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
           duration: const Duration(milliseconds: 150),
           opacity: _consent ? 1 : 0.5,
           child: Material(
-            color: C.primary,
-            borderRadius: BorderRadius.circular(12),
+            color: context.palette.accent,
+            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             elevation: 2,
             child: InkWell(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
               onTap: _handleAgree,
               child: SizedBox(
                 height: 56,
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
-                    const Icon(Icons.done_all, size: 20, color: C.onPrimary),
+                    Icon(Icons.done_all, size: 20, color: context.palette.onPrimary),
                     const SizedBox(width: 8),
                     Text('Saya Mengerti',
-                        style: _ts(18, 24, FontWeight.w600, C.onPrimary)),
+                        style: AppText.headline(context,
+                            color: context.palette.onPrimary)),
                   ],
                 ),
               ),
@@ -726,16 +709,16 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
         ),
         const SizedBox(height: 16),
         Material(
-          color: C.surfaceContainer,
-          borderRadius: BorderRadius.circular(12),
+          color: context.palette.surfaceAlt,
+          borderRadius: BorderRadius.circular(AppSpace.radiusTile),
           child: InkWell(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             onTap: () => Navigator.maybePop(context),
             child: SizedBox(
               height: 48,
               child: Center(
                 child: Text('Kembali ke Pengaturan Akun',
-                    style: _ts(14, 20, FontWeight.w500, C.onSurface)),
+                    style: AppText.subtitle(context)),
               ),
             ),
           ),

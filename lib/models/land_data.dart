@@ -19,6 +19,7 @@ class LandData {
   final DateTime lastWatered;
   final DateTime lastFertilized;
   final int fertilizeIntervalWeeks;
+  final int wateringIntervalWeeks;
 
   const LandData({
     this.id,
@@ -30,6 +31,7 @@ class LandData {
     required this.lastWatered,
     required this.lastFertilized,
     required this.fertilizeIntervalWeeks,
+    this.wateringIntervalWeeks = 1,
   });
 
   /// Dipakai nanti saat mengirim data ke API.
@@ -42,5 +44,6 @@ class LandData {
         'last_watered': lastWatered.toIso8601String(),
         'last_fertilized': lastFertilized.toIso8601String(),
         'fertilize_interval_weeks': fertilizeIntervalWeeks,
+        'watering_interval_weeks': wateringIntervalWeeks,
       };
 }

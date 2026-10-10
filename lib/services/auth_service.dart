@@ -28,7 +28,9 @@ class HasilLogin {
 // ─────────────────────────────────────────────────────────
 
 /// Kirim permintaan registrasi akun baru.
-Future<Map<String, dynamic>> register({
+/// Backend langsung mengembalikan token, jadi pendaftar otomatis masuk
+/// tanpa perlu login ulang. Token JWT otomatis disimpan.
+Future<HasilLogin> register({
   required String nama,
   required String email,
   required String password,
@@ -45,7 +47,9 @@ Future<Map<String, dynamic>> register({
     }),
   );
   final body = parseResponse(res);
-  return body['pengguna'] as Map<String, dynamic>;
+  final hasil = HasilLogin.fromJson(body);
+  await simpanToken(hasil.token);
+  return hasil;
 }
 
 /// Login dengan email + password.

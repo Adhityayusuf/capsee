@@ -2,6 +2,12 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 
 import '../../core/app_colors.dart';
+import '../../core/app_text.dart';
+import '../../core/app_theme.dart';
+import '../../services/services.dart';
+import '../../widgets/popup_notifikasi.dart';
+import '../../widgets/ui_kit.dart';
+import '../auth/lupa_sandi_screen.dart';
 
 class UbahKataSandiScreen extends StatefulWidget {
   const UbahKataSandiScreen({super.key});
@@ -20,6 +26,7 @@ class _UbahKataSandiScreenState extends State<UbahKataSandiScreen> {
   bool _obscureCurrent = true;
   bool _obscureNew = true;
   bool _obscureConfirm = true;
+  bool _isSaving = false;
 
   // Password Strength State
   String _pwdStrengthText = 'Lemah';
@@ -27,16 +34,6 @@ class _UbahKataSandiScreenState extends State<UbahKataSandiScreen> {
   bool _hasMinLength = false;
   bool _hasMixedCase = false;
   bool _hasSymbolOrNumber = false;
-
-  // Warna mengacu ke palette kanonik Capsee.
-  static const Color cBg = AppColors.background;
-  static const Color cPrimaryGreen = AppColors.primary;
-  static const Color cCardBg = AppColors.surfaceLow;
-  static const Color cTextTitle = AppColors.title;
-  static const Color cTextBody = AppColors.subtitle;
-  static const Color cLabelColor = AppColors.onSurfaceVariant;
-  static const Color cInputBorder = AppColors.border;
-  static const Color cCancelBtnBg = AppColors.surfaceHigh;
 
   @override
   void initState() {
@@ -84,41 +81,37 @@ class _UbahKataSandiScreenState extends State<UbahKataSandiScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Scaffold(
-      backgroundColor: cBg,
+      backgroundColor: p.background,
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
         child: ClipRect(
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
             child: AppBar(
-              backgroundColor: cBg.withValues(alpha: 0.8),
+              backgroundColor: p.surface.withValues(alpha: 0.85),
               elevation: 0,
               scrolledUnderElevation: 0,
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back, color: cTextTitle),
+                icon: Icon(Icons.arrow_back, color: p.title),
                 onPressed: () => Navigator.pop(context),
               ),
-              title: const Text(
+              title: Text(
                 'Ubah Kata Sandi',
-                style: TextStyle(
-                  color: cTextTitle,
-                  fontSize: 18,
-                  fontFamily: 'PlusJakartaSans',
-                  fontWeight: FontWeight.w700,
-                ),
+                style: AppText.headline(context),
               ),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.close, color: cTextTitle),
+                  icon: Icon(Icons.close, color: p.title),
                   onPressed: () => Navigator.pop(context),
                 ),
-                const Padding(
-                  padding: EdgeInsets.only(right: 16.0),
+                Padding(
+                  padding: const EdgeInsets.only(right: 16.0),
                   child: CircleAvatar(
                     radius: 16,
-                    backgroundColor: AppColors.primaryDark,
-                    child: Icon(Icons.person, color: Colors.white, size: 18),
+                    backgroundColor: p.primary,
+                    child: Icon(Icons.person, color: p.onPrimary, size: 18),
                   ),
                 ),
               ],
@@ -128,31 +121,29 @@ class _UbahKataSandiScreenState extends State<UbahKataSandiScreen> {
       ),
       body: SafeArea(
         child: SingleChildScrollView(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 16),
+          padding: const EdgeInsets.fromLTRB(
+              AppSpace.page, AppSpace.page, AppSpace.page, AppSpace.page),
           child: Form(
             key: _formKey,
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 // Header Card
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: cCardBg,
-                    borderRadius: BorderRadius.circular(16),
-                  ),
+                CapseeCard(
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
-                          color: AppColors.primarySoft,
-                          borderRadius: BorderRadius.circular(12),
+                          color: p.accentSoft,
+                          borderRadius:
+                              BorderRadius.circular(AppSpace.radiusTile),
                         ),
-                        child: const Icon(Icons.lock_person, color: cPrimaryGreen, size: 24),
+                        child: Icon(Icons.lock_person,
+                            color: p.onAccentSoft, size: 24),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpace.gapMd),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
@@ -160,44 +151,22 @@ class _UbahKataSandiScreenState extends State<UbahKataSandiScreen> {
                             Row(
                               mainAxisAlignment: MainAxisAlignment.spaceBetween,
                               children: [
-                                const Expanded(
+                                Expanded(
                                   child: Text(
                                     'Perbarui Kata Sandi\nAkun',
-                                    style: TextStyle(
-                                      fontSize: 18,
-                                      fontFamily: 'PlusJakartaSans',
-                                      fontWeight: FontWeight.w700,
-                                      color: cTextTitle,
-                                      height: 1.2,
-                                    ),
+                                    style: AppText.headline(context),
                                   ),
                                 ),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                                  decoration: BoxDecoration(
-                                    color: AppColors.primaryFixed,
-                                    borderRadius: BorderRadius.circular(20),
-                                  ),
-                                  child: const Text(
-                                    'Aman',
-                                    style: TextStyle(
-                                      fontSize: 11,
-                                      fontWeight: FontWeight.w700,
-                                      color: AppColors.primaryDark,
-                                    ),
-                                  ),
+                                const StatusBadge(
+                                  label: 'Aman',
+                                  kind: BadgeKind.success,
                                 ),
                               ],
                             ),
                             const SizedBox(height: 8),
-                            const Text(
+                            Text(
                               'Pastikan kata sandi baru Anda kuat, unik, dan terdiri dari minimal 8 karakter demi keamanan data lahan Anda.',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontFamily: 'PlusJakartaSans',
-                                color: cTextBody,
-                                height: 1.4,
-                              ),
+                              style: AppText.body(context),
                             ),
                           ],
                         ),
@@ -219,15 +188,19 @@ class _UbahKataSandiScreenState extends State<UbahKataSandiScreen> {
                 Align(
                   alignment: Alignment.centerRight,
                   child: TextButton(
-                    onPressed: () {},
-                    child: const Text(
+                    onPressed: () {
+                      Navigator.of(context).push(
+                        MaterialPageRoute(
+                          builder: (_) => LupaSandiScreen(
+                            onSubmit: (_) async {},
+                          ),
+                        ),
+                      );
+                    },
+                    child: Text(
                       'Lupa kata sandi saat ini?',
-                      style: TextStyle(
-                        color: cPrimaryGreen,
-                        fontSize: 12,
-                        fontFamily: 'PlusJakartaSans',
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: AppText.bodySm(context, color: p.accent)
+                          .copyWith(fontWeight: FontWeight.w700),
                     ),
                   ),
                 ),
@@ -245,27 +218,23 @@ class _UbahKataSandiScreenState extends State<UbahKataSandiScreen> {
                 const SizedBox(height: 12),
 
                 // Password Strength Meter
-                Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: cCardBg,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                CapseeCard(
                   child: Column(
                     children: [
                       Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: [
-                          const Text(
+                          Text(
                             'Kekuatan Kata Sandi',
-                            style: TextStyle(fontSize: 11, color: cTextBody),
+                            style: AppText.caption(context),
                           ),
                           Text(
                             _pwdStrengthText,
-                            style: TextStyle(
-                              fontSize: 11,
+                            style: AppText.caption(context).copyWith(
                               fontWeight: FontWeight.bold,
-                              color: _strengthLevel >= 2 ? cPrimaryGreen : AppColors.warning,
+                              color: _strengthLevel >= 2
+                                  ? p.accent
+                                  : AppColors.warning,
                             ),
                           ),
                         ],
@@ -303,49 +272,34 @@ class _UbahKataSandiScreenState extends State<UbahKataSandiScreen> {
                   onToggleObscure: () => setState(() => _obscureConfirm = !_obscureConfirm),
                 ),
                 const SizedBox(height: 6),
-                const Padding(
-                  padding: EdgeInsets.only(left: 4.0),
+                Padding(
+                  padding: const EdgeInsets.only(left: 4.0),
                   child: Text(
                     'Ketik ulang kata sandi baru untuk memastikan kesesuaian.',
-                    style: TextStyle(fontSize: 11, fontFamily: 'PlusJakartaSans', color: cTextBody),
+                    style: AppText.caption(context),
                   ),
                 ),
                 const SizedBox(height: 24),
 
                 // Auto Protection Info
-                Container(
-                  padding: const EdgeInsets.all(16),
-                  decoration: BoxDecoration(
-                    color: cCardBg,
-                    borderRadius: BorderRadius.circular(12),
-                  ),
+                CapseeCard(
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.verified_user, color: cPrimaryGreen, size: 24),
-                      const SizedBox(width: 12),
+                      Icon(Icons.verified_user, color: p.accent, size: 24),
+                      const SizedBox(width: AppSpace.gapMd),
                       Expanded(
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            const Text(
+                            Text(
                               'Perlindungan Akun Otomatis',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontFamily: 'PlusJakartaSans',
-                                fontWeight: FontWeight.bold,
-                                color: cTextTitle,
-                              ),
+                              style: AppText.subtitle(context),
                             ),
                             const SizedBox(height: 4),
-                            const Text(
+                            Text(
                               'Demi keamanan akun Capsee Anda, setelah mengganti kata sandi, sesi aktif di perangkat lain akan tetap aman atau dapat ditinjau ulang pada menu Sesi Masuk.',
-                              style: TextStyle(
-                                fontSize: 12,
-                                fontFamily: 'PlusJakartaSans',
-                                color: cTextBody,
-                                height: 1.4,
-                              ),
+                              style: AppText.bodySm(context),
                             ),
                           ],
                         ),
@@ -360,27 +314,33 @@ class _UbahKataSandiScreenState extends State<UbahKataSandiScreen> {
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton(
-                    onPressed: () {
-                      // Save password logic
-                    },
+                    onPressed: _isSaving ? null : _simpan,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: cPrimaryGreen,
+                      backgroundColor: p.primary,
+                      foregroundColor: p.onPrimary,
                       elevation: 0,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                              AppSpace.radiusTile)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
-                      children: const [
-                        Icon(Icons.check_circle_outline, color: Colors.white, size: 22),
-                        SizedBox(width: 8),
+                      children: [
+                        if (_isSaving)
+                          SizedBox(
+                            width: 20,
+                            height: 20,
+                            child: CircularProgressIndicator(
+                              color: p.onPrimary,
+                              strokeWidth: 2,
+                            ),
+                          )
+                        else
+                          Icon(Icons.check_circle_outline, color: p.onPrimary, size: 22),
+                        const SizedBox(width: 8),
                         Text(
-                          'Simpan Kata Sandi',
-                          style: TextStyle(
-                            fontSize: 15,
-                            fontFamily: 'PlusJakartaSans',
-                            fontWeight: FontWeight.bold,
-                            color: Colors.white,
-                          ),
+                          _isSaving ? 'Menyimpan…' : 'Simpan Kata Sandi',
+                          style: AppText.subtitle(context, color: p.onPrimary),
                         ),
                       ],
                     ),
@@ -393,38 +353,31 @@ class _UbahKataSandiScreenState extends State<UbahKataSandiScreen> {
                   child: TextButton(
                     onPressed: () => Navigator.pop(context),
                     style: TextButton.styleFrom(
-                      backgroundColor: cCancelBtnBg,
-                      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                      backgroundColor: p.surfaceAlt,
+                      shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(
+                              AppSpace.radiusTile)),
                     ),
-                    child: const Text(
+                    child: Text(
                       'Batal',
-                      style: TextStyle(
-                        color: cTextTitle,
-                        fontSize: 15,
-                        fontFamily: 'PlusJakartaSans',
-                        fontWeight: FontWeight.bold,
-                      ),
+                      style: AppText.subtitle(context),
                     ),
                   ),
                 ),
                 const SizedBox(height: 24),
-                
+
                 // Footer Logo
                 Center(
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      Icon(Icons.eco_outlined, color: AppColors.hint, size: 16),
+                      Icon(Icons.eco_outlined, color: p.hint, size: 16),
                       const SizedBox(width: 4),
                       Text(
                         'CAPSEE AGRO SECURITY\nSTANDARD',
                         textAlign: TextAlign.center,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: AppColors.icon,
-                          height: 1.2,
-                        ),
+                        style: AppText.overline(context, color: p.icon)
+                            .copyWith(height: 1.2),
                       )
                     ],
                   ),
@@ -437,22 +390,51 @@ class _UbahKataSandiScreenState extends State<UbahKataSandiScreen> {
     );
   }
 
+  Future<void> _simpan() async {
+    if (_currentPwdController.text.isEmpty ||
+        _newPwdController.text.length < 8) {
+      showErrorPopup(
+        context,
+        'Isi sandi lama dan sandi baru (min. 8 karakter).',
+      );
+      return;
+    }
+    if (_newPwdController.text != _confirmPwdController.text) {
+      showErrorPopup(context, 'Konfirmasi sandi baru tidak cocok.');
+      return;
+    }
+    setState(() => _isSaving = true);
+    try {
+      await gantiSandi(
+        sandiLama: _currentPwdController.text,
+        sandiBaru: _newPwdController.text,
+      );
+      if (!mounted) return;
+      showSuccessPopup(context, 'Kata sandi berhasil diperbarui.');
+      Navigator.maybePop(context);
+    } catch (e) {
+      if (!mounted) return;
+      showErrorPopup(context, 'Gagal menyimpan: ${pesanError(e)}');
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
+  }
+
   Widget _buildLabel(String text, {bool isRequired = false}) {
+    final p = context.palette;
     return Padding(
       padding: const EdgeInsets.only(bottom: 8.0),
       child: Row(
         children: [
           Text(
             text,
-            style: const TextStyle(
-              fontSize: 12,
-              fontFamily: 'PlusJakartaSans',
-              fontWeight: FontWeight.w700,
-              color: cLabelColor,
-            ),
+            style: AppText.bodySm(context, color: p.subtitle)
+                .copyWith(fontWeight: FontWeight.w700),
           ),
           if (isRequired)
-            const Text(' *', style: TextStyle(color: AppColors.error, fontWeight: FontWeight.bold)),
+            Text(' *',
+                style: AppText.bodySm(context, color: p.error)
+                    .copyWith(fontWeight: FontWeight.bold)),
         ],
       ),
     );
@@ -465,25 +447,26 @@ class _UbahKataSandiScreenState extends State<UbahKataSandiScreen> {
     required bool isObscure,
     required VoidCallback onToggleObscure,
   }) {
+    final p = context.palette;
     return Container(
       height: 54,
       decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: cInputBorder),
+        color: p.surface,
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+        border: Border.all(color: p.border),
       ),
       child: TextFormField(
         controller: controller,
         obscureText: isObscure,
-        style: const TextStyle(fontSize: 15, fontFamily: 'PlusJakartaSans', color: cTextTitle),
+        style: AppText.body(context, color: p.title),
         decoration: InputDecoration(
           hintText: hintText,
-          hintStyle: const TextStyle(color: Colors.black38),
-          prefixIcon: Icon(prefixIcon, color: Colors.black54, size: 22),
+          hintStyle: AppText.body(context, color: p.subtitle),
+          prefixIcon: Icon(prefixIcon, color: p.subtitle, size: 22),
           suffixIcon: IconButton(
             icon: Icon(
               isObscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
-              color: Colors.black45,
+              color: p.subtitle,
               size: 22,
             ),
             onPressed: onToggleObscure,
@@ -496,13 +479,14 @@ class _UbahKataSandiScreenState extends State<UbahKataSandiScreen> {
   }
 
   Widget _buildStrengthBar(int index) {
+    final p = context.palette;
     Color barColor;
     if (index <= _strengthLevel) {
        // Green if filled
-       barColor = cPrimaryGreen;
+       barColor = p.primary;
     } else {
        // Light grey/blue if unfilled
-       barColor = AppColors.border; 
+       barColor = p.border;
     }
 
     return Expanded(
@@ -517,23 +501,21 @@ class _UbahKataSandiScreenState extends State<UbahKataSandiScreen> {
   }
 
   Widget _buildRuleItem(String text, bool isMet) {
+    final p = context.palette;
     return Padding(
       padding: const EdgeInsets.only(bottom: 6.0),
       child: Row(
         children: [
           Icon(
             isMet ? Icons.check_circle : Icons.radio_button_unchecked,
-            color: isMet ? cPrimaryGreen : AppColors.hint,
+            color: isMet ? p.accent : p.hint,
             size: 20,
           ),
           const SizedBox(width: 8),
           Text(
             text,
-            style: TextStyle(
-              fontSize: 12,
-              fontFamily: 'PlusJakartaSans',
-              color: isMet ? cTextTitle : cTextBody,
-            ),
+            style: AppText.bodySm(
+                context, color: isMet ? p.title : p.subtitle),
           ),
         ],
       ),

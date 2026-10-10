@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import '../core/app_colors.dart';
 import '../core/app_info.dart';
+import '../core/app_text.dart';
+import '../core/app_theme.dart';
+import 'ui_kit.dart';
 
 /// ---------------------------------------------------------------
 /// Kerangka halaman auth: background terang + scroll + center.
@@ -13,12 +14,13 @@ class AuthScaffold extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: p.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+            padding: const EdgeInsets.all(AppSpace.page),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: child,
@@ -39,6 +41,7 @@ class AuthTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return SizedBox(
       height: 44,
       child: Stack(
@@ -53,25 +56,21 @@ class AuthTopBar extends StatelessWidget {
                   width: 38,
                   height: 38,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: p.surface,
                     shape: BoxShape.circle,
-                    border: Border.all(color: AppColors.border),
+                    border: Border.all(color: p.border),
                   ),
-                  child: const Icon(
+                  child: Icon(
                     Icons.arrow_back_ios_new_rounded,
                     size: 16,
-                    color: AppColors.title,
+                    color: p.title,
                   ),
                 ),
               ),
             ),
           Text(
             AppInfo.name,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: AppColors.primary,
-            ),
+            style: AppText.display(context, color: p.accent),
           ),
         ],
       ),
@@ -91,12 +90,13 @@ class CapseeLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final scale = size / 88;
     if (onPrimary) {
       return Icon(
         Icons.eco_rounded,
         size: size * 0.75,
-        color: Colors.white,
+        color: p.onPrimary,
       );
     }
     return Container(
@@ -104,25 +104,25 @@ class CapseeLogo extends StatelessWidget {
       height: size,
       padding: EdgeInsets.all(10 * scale),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: p.surface,
         borderRadius: BorderRadius.circular(22 * scale),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: AppColors.primaryShadow,
+            color: p.shadow,
             blurRadius: 24,
-            offset: Offset(0, 8),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
       child: Container(
         decoration: BoxDecoration(
-          color: AppColors.primarySoft,
+          color: p.accentSoft,
           borderRadius: BorderRadius.circular(16 * scale),
         ),
         child: Icon(
           Icons.eco_rounded,
           size: 40 * scale,
-          color: AppColors.primary,
+          color: p.onAccentSoft,
         ),
       ),
     );
@@ -136,22 +136,7 @@ class AuthCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: const [
-          BoxShadow(
-            color: AppColors.shadow,
-            blurRadius: 24,
-            offset: Offset(0, 10),
-          ),
-        ],
-      ),
-      child: child,
-    );
+    return CapseeCard(child: child);
   }
 }
 
@@ -168,22 +153,14 @@ class AuthHeader extends StatelessWidget {
         Text(
           title,
           textAlign: TextAlign.center,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            color: AppColors.title,
-          ),
+          style: AppText.display(context),
         ),
         if (subtitle != null) ...[
           const SizedBox(height: 8),
           Text(
             subtitle!,
             textAlign: TextAlign.center,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
-              height: 1.4,
-              color: AppColors.subtitle,
-            ),
+            style: AppText.body(context),
           ),
         ],
       ],
@@ -198,13 +175,10 @@ class FieldLabel extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Text(
       text,
-      style: GoogleFonts.plusJakartaSans(
-        fontSize: 13.5,
-        fontWeight: FontWeight.w700,
-        color: AppColors.title,
-      ),
+      style: AppText.subtitle(context).copyWith(color: p.subtitle),
     );
   }
 }
@@ -230,28 +204,29 @@ class PrimaryButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return SizedBox(
       width: double.infinity,
       height: 52,
       child: ElevatedButton(
         onPressed: isLoading ? null : onPressed,
         style: ElevatedButton.styleFrom(
-          backgroundColor: AppColors.primary,
-          foregroundColor: Colors.white,
-          disabledBackgroundColor: AppColors.primaryDisabled,
-          disabledForegroundColor: Colors.white,
+          backgroundColor: p.primary,
+          foregroundColor: p.onPrimary,
+          disabledBackgroundColor: p.primary.withValues(alpha: 0.6),
+          disabledForegroundColor: p.onPrimary,
           elevation: 0,
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(radius),
           ),
         ),
         child: isLoading
-            ? const SizedBox(
+            ? SizedBox(
                 width: 22,
                 height: 22,
                 child: CircularProgressIndicator(
                   strokeWidth: 2.5,
-                  color: Colors.white,
+                  color: p.onPrimary,
                 ),
               )
             : Row(
@@ -265,10 +240,8 @@ class PrimaryButton extends StatelessWidget {
                   Flexible(
                     child: Text(
                       label,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: AppText.subtitle(context)
+                          .copyWith(color: p.onPrimary),
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                     ),
@@ -292,6 +265,7 @@ class SocialButton extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return GestureDetector(
       onTap: onPressed,
       child: Container(
@@ -299,14 +273,14 @@ class SocialButton extends StatelessWidget {
         height: 52,
         alignment: Alignment.center,
         decoration: BoxDecoration(
-          color: Colors.white,
+          color: p.surface,
           shape: BoxShape.circle,
-          border: Border.all(color: AppColors.border),
-          boxShadow: const [
+          border: Border.all(color: p.border),
+          boxShadow: [
             BoxShadow(
-              color: AppColors.shadow,
+              color: p.shadow,
               blurRadius: 10,
-              offset: Offset(0, 4),
+              offset: const Offset(0, 4),
             ),
           ],
         ),
@@ -321,14 +295,12 @@ class GoogleIcon extends StatelessWidget {
   const GoogleIcon({super.key, this.size = 22});
 
   final double size;
-
   @override
   Widget build(BuildContext context) {
     return Text(
       'G',
-      style: GoogleFonts.plusJakartaSans(
+      style: AppText.title(context).copyWith(
         fontSize: size,
-        fontWeight: FontWeight.w800,
         color: const Color(0xFF4285F4),
       ),
     );
@@ -342,45 +314,41 @@ class OrDivider extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Text(
       text,
       textAlign: TextAlign.center,
-      style: GoogleFonts.plusJakartaSans(
-        fontSize: 13,
-        color: AppColors.hint,
-      ),
+      style: AppText.body(context, color: p.hint),
     );
   }
 }
 
 /// Dekorasi input: field abu-abu terisi, tanpa border tebal.
-InputDecoration capseeInputDecoration({
+InputDecoration capseeInputDecoration(
+  BuildContext context, {
   String? hint,
   IconData? prefixIcon,
   Widget? suffix,
 }) {
+  final p = context.palette;
   OutlineInputBorder border(Color color, {double width = 1}) =>
       OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
         borderSide: BorderSide(color: color, width: width),
       );
 
   return InputDecoration(
     hintText: hint,
-    hintStyle: GoogleFonts.plusJakartaSans(
-      fontSize: 15,
-      color: AppColors.hint,
-    ),
-    prefixIcon: prefixIcon != null
-        ? Icon(prefixIcon, color: AppColors.icon)
-        : null,
+    hintStyle: AppText.body(context, color: p.hint),
+    prefixIcon:
+        prefixIcon != null ? Icon(prefixIcon, color: p.icon) : null,
     suffixIcon: suffix,
     filled: true,
-    fillColor: AppColors.fieldFill,
+    fillColor: p.surfaceAlt,
     contentPadding: const EdgeInsets.symmetric(vertical: 16, horizontal: 16),
-    enabledBorder: border(Colors.transparent),
-    focusedBorder: border(AppColors.primary, width: 1.5),
-    errorBorder: border(AppColors.error),
-    focusedErrorBorder: border(AppColors.error, width: 1.5),
+    enabledBorder: border(const Color(0x00000000)),
+    focusedBorder: border(p.primary, width: 1.5),
+    errorBorder: border(p.error),
+    focusedErrorBorder: border(p.error, width: 1.5),
   );
 }

@@ -1,12 +1,14 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/app_colors.dart';
+import '../../core/app_text.dart';
+import '../../core/app_theme.dart';
 import '../../core/app_info.dart';
+import '../../services/services.dart';
 import '../../widgets/auth_widgets.dart';
 import '../auth/register_screen.dart';
+import '../home/dashboard_screen.dart';
 
 /// Layar pembuka: logo, nama aplikasi, indikator loading, dan versi
 /// sebelum masuk ke alur utama.
@@ -41,8 +43,18 @@ class _SplashScreenState extends State<SplashScreen>
     _timer = Timer(_splashDuration, _lanjut);
   }
 
-  void _lanjut() {
+  void _lanjut() async {
     if (!mounted) return;
+    // Kalau sudah ada token, langsung ke dashboard agar tidak login ulang
+    // di tiap buka aplikasi (khusus HP).
+    final login = await sudahLogin();
+    if (!mounted) return;
+    if (login) {
+      Navigator.of(context).pushReplacement(
+        MaterialPageRoute(builder: (_) => const DashboardScreen()),
+      );
+      return;
+    }
     Navigator.of(context).pushReplacement(
       MaterialPageRoute(builder: (_) => const RegisterScreen()),
     );
@@ -57,8 +69,9 @@ class _SplashScreenState extends State<SplashScreen>
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Scaffold(
-      backgroundColor: AppColors.primary,
+      backgroundColor: p.primary,
       body: Stack(
         fit: StackFit.expand,
         children: [
@@ -76,21 +89,17 @@ class _SplashScreenState extends State<SplashScreen>
                         const SizedBox(height: 26),
                         Text(
                           AppInfo.name,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 34,
-                            fontWeight: FontWeight.w800,
-                            color: Colors.white,
-                          ),
+                          style: AppText.display(context, color: p.onPrimary)
+                              .copyWith(fontSize: 34),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           AppInfo.tagline,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
-                            color: Colors.white70,
-                          ),
+                          style: AppText.body(context,
+                                  color: p.onPrimary.withValues(alpha: 0.7))
+                              .copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5),
                         ),
                       ],
                     ),
@@ -99,12 +108,12 @@ class _SplashScreenState extends State<SplashScreen>
                 const Spacer(),
                 FadeTransition(
                   opacity: _fade,
-                  child: const SizedBox(
+                  child: SizedBox(
                     width: 26,
                     height: 26,
                     child: CircularProgressIndicator(
                       strokeWidth: 2.6,
-                      color: Colors.white,
+                      color: p.onPrimary,
                     ),
                   ),
                 ),
@@ -115,11 +124,9 @@ class _SplashScreenState extends State<SplashScreen>
                     opacity: _fade,
                     child: Text(
                       'Versi ${AppInfo.version}',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: Colors.white70,
-                      ),
+                      style: AppText.bodySm(context,
+                              color: p.onPrimary.withValues(alpha: 0.7))
+                          .copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),

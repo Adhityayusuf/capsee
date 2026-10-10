@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS pengguna (
   nama VARCHAR NOT NULL,
   email VARCHAR NOT NULL UNIQUE,
   nomor_hp VARCHAR,
-  kata_sandi_hash TEXT NOT NULL,
+  kata_sandi_hash TEXT,
+  google_id VARCHAR UNIQUE,
   dibuat_pada TIMESTAMPTZ NOT NULL DEFAULT now(),
   diperbarui_pada TIMESTAMPTZ NOT NULL DEFAULT now()
 );
@@ -39,7 +40,8 @@ CREATE TABLE IF NOT EXISTS lahan (
   umur_tanaman_bulan SMALLINT NOT NULL CHECK (umur_tanaman_bulan BETWEEN 1 AND 5),
   tanggal_terakhir_siram DATE,
   tanggal_terakhir_pupuk DATE,
-  interval_pupuk_minggu SMALLINT NOT NULL CHECK (interval_pupuk_minggu IN (1, 2)),
+  interval_pupuk_minggu SMALLINT NOT NULL CHECK (interval_pupuk_minggu BETWEEN 1 AND 12),
+  interval_siram_minggu SMALLINT NOT NULL DEFAULT 1 CHECK (interval_siram_minggu BETWEEN 1 AND 12),
   status_kesehatan VARCHAR NOT NULL DEFAULT 'belum_discan'
     CHECK (status_kesehatan IN ('sehat', 'tidak_sehat', 'belum_discan')),
   dibuat_pada TIMESTAMPTZ NOT NULL DEFAULT now(),
@@ -123,11 +125,26 @@ CREATE TABLE IF NOT EXISTS jadwal_pemupukan (
   dibuat_pada TIMESTAMPTZ NOT NULL DEFAULT now()
 );
 
+-- ── Jadwal kegiatan manual (nama + tanggal + deskripsi) ──
+CREATE TABLE IF NOT EXISTS jadwal_kegiatan (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  id_lahan UUID NOT NULL REFERENCES lahan(id) ON DELETE CASCADE,
+  nama_kegiatan VARCHAR(150) NOT NULL CHECK (char_length(btrim(nama_kegiatan)) > 0),
+  deskripsi TEXT,
+  tanggal_jadwal DATE NOT NULL,
+  status VARCHAR NOT NULL DEFAULT 'pending'
+    CHECK (status IN ('pending', 'selesai')),
+  selesai_pada TIMESTAMPTZ,
+  dibuat_pada TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_jadwal_kegiatan_id_lahan ON jadwal_kegiatan (id_lahan);
+CREATE INDEX IF NOT EXISTS idx_jadwal_kegiatan_tanggal ON jadwal_kegiatan (tanggal_jadwal);
+
 CREATE TABLE IF NOT EXISTS log_aktivitas (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   id_lahan UUID NOT NULL REFERENCES lahan(id) ON DELETE CASCADE,
   jenis_aktivitas VARCHAR NOT NULL
-    CHECK (jenis_aktivitas IN ('scan', 'siram', 'pupuk', 'peringatan')),
+    CHECK (jenis_aktivitas IN ('scan', 'siram', 'pupuk', 'peringatan', 'kegiatan_lain')),
   id_referensi UUID,
   deskripsi TEXT NOT NULL,
   terjadi_pada TIMESTAMPTZ NOT NULL DEFAULT now(),
