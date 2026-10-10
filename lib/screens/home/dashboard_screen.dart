@@ -1,4 +1,3 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
@@ -7,6 +6,7 @@ import '../../core/app_colors.dart';
 import '../../core/app_theme.dart';
 import '../../core/theme_mode_scope.dart';
 import '../../models/land_data.dart';
+import '../../widgets/popup_notifikasi.dart';
 import '../akun/akun_screen.dart';
 import '../lahan/detail_lahan_screen.dart';
 import '../lahan/lahan_page.dart';
@@ -26,7 +26,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _tab = 0;
   final ImagePicker _picker = ImagePicker();
-  final List<ScanHistoryItem> _scanHistory = [];
+  List<ScanHistoryItem> _scanHistory = [];
 
   Map<String, dynamic>? _profil;
   List<Map<String, dynamic>>? _lahanList;
@@ -43,17 +43,46 @@ class _DashboardScreenState extends State<DashboardScreen> {
     try {
       final profil = await getProfil();
       final lahanList = await getDaftarLahan();
+      // Ambil riwayat scan dari SEMUA lahan (bukan list lokal kosong).
+      // Satu lahan gagal tidak menggagalkan yang lain.
+      final List<ScanHistoryItem> history = [];
+      for (final lahan in lahanList) {
+        final id = (lahan['id'] ?? '').toString();
+        if (id.isEmpty) continue;
+        try {
+          final riwayat = await getRiwayatScan(id);
+          for (final s in riwayat) {
+            final waktu =
+                DateTime.tryParse((s['dipindai_pada'] ?? '').toString()) ??
+                DateTime.now();
+            history.add(
+              ScanHistoryItem(
+                imagePath: '',
+                scannedAt: waktu,
+                idScan: (s['id'] ?? '').toString(),
+                idLahan: id,
+                urlGambar: (s['url_gambar'] ?? '').toString(),
+                statusHasil: (s['status_hasil'] ?? '').toString(),
+              ),
+            );
+          }
+        } catch (_) {
+          // Lewati lahan yang gagal dimuat, lanjut ke lahan berikut.
+        }
+      }
+      history.sort((a, b) => b.scannedAt.compareTo(a.scannedAt));
       if (mounted) {
         setState(() {
           _profil = profil;
           _lahanList = lahanList;
+          _scanHistory = history;
           _isLoading = false;
         });
       }
     } catch (e) {
       if (mounted) {
         setState(() => _isLoading = false);
-        _message('Gagal memuat data: $e');
+        _message('Gagal memuat data: ${pesanError(e)}');
       }
     }
   }
@@ -62,7 +91,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final pages = [
       _buildDashboard(),
-      RiwayatScanScreen(items: _scanHistory, onScan: _openScan),
+      RiwayatScanScreen(items: _scanHistory, onScan: () => _openScan()),
       const LahanPage(),
       const NotifikasiScreen(),
       const AkunScreen(),
@@ -75,7 +104,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         onSelected: (index) {
           setState(() => _tab = index == 3 ? 4 : index);
         },
-        onScan: _openScan,
+        onScan: () => _openScan(),
       ),
     );
   }
@@ -132,19 +161,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         ),
                       ),
                     )
-                  else
-                    for (final landMap in _lahanList!) ...[
+                  else ...[
+                    // Hanya 3 terbaru di dashboard (backend sudah urut terbaru dulu).
+                    for (final landMap in _lahanList!.take(3)) ...[
                       _landCard(landMap),
                       const SizedBox(height: 14),
                     ],
-                  OutlinedButton.icon(
-                    onPressed: _addLand,
-                    icon: const Icon(Icons.add_circle_outline_rounded),
-                    label: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                      child: Text('Tambah Lahan Baru'),
+                    SizedBox(
+                      width: double.infinity,
+                      child: OutlinedButton.icon(
+                        onPressed: () => setState(() => _tab = 2),
+                        icon: const Icon(
+                          Icons.add_location_alt_rounded,
+                          size: 19,
+                        ),
+                        label: Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 12),
+                          child: Text(
+                            _lahanList!.length > 3
+                                ? 'Lihat Semua ${_lahanList!.length} Lahan'
+                                : 'Buka Halaman Lahan',
+                          ),
+                        ),
+                      ),
                     ),
-                  ),
+                  ],
                 ]),
               ),
             ),
@@ -490,7 +531,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: FilledButton.icon(
-                    onPressed: _openScan,
+                    onPressed: () => _openScan(lahanTetap: land),
                     icon: const Icon(Icons.photo_camera_rounded, size: 17),
                     label: Text(warning ? 'Scan' : 'Scan'),
                   ),
@@ -512,18 +553,69 @@ class _DashboardScreenState extends State<DashboardScreen> {
     child: Text(label, style: _style(10, foreground, FontWeight.w700)),
   );
 
-  Future<void> _openScan() async {
+  /// WAJIB pilih lahan dulu SEBELUM buka kamera.
+  /// Kalau user batal pilih → return null, tidak ada foto diambil,
+  /// tidak ada upload ke Cloudinary.
+  Future<Map<String, dynamic>?> _pilihLahanUntukScan() async {
+    final list = _lahanList ?? [];
+    if (list.isEmpty) return null;
+    if (list.length == 1) return list.first;
+    return showDialog<Map<String, dynamic>>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Pilih Lahan untuk Scan'),
+        content: SizedBox(
+          width: double.maxFinite,
+          child: ListView.separated(
+            shrinkWrap: true,
+            itemCount: list.length,
+            separatorBuilder: (_, _) => const Divider(height: 1),
+            itemBuilder: (_, i) {
+              final land = list[i];
+              return ListTile(
+                dense: true,
+                leading: const Icon(Icons.eco_rounded),
+                title: Text((land['nama'] ?? 'Lahan').toString()),
+                subtitle: Text(
+                  '${land['kecamatan'] ?? ''}, ${land['kota'] ?? ''}',
+                ),
+                onTap: () => Navigator.of(ctx).pop(land),
+              );
+            },
+          ),
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(ctx).pop(),
+            child: const Text('Batal'),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openScan({Map<String, dynamic>? lahanTetap}) async {
     if (_lahanList == null || _lahanList!.isEmpty) {
-      _message('Buat lahan terlebih dahulu sebelum melakukan scan.');
+      if (mounted) showInfoPopup(context, 'Buat lahan terlebih dahulu sebelum melakukan scan.');
+      return;
+    }
+
+    // Kalau dipanggil dari kartu lahan tertentu, pakai lahan itu langsung
+    // tanpa dialog pilih (tetap wajib ada id).
+    Map<String, dynamic>? target = lahanTetap;
+    // 1. Pilih lahan dulu. Batal = berhenti, jangan buka kamera/upload.
+    target ??= await _pilihLahanUntukScan();
+    if (target == null || !mounted) return;
+    final String idLahanTarget = (target['id'] ?? '').toString();
+    if (idLahanTarget.isEmpty) {
+      showErrorPopup(context, 'Lahan belum tersinkron. Pilih lahan lain.');
       return;
     }
 
     try {
+      // 2. Baru buka kamera setelah lahan jelas.
       final picked = await _picker.pickImage(source: ImageSource.camera);
       if (picked == null || !mounted) return;
-
-      // Ambil ID lahan pertama sebagai target scan (untuk testing dari dashboard)
-      final String idLahanTarget = _lahanList!.first['id'];
 
       // Tampilkan loading dialog
       showDialog(
@@ -533,8 +625,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
 
       // Panggil backend: ini akan otomatis kompres, upload ke Cloudinary, dan simpan ke DB!
-      final res = await uploadScan(
-        file: File(picked.path),
+      await uploadScan(
+        file: picked,
         idLahan: idLahanTarget,
         bagianTanaman: 'daun', // Default dari dashboard
       );
@@ -542,7 +634,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       if (!mounted) return;
       Navigator.of(context).pop(); // Tutup loading
 
-      _message('Upload berhasil! URL Cloudinary tersimpan di Neon.');
+      if (mounted) showSuccessPopup(context, 'Upload berhasil! Hasil scan tersimpan di database.');
 
       // Buka halaman hasil statis (tampilannya masih statis, tapi datanya sudah masuk DB)
       await Navigator.of(context).push(
@@ -553,8 +645,9 @@ class _DashboardScreenState extends State<DashboardScreen> {
       _loadData();
     } catch (e) {
       if (!mounted) return;
-      Navigator.of(context).pop(); // Tutup loading
-      _message('Gagal melakukan scan atau upload: $e');
+      // Tutup loading kalau masih terbuka (jangan pop halaman dashboard).
+      if (Navigator.of(context).canPop()) Navigator.of(context).pop();
+      showErrorPopup(context, 'Gagal melakukan scan atau upload: ${pesanError(e)}');
     }
   }
 
@@ -595,9 +688,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         .then((_) => _loadData()); // Muat ulang setelah kembali dari detail
   }
 
-  void _message(String message) => ScaffoldMessenger.of(
-    context,
-  ).showSnackBar(SnackBar(content: Text(message)));
+  void _message(String message) {
+    if (!mounted) return;
+    showInfoPopup(context, message);
+  }
 }
 
 TextStyle _style(

@@ -16,6 +16,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/app_colors.dart';
+import '../../core/app_theme.dart';
 
 // ─────────────────────────── Token tambahan (alias ke AppColors) ───────────────────────────
 class _P {
@@ -49,10 +50,6 @@ TextStyle _ts(double size, double height, FontWeight w, Color color,
       letterSpacing: letterSpacing,
       fontStyle: fontStyle,
     );
-
-const _softShadow = [
-  BoxShadow(color: AppColors.shadow, blurRadius: 3, offset: Offset(0, 1)),
-];
 
 // ─────────────────────────── Data langkah ───────────────────────────
 const _chipLabels = ['1. Lahan', '2. Pindai', '3. Jadwal', '4. Notifikasi'];
@@ -135,7 +132,7 @@ class _PanduanScreenState extends State<PanduanScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: C.surface,
+      backgroundColor: context.palette.background,
       appBar: _buildAppBar(context),
       body: SingleChildScrollView(
         controller: _scroll,
@@ -173,10 +170,10 @@ class _PanduanScreenState extends State<PanduanScreen> {
       preferredSize: const Size.fromHeight(64),
       child: Container(
         decoration: BoxDecoration(
-          color: C.surface.withValues(alpha: 0.95),
-          boxShadow: const [
+          color: context.palette.surface.withValues(alpha: 0.95),
+          boxShadow: [
             BoxShadow(
-                color: AppColors.shadow, blurRadius: 8, offset: Offset(0, 1)),
+                color: context.palette.shadow, blurRadius: 8, offset: const Offset(0, 1)),
           ],
         ),
         child: SafeArea(
@@ -190,8 +187,8 @@ class _PanduanScreenState extends State<PanduanScreen> {
                   IconButton(
                     tooltip: 'Kembali',
                     onPressed: () => Navigator.maybePop(context),
-                    icon: const Icon(Icons.arrow_back,
-                        size: 24, color: C.onSurfaceVariant),
+                    icon: Icon(Icons.arrow_back,
+                        size: 24, color: context.palette.subtitle),
                     style: IconButton.styleFrom(
                         minimumSize: const Size(44, 44),
                         shape: const CircleBorder()),
@@ -200,7 +197,7 @@ class _PanduanScreenState extends State<PanduanScreen> {
                   Expanded(
                     child: Text('Panduan Cara Kerja',
                         overflow: TextOverflow.ellipsis,
-                        style: _ts(18, 24, FontWeight.w600, C.onSurface,
+                        style: _ts(18, 24, FontWeight.w600, context.palette.title,
                             letterSpacing: -0.2)),
                   ),
                   TextButton(
@@ -210,16 +207,16 @@ class _PanduanScreenState extends State<PanduanScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                     ),
                     child: Text('Lewati',
-                        style: _ts(12, 16, FontWeight.w600, C.primary)),
+                        style: _ts(12, 16, FontWeight.w600, context.palette.accent)),
                   ),
                   const SizedBox(width: 4),
                   Container(
                     width: 32,
                     height: 32,
-                    decoration: const BoxDecoration(
-                        color: C.primary, shape: BoxShape.circle),
+                    decoration: BoxDecoration(
+                        color: context.palette.primary, shape: BoxShape.circle),
                     child:
-                        const Icon(Icons.person, size: 18, color: C.onPrimary),
+                        Icon(Icons.person, size: 18, color: context.palette.onPrimary),
                   ),
                 ],
               ),
@@ -248,8 +245,8 @@ class _PanduanScreenState extends State<PanduanScreen> {
                   width: i == _step ? 28 : 8,
                   decoration: BoxDecoration(
                     color: i == _step
-                        ? C.primaryContainer
-                        : C.surfaceHighest,
+                        ? context.palette.primary
+                        : context.palette.surfaceAlt,
                     borderRadius: BorderRadius.circular(999),
                   ),
                 ),
@@ -262,7 +259,7 @@ class _PanduanScreenState extends State<PanduanScreen> {
               ? 'Langkah 4 dari 4 (Selesai)'
               : 'Langkah ${_step + 1} dari $_total',
           style: _ts(10, 14, isLast ? FontWeight.w600 : FontWeight.w700,
-              isLast ? C.primary : C.onSurfaceVariant),
+              isLast ? context.palette.accent : context.palette.subtitle),
         ),
       ],
     );
@@ -275,7 +272,7 @@ class _PanduanScreenState extends State<PanduanScreen> {
       children: [
         // Tombol utama
         Material(
-          color: C.primaryContainer,
+          color: context.palette.primary,
           borderRadius: BorderRadius.circular(12),
           elevation: 2,
           child: InkWell(
@@ -289,10 +286,10 @@ class _PanduanScreenState extends State<PanduanScreen> {
                   Flexible(
                     child: Text(_primaryLabels[_step],
                         overflow: TextOverflow.ellipsis,
-                        style: _ts(14, 20, FontWeight.w700, C.onPrimary)),
+                        style: _ts(14, 20, FontWeight.w700, context.palette.onPrimary)),
                   ),
                   const SizedBox(width: 4),
-                  Icon(_primaryIcons[_step], size: 20, color: C.onPrimary),
+                  Icon(_primaryIcons[_step], size: 20, color: context.palette.onPrimary),
                 ],
               ),
             ),
@@ -303,10 +300,10 @@ class _PanduanScreenState extends State<PanduanScreen> {
           Center(
             child: TextButton.icon(
               onPressed: () => _goTo(_step - 1),
-              icon: const Icon(Icons.arrow_back,
-                  size: 18, color: C.onSurfaceVariant),
+              icon: Icon(Icons.arrow_back,
+                  size: 18, color: context.palette.subtitle),
               label: Text('Kembali',
-                  style: _ts(12, 16, FontWeight.w600, C.onSurfaceVariant)),
+                  style: _ts(12, 16, FontWeight.w600, context.palette.subtitle)),
             ),
           ),
       ],
@@ -318,21 +315,21 @@ class _PanduanScreenState extends State<PanduanScreen> {
       mainAxisAlignment: MainAxisAlignment.center,
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Padding(
-          padding: EdgeInsets.only(top: 1),
-          child: Icon(Icons.info_outline, size: 16, color: C.outline),
+        Padding(
+          padding: const EdgeInsets.only(top: 1),
+          child: Icon(Icons.info_outline, size: 16, color: context.palette.icon),
         ),
         const SizedBox(width: 6),
         Flexible(
           child: Text.rich(
             TextSpan(
-              style: _ts(12, 16, FontWeight.w400, C.outline),
+              style: _ts(12, 16, FontWeight.w400, context.palette.hint),
               children: [
                 const TextSpan(
                     text: 'Panduan dapat diakses kembali kapan saja melalui menu '),
                 TextSpan(
                   text: 'Bantuan & Akun',
-                  style: _ts(12, 16, FontWeight.w600, C.onSurfaceVariant),
+                  style: _ts(12, 16, FontWeight.w600, context.palette.subtitle),
                 ),
                 const TextSpan(text: '.'),
               ],
@@ -359,28 +356,28 @@ class _StepChips extends StatelessWidget {
         children: [
           for (int i = 0; i < _chipLabels.length; i++) ...[
             if (i > 0) const SizedBox(width: 4),
-            _chip(i),
+            _chip(context, i),
           ],
         ],
       ),
     );
   }
 
-  Widget _chip(int i) {
+  Widget _chip(BuildContext context, int i) {
     final done = i < current;
     final active = i == current;
 
     Color bg;
     Color fg;
     if (active) {
-      bg = C.primaryContainer;
-      fg = C.onPrimary;
+      bg = context.palette.primary;
+      fg = context.palette.onPrimary;
     } else if (done) {
-      bg = C.surfaceHigh;
-      fg = C.primary;
+      bg = context.palette.surfaceAlt;
+      fg = context.palette.accent;
     } else {
-      bg = C.surfaceLow;
-      fg = C.onSurfaceVariant;
+      bg = context.palette.surfaceAlt;
+      fg = context.palette.subtitle;
     }
 
     return GestureDetector(
@@ -394,13 +391,13 @@ class _StepChips extends StatelessWidget {
           decoration: BoxDecoration(
             color: bg,
             borderRadius: BorderRadius.circular(999),
-            boxShadow: active ? _softShadow : null,
+            boxShadow: active ? [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))] : null,
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
             children: [
               if (done) ...[
-                const Icon(Icons.check_circle, size: 16, color: C.primary),
+                Icon(Icons.check_circle, size: 16, color: context.palette.accent),
                 const SizedBox(width: 6),
               ] else if (active) ...[
                 const _Blink(child: _Dot(color: Colors.white, size: 8)),
@@ -425,7 +422,7 @@ class _ProgressBar extends StatelessWidget {
       borderRadius: BorderRadius.circular(999),
       child: Container(
         height: 6,
-        color: C.surfaceHigh,
+        color: context.palette.surfaceAlt,
         child: AnimatedFractionallySizedBox(
           duration: const Duration(milliseconds: 400),
           curve: Curves.easeOut,
@@ -433,7 +430,7 @@ class _ProgressBar extends StatelessWidget {
           widthFactor: fraction,
           child: Container(
             decoration: BoxDecoration(
-              color: C.primary,
+              color: context.palette.accent,
               borderRadius: BorderRadius.circular(999),
             ),
           ),
@@ -470,7 +467,7 @@ class _Step1 extends StatelessWidget {
                     child: _GlassPill(
                       icon: Icons.nature,
                       text: 'GIS & Plot Telemetri',
-                      color: C.onSurface,
+                      color: context.palette.title,
                       weight: FontWeight.w600,
                     ),
                   ),
@@ -485,29 +482,29 @@ class _Step1 extends StatelessWidget {
               const SizedBox(width: 8),
               Flexible(
                 child: Text('Pemetaan Bedengan',
-                    style: _ts(12, 16, FontWeight.w600, C.onSurfaceVariant)),
+                    style: _ts(12, 16, FontWeight.w600, context.palette.subtitle)),
               ),
             ],
           ),
           const SizedBox(height: 4),
           Text('1. Daftarkan Data Lahan Cabai',
-              style: _ts(22, 28, FontWeight.w700, C.onSurface)),
+              style: _ts(22, 28, FontWeight.w700, context.palette.title)),
           const SizedBox(height: 4),
           Text(
             'Masukkan informasi petak kebun, varietas cabai, dan tanggal tanam untuk kalibrasi kebutuhan nutrisi spesifik.',
-            style: _ts(14, 20, FontWeight.w400, C.onSurfaceVariant),
+            style: _ts(14, 20, FontWeight.w400, context.palette.subtitle),
           ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: C.surfaceLow,
+              color: context.palette.surfaceAlt,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Column(
+            child: Column(
               children: [
                 _CheckRow('Input varietas & luas bedengan dalam hitungan menit'),
-                SizedBox(height: 8),
+                const SizedBox(height: 8),
                 _CheckRow('Sinkronisasi koordinat GPS & prakiraan cuaca mikro'),
               ],
             ),
@@ -527,9 +524,9 @@ class _Step2 extends StatelessWidget {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: C.surfaceLowest,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: _softShadow,
+        boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -600,12 +597,12 @@ class _Step2 extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: C.surfaceLowest.withValues(alpha: 0.9),
+                          color: context.palette.surface.withValues(alpha: 0.9),
                           borderRadius: BorderRadius.circular(999),
-                          boxShadow: _softShadow,
+                          boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
                         ),
                         child: Text('Akurasi 98.4%',
-                            style: _ts(10, 14, FontWeight.w700, C.primary)),
+                            style: _ts(10, 14, FontWeight.w700, context.palette.accent)),
                       ),
                     ],
                   ),
@@ -657,35 +654,35 @@ class _Step2 extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                const _TagPill('LANGKAH 2 • PINDAI DAUN TANAMAN',
-                    bg: _P.secondaryContainer,
-                    fg: _P.onSecondaryContainer,
+                _TagPill('LANGKAH 2 • PINDAI DAUN TANAMAN',
+                    bg: context.palette.accentSoft,
+                    fg: context.palette.onAccentSoft,
                     letterSpacing: 0.5),
                 const SizedBox(height: 16),
                 Text('2. Foto & Pindai Daun Sakit',
-                    style: _ts(22, 28, FontWeight.w700, C.onSurface,
+                    style: _ts(22, 28, FontWeight.w700, context.palette.title,
                         letterSpacing: -0.2)),
                 const SizedBox(height: 4),
                 Text(
                   'Arahkan kamera ponsel pada helai daun dengan jarak 10–15 cm di pencahayaan alami. Model AI Capsee akan mengidentifikasi patogen dan bercak daun secara instan.',
-                  style: _ts(14, 22, FontWeight.w400, C.onSurfaceVariant),
+                  style: _ts(14, 22, FontWeight.w400, context.palette.subtitle),
                 ),
                 const SizedBox(height: 14),
-                const _TipTile(
+                _TipTile(
                   icon: Icons.wb_sunny,
                   title: 'Jarak & Pencahayaan Alami',
                   body:
                       'Gunakan jarak 10–15 cm dengan sinar matahari pagi atau siang yang merata.',
                 ),
                 const SizedBox(height: 10),
-                const _TipTile(
+                _TipTile(
                   icon: Icons.coronavirus,
                   title: 'Identifikasi Otomatis Multi-Patogen',
                   body:
                       'Mendeteksi Antraknosa, Cercospora, Gemini Virus, serta defisiensi hara.',
                 ),
                 const SizedBox(height: 10),
-                const _TipTile(
+                _TipTile(
                   icon: Icons.verified,
                   title: 'Diagnosis Computer Vision Presisi',
                   body:
@@ -728,6 +725,11 @@ class _Step3 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tertiaryBlue =
+        isDark ? const Color(0xFF7DD3FC) : C.tertiary;
+    final tertiaryBg =
+        isDark ? const Color(0xFF0F2A3A) : C.tertiaryFixed;
     return _WhiteCard(
       padding: const EdgeInsets.all(16),
       child: Column(
@@ -737,7 +739,7 @@ class _Step3 extends StatelessWidget {
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
-              color: C.surfaceLow,
+              color: context.palette.surfaceAlt,
               borderRadius: BorderRadius.circular(8),
             ),
             child: Column(
@@ -749,21 +751,21 @@ class _Step3 extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: C.surfaceContainer,
+                          color: context.palette.surface,
                           borderRadius: BorderRadius.circular(999),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const Icon(Icons.cloud_sync,
-                                size: 15, color: C.tertiary),
+                            Icon(Icons.cloud_sync,
+                                size: 15, color: tertiaryBlue),
                             const SizedBox(width: 6),
                             Flexible(
                               child: Text(
                                 'Sinkron BMKG 28°C • Cerah Berawan',
                                 overflow: TextOverflow.ellipsis,
                                 style: _ts(10, 14, FontWeight.w700,
-                                    C.onSurfaceVariant),
+                                    context.palette.subtitle),
                               ),
                             ),
                           ],
@@ -771,42 +773,44 @@ class _Step3 extends StatelessWidget {
                       ),
                     ),
                     const SizedBox(width: 8),
-                    const _Dot(color: _P.secondary, size: 8),
+                    _Dot(color: context.palette.accent, size: 8),
                     const SizedBox(width: 4),
                     Text('Aktif',
-                        style: _ts(10, 14, FontWeight.w600, C.primary)),
+                        style: _ts(10, 14, FontWeight.w600, context.palette.accent)),
                   ],
                 ),
                 const SizedBox(height: 12),
                 _scheduleTile(
-                  iconBg: C.tertiaryFixed,
-                  iconColor: C.tertiary,
+                  context,
+                  iconBg: tertiaryBg,
+                  iconColor: tertiaryBlue,
                   icon: Icons.water_drop,
                   title: 'Penyiraman Pagi',
                   chip: '06.30 WIB',
-                  chipBg: C.primaryFixedDim.withValues(alpha: 0.3),
-                  chipFg: C.primary,
+                  chipBg: context.palette.accentSoft,
+                  chipFg: context.palette.onAccentSoft,
                   subtitle: 'Volume 450ml / tanaman • Drip otomatis',
-                  trailing: const Icon(Icons.check_circle,
-                      size: 22, color: C.primary),
+                  trailing: Icon(Icons.check_circle,
+                      size: 22, color: context.palette.accent),
                 ),
                 const SizedBox(height: 8),
                 _scheduleTile(
-                  iconBg: _P.secondaryContainer,
-                  iconColor: _P.onSecondaryFixedVariant,
+                  context,
+                  iconBg: context.palette.accentSoft,
+                  iconColor: context.palette.onAccentSoft,
                   icon: Icons.science,
                   title: 'Pemupukan NPK 16-16-16',
                   chip: '3 Hari Lagi',
-                  chipBg: C.tertiaryFixed.withValues(alpha: 0.4),
-                  chipFg: C.tertiary,
+                  chipBg: tertiaryBg,
+                  chipFg: tertiaryBlue,
                   subtitle: 'Fase Vegetatif Lanjut • Dosis 15g/liter',
                   trailing: Container(
                     width: 32,
                     height: 32,
-                    decoration: const BoxDecoration(
-                        color: C.surfaceContainer, shape: BoxShape.circle),
-                    child: const Icon(Icons.chevron_right,
-                        size: 18, color: C.onSurfaceVariant),
+                    decoration: BoxDecoration(
+                        color: context.palette.surfaceAlt, shape: BoxShape.circle),
+                    child: Icon(Icons.chevron_right,
+                        size: 18, color: context.palette.subtitle),
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -845,7 +849,7 @@ class _Step3 extends StatelessWidget {
                                   'Plot Cabai Rawit Merah (Blok C-2)',
                                   overflow: TextOverflow.ellipsis,
                                   style: _ts(10, 14, FontWeight.w600,
-                                      C.onPrimary,
+                                      context.palette.onPrimary,
                                       letterSpacing: 0.3),
                                 ),
                               ),
@@ -860,41 +864,43 @@ class _Step3 extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          const _TagPill('LANGKAH 3 • KALENDER & PERAWATAN PRESISI',
-              bg: Color(0x6679DB8D), fg: C.primary, letterSpacing: 0.5),
+          _TagPill('LANGKAH 3 • KALENDER & PERAWATAN PRESISI',
+              bg: context.palette.accentSoft,
+              fg: context.palette.onAccentSoft,
+              letterSpacing: 0.5),
           const SizedBox(height: 8),
           Text('Pantau Jadwal Perawatan',
-              style: _ts(22, 28, FontWeight.w700, C.onSurface,
+              style: _ts(22, 28, FontWeight.w700, context.palette.title,
                   letterSpacing: -0.2)),
           const SizedBox(height: 4),
           Text(
             'Capsee menyusun kalender penyiraman dan pemupukan presisi otomatis sesuai fase pertumbuhan tanaman cabai Anda.',
-            style: _ts(14, 22, FontWeight.w400, C.onSurfaceVariant),
+            style: _ts(14, 22, FontWeight.w400, context.palette.subtitle),
           ),
           const SizedBox(height: 12),
-          const _FeatureRow(
+          _FeatureRow(
             icon: Icons.event_repeat,
-            iconBg: C.primary,
-            iconColor: C.onPrimary,
+            iconBg: context.palette.primary,
+            iconColor: context.palette.onPrimary,
             shadow: true,
             title: 'Kalender Otomatis Cerdas',
             body:
                 'Jadwal penyiraman & pemupukan dihitung berdasarkan usia tanaman dan varietas cabai secara akurat.',
           ),
           const SizedBox(height: 8),
-          const _FeatureRow(
+          _FeatureRow(
             icon: Icons.biotech,
-            iconBg: C.surfaceHigh,
-            iconColor: C.primary,
+            iconBg: context.palette.surfaceAlt,
+            iconColor: context.palette.accent,
             title: 'Rekomendasi Dosis Pupuk',
             body:
                 'Takaran spesifik jenis pupuk organik dan anorganik untuk mencegah keracunan hara atau defisiensi mineral.',
           ),
           const SizedBox(height: 8),
-          const _FeatureRow(
+          _FeatureRow(
             icon: Icons.wb_sunny,
-            iconBg: C.tertiaryFixed,
-            iconColor: C.tertiary,
+            iconBg: tertiaryBg,
+            iconColor: tertiaryBlue,
             title: 'Penyesuaian Cuaca Real-Time',
             body:
                 'Jadwal penyiraman otomatis ditunda jika sensor mendeteksi anomali cuaca di koordinat kebun.',
@@ -904,7 +910,7 @@ class _Step3 extends StatelessWidget {
     );
   }
 
-  Widget _scheduleTile({
+  Widget _scheduleTile(BuildContext context, {
     required Color iconBg,
     required Color iconColor,
     required IconData icon,
@@ -918,9 +924,9 @@ class _Step3 extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: C.surfaceLowest,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(8),
-        boxShadow: _softShadow,
+        boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
       ),
       child: Row(
         children: [
@@ -940,7 +946,7 @@ class _Step3 extends StatelessWidget {
                     Flexible(
                       child: Text(title,
                           overflow: TextOverflow.ellipsis,
-                          style: _ts(12, 16, FontWeight.w600, C.onSurface)),
+                          style: _ts(12, 16, FontWeight.w600, context.palette.title)),
                     ),
                     const SizedBox(width: 6),
                     Container(
@@ -957,7 +963,7 @@ class _Step3 extends StatelessWidget {
                 ),
                 Text(subtitle,
                     overflow: TextOverflow.ellipsis,
-                    style: _ts(12, 16, FontWeight.w400, C.onSurfaceVariant)),
+                    style: _ts(12, 16, FontWeight.w400, context.palette.subtitle)),
               ],
             ),
           ),
@@ -975,6 +981,11 @@ class _Step4 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final tertiaryBlue =
+        isDark ? const Color(0xFF7DD3FC) : C.tertiary;
+    final tertiaryBg =
+        isDark ? const Color(0xFF0F2A3A) : C.tertiaryFixed;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -982,9 +993,9 @@ class _Step4 extends StatelessWidget {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            color: C.surfaceContainer,
+            color: context.palette.surfaceAlt,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: _softShadow,
+            boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
           ),
           child: Column(
             children: [
@@ -996,15 +1007,15 @@ class _Step4 extends StatelessWidget {
                       Container(
                         width: 28,
                         height: 28,
-                        decoration: const BoxDecoration(
-                            color: C.primaryContainer, shape: BoxShape.circle),
-                        child: const Icon(Icons.notifications_active,
-                            size: 16, color: C.onPrimary),
+                        decoration: BoxDecoration(
+                            color: context.palette.primary, shape: BoxShape.circle),
+                        child: Icon(Icons.notifications_active,
+                            size: 16, color: context.palette.onPrimary),
                       ),
                       const SizedBox(width: 4),
                       Text('PUSAT SIAGA LAPANGAN',
                           style: _ts(10, 14, FontWeight.w700,
-                              C.onSurfaceVariant,
+                              context.palette.subtitle,
                               letterSpacing: 1.0)),
                     ],
                   ),
@@ -1012,17 +1023,17 @@ class _Step4 extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
-                      color: C.surfaceLowest,
+                      color: context.palette.surface,
                       borderRadius: BorderRadius.circular(999),
-                      boxShadow: _softShadow,
+                      boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        const _Blink(child: _Dot(color: C.primary, size: 6)),
+                        _Blink(child: _Dot(color: context.palette.accent, size: 6)),
                         const SizedBox(width: 4),
                         Text('Real-time',
-                            style: _ts(10, 14, FontWeight.w700, C.primary)),
+                            style: _ts(10, 14, FontWeight.w700, context.palette.accent)),
                       ],
                     ),
                   ),
@@ -1031,15 +1042,15 @@ class _Step4 extends StatelessWidget {
               const SizedBox(height: 12),
               // Alert 1
               _AlertTile(
-                color: C.error,
+                color: context.palette.error,
                 icon: Icons.thunderstorm,
                 title: 'Peringatan Cuaca BMKG',
                 badge: 'Prioritas Tinggi',
-                badgeBg: C.errorContainer,
-                badgeFg: C.onErrorContainer,
+                badgeBg: context.palette.error.withValues(alpha: 0.12),
+                badgeFg: context.palette.error,
                 body: Text.rich(
                   TextSpan(
-                    style: _ts(12, 16, FontWeight.w400, C.onSurfaceVariant),
+                    style: _ts(12, 16, FontWeight.w400, context.palette.subtitle),
                     children: [
                       const TextSpan(
                           text:
@@ -1047,7 +1058,7 @@ class _Step4 extends StatelessWidget {
                       TextSpan(
                         text: 'Cercospora capsici',
                         style: _ts(12, 16, FontWeight.w500,
-                            C.onSurfaceVariant,
+                            context.palette.subtitle,
                             fontStyle: FontStyle.italic),
                       ),
                       const TextSpan(text: ' meningkat tajam.'),
@@ -1059,28 +1070,28 @@ class _Step4 extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text('Tindakan Sanitasi',
-                        style: _ts(10, 14, FontWeight.w600, C.tertiary)),
-                    const Icon(Icons.chevron_right,
-                        size: 14, color: C.tertiary),
+                        style: _ts(10, 14, FontWeight.w600, tertiaryBlue)),
+                    Icon(Icons.chevron_right,
+                        size: 14, color: tertiaryBlue),
                   ],
                 ),
               ),
               const SizedBox(height: 8),
               // Alert 2
               _AlertTile(
-                color: C.primary,
+                color: context.palette.accent,
                 icon: Icons.water_drop,
                 title: 'Pengingat Jadwal Sore',
                 badge: 'Aktif',
-                badgeBg: _P.onPrimaryContainer,
-                badgeFg: _P.onSecondaryContainer,
+                badgeBg: context.palette.accentSoft,
+                badgeFg: context.palette.onAccentSoft,
                 body: Text(
                   'Jadwal Siram 16.30 WIB: Dosis 350ml/tanaman bedeng varietas Cabai Rawit Merah.',
-                  style: _ts(12, 16, FontWeight.w400, C.onSurfaceVariant),
+                  style: _ts(12, 16, FontWeight.w400, context.palette.subtitle),
                 ),
                 footerLeft: 'Pukul 16.00 WIB',
                 footerRight: Material(
-                  color: C.surfaceContainer,
+                  color: context.palette.surfaceAlt,
                   borderRadius: BorderRadius.circular(4),
                   child: InkWell(
                     borderRadius: BorderRadius.circular(4),
@@ -1089,7 +1100,7 @@ class _Step4 extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       child: Text('Konfirmasi Selesai',
-                          style: _ts(10, 14, FontWeight.w600, C.primary)),
+                          style: _ts(10, 14, FontWeight.w600, context.palette.accent)),
                     ),
                   ),
                 ),
@@ -1097,18 +1108,18 @@ class _Step4 extends StatelessWidget {
               const SizedBox(height: 8),
               // Alert 3 (ringkas)
               _AccentBox(
-                color: C.tertiary,
+                color: tertiaryBlue,
                 child: Row(
                   children: [
                     Container(
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: C.surfaceContainer,
+                        color: context.palette.surfaceAlt,
                         borderRadius: BorderRadius.circular(8),
                       ),
-                      child: const Icon(Icons.document_scanner,
-                          size: 18, color: C.tertiary),
+                      child: Icon(Icons.document_scanner,
+                          size: 18, color: tertiaryBlue),
                     ),
                     const SizedBox(width: 4),
                     Expanded(
@@ -1118,11 +1129,11 @@ class _Step4 extends StatelessWidget {
                           Text('Scan Ulang Daun Disarankan',
                               overflow: TextOverflow.ellipsis,
                               style:
-                                  _ts(12, 16, FontWeight.w600, C.onSurface)),
+                                  _ts(12, 16, FontWeight.w600, context.palette.title)),
                           Text('Evaluasi pasca aplikasi fungisida tembaga',
                               overflow: TextOverflow.ellipsis,
                               style: _ts(12, 16, FontWeight.w400,
-                                  C.onSurfaceVariant)),
+                                  context.palette.subtitle)),
                         ],
                       ),
                     ),
@@ -1131,11 +1142,11 @@ class _Step4 extends StatelessWidget {
                       padding: const EdgeInsets.symmetric(
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
-                        color: C.surfaceHigh,
+                        color: context.palette.surfaceAlt,
                         borderRadius: BorderRadius.circular(999),
                       ),
                       child: Text('2 Hari Lagi',
-                          style: _ts(10, 14, FontWeight.w700, C.tertiary)),
+                          style: _ts(10, 14, FontWeight.w700, tertiaryBlue)),
                     ),
                   ],
                 ),
@@ -1144,43 +1155,43 @@ class _Step4 extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 24),
-        const _TagPill('LANGKAH 4 • NOTIFIKASI & PERINGATAN DINI',
-            bg: _P.onPrimaryContainer,
-            fg: _P.onSecondaryContainer,
+        _TagPill('LANGKAH 4 • NOTIFIKASI & PERINGATAN DINI',
+            bg: context.palette.accentSoft,
+            fg: context.palette.onAccentSoft,
             icon: Icons.verified,
             letterSpacing: 0.5),
         const SizedBox(height: 8),
         Text('4. Siaga dengan Notifikasi Pintar',
-            style: _ts(22, 28, FontWeight.w700, C.onSurface,
+            style: _ts(22, 28, FontWeight.w700, context.palette.title,
                 letterSpacing: -0.2)),
         const SizedBox(height: 8),
         Text(
           'Dapatkan peringatan dini risiko hama penyakit, ramalan cuaca ekstrem dari BMKG, serta pengingat rutin pemupukan langsung di ponsel Anda.',
-          style: _ts(14, 22, FontWeight.w400, C.onSurfaceVariant),
+          style: _ts(14, 22, FontWeight.w400, context.palette.subtitle),
         ),
         const SizedBox(height: 24),
-        const _BigFeatureCard(
+        _BigFeatureCard(
           icon: Icons.coronavirus,
-          iconBg: C.errorContainer,
-          iconColor: C.onErrorContainer,
+          iconBg: context.palette.error.withValues(alpha: 0.12),
+          iconColor: context.palette.error,
           title: 'Peringatan Dini Penyakit & Hama',
           body:
               'Deteksi potensi wabah penyakit dan bakteri berbahaya berdasarkan anomali kelembaban udara mikro dan tren fluktuasi suhu kanopi tanaman Anda.',
         ),
         const SizedBox(height: 4),
-        const _BigFeatureCard(
+        _BigFeatureCard(
           icon: Icons.cloud_sync,
-          iconBg: C.tertiaryFixed,
-          iconColor: C.tertiary,
+          iconBg: tertiaryBg,
+          iconColor: tertiaryBlue,
           title: 'Sinkronisasi Cuaca Ekstrem',
           body:
               'Rekomendasi taktis penundaan jadwal penyemprotan nutrisi saat cuaca ekstrem agar pupuk tidak terbasuh dan terbuang percuma.',
         ),
         const SizedBox(height: 4),
-        const _BigFeatureCard(
+        _BigFeatureCard(
           icon: Icons.alarm_on,
-          iconBg: _P.onPrimaryContainer,
-          iconColor: _P.onSecondaryContainer,
+          iconBg: context.palette.accentSoft,
+          iconColor: context.palette.onAccentSoft,
           title: 'Pengingat Perawatan Tepat Waktu',
           body:
               'Notifikasi push harian presisi yang bersahabat untuk jadwal penyiraman, perompesan tunas air, hingga pemupukan fase vegetatif dan generatif.',
@@ -1201,9 +1212,9 @@ class _WhiteCard extends StatelessWidget {
     return Container(
       padding: padding,
       decoration: BoxDecoration(
-        color: C.surfaceLowest,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: _softShadow,
+        boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
       ),
       child: child,
     );
@@ -1220,11 +1231,11 @@ class _NetImage extends StatelessWidget {
       url,
       fit: BoxFit.cover,
       loadingBuilder: (context, child, progress) =>
-          progress == null ? child : Container(color: C.surfaceLow),
+          progress == null ? child : Container(color: context.palette.surfaceAlt),
       errorBuilder: (_, _, _) => Container(
-        color: C.surfaceContainer,
+        color: context.palette.surfaceAlt,
         alignment: Alignment.center,
-        child: const Icon(Icons.image_outlined, size: 32, color: C.outline),
+        child: Icon(Icons.image_outlined, size: 32, color: context.palette.icon),
       ),
     );
   }
@@ -1268,14 +1279,14 @@ class _GlassPill extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: C.surface.withValues(alpha: 0.9),
+        color: context.palette.surface.withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(999),
-        boxShadow: _softShadow,
+        boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 18, color: C.primary),
+          Icon(icon, size: 18, color: context.palette.accent),
           const SizedBox(width: 8),
           Text(text, style: _ts(10, 14, weight, color)),
         ],
@@ -1286,20 +1297,23 @@ class _GlassPill extends StatelessWidget {
 
 class _TagPill extends StatelessWidget {
   final String text;
-  final Color bg;
-  final Color fg;
+  final Color? bg;
+  final Color? fg;
   final IconData? icon;
   final double? letterSpacing;
   const _TagPill(
     this.text, {
-    this.bg = _P.onPrimaryContainer,
-    this.fg = C.primary,
+    this.bg,
+    this.fg,
     this.icon,
     this.letterSpacing,
   });
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
+    final bg = this.bg ?? p.accentSoft;
+    final fg = this.fg ?? p.onAccentSoft;
     return Container(
       padding: EdgeInsets.symmetric(horizontal: icon != null ? 12 : 10, vertical: 4),
       decoration: BoxDecoration(
@@ -1336,17 +1350,17 @@ class _CheckRow extends StatelessWidget {
         Container(
           width: 24,
           height: 24,
-          decoration: const BoxDecoration(
-              color: _P.secondaryContainer, shape: BoxShape.circle),
-          child: const Icon(Icons.check,
-              size: 16, color: _P.onSecondaryContainer),
+          decoration: BoxDecoration(
+              color: context.palette.accentSoft, shape: BoxShape.circle),
+          child: Icon(Icons.check,
+              size: 16, color: context.palette.onAccentSoft),
         ),
         const SizedBox(width: 8),
         Expanded(
           child: Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(text,
-                style: _ts(12, 16, FontWeight.w400, C.onSurface)),
+                style: _ts(12, 16, FontWeight.w400, context.palette.title)),
           ),
         ),
       ],
@@ -1365,7 +1379,7 @@ class _TipTile extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: C.surfaceLow,
+        color: context.palette.surfaceAlt,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -1375,18 +1389,18 @@ class _TipTile extends StatelessWidget {
             width: 24,
             height: 24,
             margin: const EdgeInsets.only(top: 2),
-            decoration: const BoxDecoration(
-                color: _P.onPrimaryContainer, shape: BoxShape.circle),
-            child: Icon(icon, size: 16, color: C.primary),
+            decoration: BoxDecoration(
+                color: context.palette.accentSoft, shape: BoxShape.circle),
+            child: Icon(icon, size: 16, color: context.palette.onAccentSoft),
           ),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: _ts(12, 16, FontWeight.w600, C.onSurface)),
+                Text(title, style: _ts(12, 16, FontWeight.w600, context.palette.title)),
                 Text(body,
-                    style: _ts(12, 16, FontWeight.w400, C.onSurfaceVariant)),
+                    style: _ts(12, 16, FontWeight.w400, context.palette.subtitle)),
               ],
             ),
           ),
@@ -1417,7 +1431,7 @@ class _FeatureRow extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
-        color: C.surfaceLow,
+        color: context.palette.surfaceAlt,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -1430,7 +1444,7 @@ class _FeatureRow extends StatelessWidget {
             decoration: BoxDecoration(
               color: iconBg,
               borderRadius: BorderRadius.circular(8),
-              boxShadow: shadow ? _softShadow : null,
+              boxShadow: shadow ? [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))] : null,
             ),
             child: Icon(icon, size: 20, color: iconColor),
           ),
@@ -1439,10 +1453,10 @@ class _FeatureRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: _ts(14, 20, FontWeight.w600, C.onSurface)),
+                Text(title, style: _ts(14, 20, FontWeight.w600, context.palette.title)),
                 const SizedBox(height: 2),
                 Text(body,
-                    style: _ts(12, 18, FontWeight.w400, C.onSurfaceVariant)),
+                    style: _ts(12, 18, FontWeight.w400, context.palette.subtitle)),
               ],
             ),
           ),
@@ -1472,9 +1486,9 @@ class _BigFeatureCard extends StatelessWidget {
       padding: const EdgeInsets.all(16),
       margin: const EdgeInsets.only(bottom: 4),
       decoration: BoxDecoration(
-        color: C.surfaceLowest,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(12),
-        boxShadow: _softShadow,
+        boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1493,10 +1507,10 @@ class _BigFeatureCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: _ts(18, 24, FontWeight.w600, C.onSurface)),
+                Text(title, style: _ts(18, 24, FontWeight.w600, context.palette.title)),
                 const SizedBox(height: 4),
                 Text(body,
-                    style: _ts(12, 18, FontWeight.w400, C.onSurfaceVariant)),
+                    style: _ts(12, 18, FontWeight.w400, context.palette.subtitle)),
               ],
             ),
           ),
@@ -1517,9 +1531,9 @@ class _AccentBox extends StatelessWidget {
     return Container(
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
-        color: C.surfaceLowest,
+        color: context.palette.surface,
         borderRadius: BorderRadius.circular(8),
-        boxShadow: _softShadow,
+        boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
       ),
       child: IntrinsicHeight(
         child: Row(
@@ -1579,7 +1593,7 @@ class _AlertTile extends StatelessWidget {
                     Flexible(
                       child: Text(title,
                           overflow: TextOverflow.ellipsis,
-                          style: _ts(12, 16, FontWeight.w600, C.onSurface)),
+                          style: _ts(12, 16, FontWeight.w600, context.palette.title)),
                     ),
                   ],
                 ),
@@ -1603,7 +1617,7 @@ class _AlertTile extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(footerLeft, style: _ts(10, 14, FontWeight.w700, C.outline)),
+              Text(footerLeft, style: _ts(10, 14, FontWeight.w700, context.palette.hint)),
               footerRight,
             ],
           ),

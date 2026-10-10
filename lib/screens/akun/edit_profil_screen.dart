@@ -3,7 +3,9 @@ import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/app_colors.dart';
+import '../../core/app_theme.dart';
+import '../../services/services.dart';
+import '../../widgets/popup_notifikasi.dart';
 
 class EditProfileScreen extends StatefulWidget {
   const EditProfileScreen({super.key});
@@ -21,21 +23,59 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   late final TextEditingController _farmLocationController;
 
   Uint8List? _avatarBytes;
-
-  // Token warna kini mengacu ke palette kanonik.
-  static const Color cPrimaryGreen = AppColors.primary;
-  static const Color cPrimaryContainer = AppColors.primaryContainer;
-  static const Color cBackground = AppColors.background;
-  static const Color cOnSurface = AppColors.onSurface;
-  static const Color cMutedText = AppColors.onSurfaceVariant;
+  bool _isLoading = true;
+  bool _isSaving = false;
 
   @override
   void initState() {
     super.initState();
-    _nameController = TextEditingController(text: 'Budi Santoso');
-    _emailController = TextEditingController(text: 'budi.santoso@agrimail.id');
-    _phoneController = TextEditingController(text: '+62 812-3456-7890');
-    _farmLocationController = TextEditingController(text: 'Kab. Malang, Jawa Timur');
+    _nameController = TextEditingController();
+    _emailController = TextEditingController();
+    _phoneController = TextEditingController();
+    _farmLocationController = TextEditingController();
+    _loadProfil();
+  }
+
+  Future<void> _loadProfil() async {
+    try {
+      final profil = await getProfil();
+      if (!mounted) return;
+      setState(() {
+        _nameController.text = (profil['nama'] ?? '').toString();
+        _emailController.text = (profil['email'] ?? '').toString();
+        _phoneController.text = (profil['nomor_hp'] ?? '').toString();
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _isLoading = false);
+      showErrorPopup(context, 'Gagal memuat profil: ${pesanError(e)}');
+    }
+  }
+
+  Future<void> _simpan() async {
+    if (!_formKey.currentState!.validate()) return;
+    if (_nameController.text.trim().length < 3) {
+      showErrorPopup(context, 'Nama minimal 3 karakter.');
+      return;
+    }
+    setState(() => _isSaving = true);
+    try {
+      await editProfil(
+        nama: _nameController.text.trim(),
+        nomorHp: _phoneController.text.trim().isEmpty
+            ? null
+            : _phoneController.text.trim(),
+      );
+      if (!mounted) return;
+      showSuccessPopup(context, 'Profil berhasil disimpan.');
+      Navigator.maybePop(context, true);
+    } catch (e) {
+      if (!mounted) return;
+      showErrorPopup(context, 'Gagal menyimpan: ${pesanError(e)}');
+    } finally {
+      if (mounted) setState(() => _isSaving = false);
+    }
   }
 
   @override
@@ -51,19 +91,39 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
   TextStyle _font({
     double fontSize = 14,
     FontWeight fontWeight = FontWeight.w400,
-    Color color = cOnSurface,
+    Color? color,
   }) {
+    final p = context.palette;
     return GoogleFonts.plusJakartaSans(
       fontSize: fontSize,
       fontWeight: fontWeight,
-      color: color,
+      color: color ?? p.title,
     );
   }
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
+    if (_isLoading) {
+      return Scaffold(
+        backgroundColor: p.background,
+        appBar: AppBar(
+          backgroundColor: p.background,
+          elevation: 0,
+          leading: IconButton(
+            icon: Icon(Icons.arrow_back, color: p.title),
+            onPressed: () => Navigator.maybePop(context),
+          ),
+          title: Text(
+            'Edit Profil',
+            style: _font(fontSize: 18, fontWeight: FontWeight.w700),
+          ),
+        ),
+        body: const Center(child: CircularProgressIndicator()),
+      );
+    }
     return Scaffold(
-      backgroundColor: cBackground,
+      backgroundColor: p.background,
       extendBodyBehindAppBar: true, // Agar efek BackdropFilter ImageFilter terasa
       appBar: PreferredSize(
         preferredSize: const Size.fromHeight(60),
@@ -72,11 +132,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           child: BackdropFilter(
             filter: ImageFilter.blur(sigmaX: 12, sigmaY: 12),
             child: AppBar(
-              backgroundColor: cBackground.withValues(alpha: 0.8),
+              backgroundColor: p.surface.withValues(alpha: 0.85),
               elevation: 0.5,
               scrolledUnderElevation: 0,
               leading: IconButton(
-                icon: const Icon(Icons.arrow_back, color: cOnSurface),
+                icon: Icon(Icons.arrow_back, color: p.title),
                 onPressed: () => Navigator.maybePop(context),
               ),
               title: Text(
@@ -85,15 +145,15 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
               ),
               actions: [
                 IconButton(
-                  icon: const Icon(Icons.close, color: cOnSurface),
+                  icon: Icon(Icons.close, color: p.title),
                   onPressed: () => Navigator.maybePop(context),
                 ),
-                const Padding(
-                  padding: EdgeInsets.only(right: 16.0),
+                Padding(
+                  padding: const EdgeInsets.only(right: 16.0),
                   child: CircleAvatar(
                     radius: 16,
-                    backgroundColor: cPrimaryGreen,
-                    child: Icon(Icons.person, color: Colors.white, size: 18),
+                    backgroundColor: p.primary,
+                    child: Icon(Icons.person, color: p.onPrimary, size: 18),
                   ),
                 ),
               ],
@@ -116,7 +176,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   children: [
                     CircleAvatar(
                       radius: 56,
-                      backgroundColor: AppColors.surfaceHigh,
+                      backgroundColor: p.surfaceAlt,
                       backgroundImage: _avatarBytes != null
                           ? MemoryImage(_avatarBytes!) as ImageProvider
                           : const NetworkImage(
@@ -126,20 +186,20 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     Container(
                       width: 38,
                       height: 38,
-                      decoration: const BoxDecoration(
-                        color: cPrimaryContainer,
+                      decoration: BoxDecoration(
+                        color: p.primary,
                         shape: BoxShape.circle,
                       ),
-                      child: const Icon(Icons.photo_camera, color: Colors.white, size: 19),
+                      child: Icon(Icons.photo_camera, color: p.onPrimary, size: 19),
                     ),
                   ],
                 ),
                 const SizedBox(height: 10),
                 Text('Ubah Foto Profil',
-                    style: _font(fontSize: 14, fontWeight: FontWeight.w700, color: cPrimaryGreen)),
+                    style: _font(fontSize: 14, fontWeight: FontWeight.w700, color: p.accent)),
                 const SizedBox(height: 4),
                 Text('Format JPG atau PNG, maks. 5 MB',
-                    style: _font(fontSize: 12, color: cMutedText)),
+                    style: _font(fontSize: 12, color: p.subtitle)),
                 const SizedBox(height: 24),
 
                 // FIELD NAMA
@@ -156,13 +216,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 _buildInput(
                   label: 'ALAMAT EMAIL',
                   isRequired: true,
+                  readOnly: true,
                   controller: _emailController,
                   icon: Icons.mail_outline,
                   placeholder: 'contoh@domain.id',
                   badgeText: 'Terverifikasi',
-                  badgeBg: AppColors.onPrimaryContainer.withValues(alpha: 0.5),
-                  badgeTextColor: cPrimaryContainer,
-                  caption: 'Email digunakan untuk laporan ringkasan mingguan petak dan diagnosa ML.',
+                  badgeBg: p.accentSoft,
+                  badgeTextColor: p.onAccentSoft,
+                  caption: 'Email tidak dapat diubah. Digunakan untuk laporan ringkasan mingguan petak dan diagnosa ML.',
                 ),
                 const SizedBox(height: 18),
 
@@ -175,8 +236,8 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   placeholder: '+62 8xx-xxxx-xxxx',
                   badgeText: 'Aktif WA',
                   badgeIcon: Icons.sms,
-                  badgeBg: AppColors.secondaryContainer.withValues(alpha: 0.3),
-                  badgeTextColor: AppColors.onSecondaryFixedVariant,
+                  badgeBg: p.accentSoft,
+                  badgeTextColor: p.onAccentSoft,
                   caption: 'Nomor aktif untuk pengiriman notifikasi darurat hama & cuaca ekstrem.',
                 ),
                 const SizedBox(height: 18),
@@ -194,18 +255,18 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                 Container(
                   padding: const EdgeInsets.all(14),
                   decoration: BoxDecoration(
-                    color: AppColors.surfaceLow,
+                    color: p.surfaceAlt,
                     borderRadius: BorderRadius.circular(12),
                   ),
                   child: Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(Icons.info, color: cPrimaryContainer, size: 22),
+                      Icon(Icons.info, color: p.accent, size: 22),
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
                           'Data profil digunakan untuk sinkronisasi sensor lahan cabai secara real-time.',
-                          style: _font(fontSize: 12, color: cMutedText),
+                          style: _font(fontSize: 12, color: p.subtitle),
                         ),
                       ),
                     ],
@@ -218,18 +279,19 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   width: double.infinity,
                   height: 52,
                   child: ElevatedButton(
-                    onPressed: () {},
+                    onPressed: _isSaving ? null : _simpan,
                     style: ElevatedButton.styleFrom(
-                      backgroundColor: cPrimaryContainer,
+                      backgroundColor: p.primary,
+                      foregroundColor: p.onPrimary,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        const Icon(Icons.check, color: Colors.white, size: 20),
+                        Icon(Icons.check, color: p.onPrimary, size: 20),
                         const SizedBox(width: 8),
                         Text('Simpan Perubahan',
-                            style: _font(fontSize: 15, fontWeight: FontWeight.w600, color: Colors.white)),
+                            style: _font(fontSize: 15, fontWeight: FontWeight.w600, color: p.onPrimary)),
                       ],
                     ),
                   ),
@@ -243,11 +305,11 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                   child: TextButton(
                     onPressed: () => Navigator.maybePop(context),
                     style: TextButton.styleFrom(
-                      backgroundColor: AppColors.surfaceContainer,
+                      backgroundColor: p.surfaceAlt,
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                     ),
                     child: Text('Batal',
-                        style: _font(fontSize: 15, fontWeight: FontWeight.w600, color: cOnSurface)),
+                        style: _font(fontSize: 15, fontWeight: FontWeight.w600, color: p.title)),
                   ),
                 ),
                 const SizedBox(height: 16),
@@ -265,12 +327,14 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     required IconData icon,
     required String placeholder,
     bool isRequired = false,
+    bool readOnly = false,
     String? badgeText,
     IconData? badgeIcon,
     Color? badgeBg,
     Color? badgeTextColor,
     String? caption,
   }) {
+    final p = context.palette;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
@@ -279,9 +343,9 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
           children: [
             Row(
               children: [
-                Text(label, style: _font(fontSize: 11, fontWeight: FontWeight.w700, color: cMutedText)),
+                Text(label, style: _font(fontSize: 11, fontWeight: FontWeight.w700, color: p.subtitle)),
                 if (isRequired)
-                  Text(' *', style: _font(fontSize: 11, fontWeight: FontWeight.w700, color: AppColors.error)),
+                  Text(' *', style: _font(fontSize: 11, fontWeight: FontWeight.w700, color: p.error)),
               ],
             ),
             if (badgeText != null)
@@ -308,20 +372,22 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         Container(
           height: 54,
           decoration: BoxDecoration(
-            color: Colors.white,
+            color: p.surface,
             borderRadius: BorderRadius.circular(12),
-            boxShadow: const [
-              BoxShadow(color: AppColors.shadow, blurRadius: 4, offset: Offset(0, 2)),
+            boxShadow: [
+              BoxShadow(color: p.shadow, blurRadius: 4, offset: const Offset(0, 2)),
             ],
           ),
           child: TextFormField(
             controller: controller,
+            readOnly: readOnly,
             style: _font(fontSize: 15),
             decoration: InputDecoration(
               hintText: placeholder,
-              prefixIcon: Icon(icon, color: cMutedText, size: 22),
+              hintStyle: _font(fontSize: 15, color: p.hint),
+              prefixIcon: Icon(icon, color: p.subtitle, size: 22),
               suffixIcon: IconButton(
-                icon: const Icon(Icons.cancel_outlined, color: Colors.black26, size: 20),
+                icon: Icon(Icons.cancel_outlined, color: p.hint, size: 20),
                 onPressed: () => controller.clear(),
               ),
               border: InputBorder.none,
@@ -331,7 +397,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
         ),
         if (caption != null) ...[
           const SizedBox(height: 4),
-          Text(caption, style: _font(fontSize: 11, color: cMutedText)),
+          Text(caption, style: _font(fontSize: 11, color: p.subtitle)),
         ],
       ],
     );

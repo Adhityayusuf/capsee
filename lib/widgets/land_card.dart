@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/app_colors.dart';
+import '../core/app_theme.dart';
 import '../models/land_data.dart';
 
 TextStyle _style(
@@ -57,6 +57,7 @@ class LandCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     final title = land['nama'] ?? 'Petak Lahan';
     final location = '${land['kecamatan'] ?? ''}, ${land['kota'] ?? ''}'.trim();
     final phase = '${land['umur_tanaman_bulan'] ?? 0} Bulan';
@@ -70,10 +71,10 @@ class LandCard extends StatelessWidget {
         : 'Data Tersinkronisasi';
     final notice = 'Interval pupuk tiap ${land['interval_pupuk_minggu']} minggu.';
 
-    final color = warning ? AppColors.error : AppColors.primary;
+    final color = warning ? p.error : p.accent;
     return Card(
       elevation: 1,
-      color: Colors.white,
+      color: p.surface,
       child: Padding(
         padding: const EdgeInsets.all(14),
         child: Column(
@@ -87,8 +88,8 @@ class LandCard extends StatelessWidget {
                   height: 64,
                   decoration: BoxDecoration(
                     color: warning
-                        ? AppColors.error.withAlpha(25)
-                        : AppColors.primarySoft,
+                        ? p.error.withValues(alpha: 0.12)
+                        : p.accentSoft,
                     borderRadius: BorderRadius.circular(8),
                   ),
                   child: Icon(Icons.eco_rounded, color: color, size: 30),
@@ -112,15 +113,15 @@ class LandCard extends StatelessWidget {
                         title,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: _style(13, AppColors.title, FontWeight.w700),
+                        style: _style(13, p.title, FontWeight.w700),
                       ),
                       Text(
                         location,
-                        style: _style(11, AppColors.subtitle, FontWeight.w400),
+                        style: _style(11, p.subtitle, FontWeight.w400),
                       ),
                       Text(
                         phase,
-                        style: _style(11, AppColors.title, FontWeight.w600),
+                        style: _style(11, p.title, FontWeight.w600),
                       ),
                     ],
                   ),
@@ -128,10 +129,10 @@ class LandCard extends StatelessWidget {
                 if (onEdit != null || onDelete != null)
                   PopupMenuButton<String>(
                     tooltip: 'Opsi lahan',
-                    icon: const Icon(
+                    icon: Icon(
                       Icons.more_vert,
                       size: 20,
-                      color: AppColors.icon,
+                      color: p.icon,
                     ),
                     onSelected: (value) {
                       if (value == 'edit') onEdit?.call();
@@ -139,7 +140,7 @@ class LandCard extends StatelessWidget {
                     },
                     itemBuilder: (_) => [
                       if (onEdit != null)
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'edit',
                           child: ListTile(
                             dense: true,
@@ -149,7 +150,7 @@ class LandCard extends StatelessWidget {
                           ),
                         ),
                       if (onDelete != null)
-                        const PopupMenuItem(
+                        PopupMenuItem(
                           value: 'hapus',
                           child: ListTile(
                             dense: true,
@@ -157,11 +158,11 @@ class LandCard extends StatelessWidget {
                             leading: Icon(
                               Icons.delete_outline,
                               size: 20,
-                              color: AppColors.error,
+                              color: p.error,
                             ),
                             title: Text(
                               'Hapus',
-                              style: TextStyle(color: AppColors.error),
+                              style: TextStyle(color: p.error),
                             ),
                           ),
                         ),
@@ -173,11 +174,9 @@ class LandCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
               decoration: BoxDecoration(
-                color:
-                    (warning
-                            ? AppColors.errorContainer
-                            : AppColors.primarySoft)
-                        .withAlpha(130),
+                color: warning
+                    ? p.error.withValues(alpha: 0.12)
+                    : p.accentSoft,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -201,7 +200,7 @@ class LandCard extends StatelessWidget {
             Container(
               padding: const EdgeInsets.all(9),
               decoration: BoxDecoration(
-                color: AppColors.chipBg,
+                color: p.surfaceAlt,
                 borderRadius: BorderRadius.circular(8),
               ),
               child: Row(
@@ -220,7 +219,7 @@ class LandCard extends StatelessWidget {
                       notice,
                       style: _style(
                         11,
-                        AppColors.title,
+                        p.title,
                         FontWeight.w400,
                         height: 1.3,
                       ),

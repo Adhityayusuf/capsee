@@ -1,3 +1,4 @@
+import 'package:capsee/core/app_theme.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
@@ -79,16 +80,17 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: p.background,
       appBar: AppBar(
-        backgroundColor: const Color(0xFFF8F9FA),
+        backgroundColor: p.surface,
         elevation: 0,
         title: Text(
           'Riwayat Aktivitas',
           style: GoogleFonts.plusJakartaSans(
             fontSize: 20,
-            color: const Color(0xFF1A1A1A),
+            color: p.title,
             fontWeight: FontWeight.w700,
           ),
         ),
@@ -140,24 +142,26 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     required IconData icon,
     required Function(String?) onChanged,
   }) {
+    final p = context.palette;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: p.surface,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: Colors.grey.shade300),
+        border: Border.all(color: p.border),
       ),
       child: DropdownButtonHideUnderline(
         child: DropdownButton<String>(
           value: value,
           isExpanded: true,
-          icon: const Icon(Icons.keyboard_arrow_down_rounded, color: Colors.grey),
+          dropdownColor: p.surface,
+          icon: Icon(Icons.keyboard_arrow_down_rounded, color: p.icon),
           items: items.map((String item) {
             return DropdownMenuItem<String>(
               value: item,
               child: Row(
                 children: [
-                  Icon(icon, size: 16, color: const Color(0xFF2E7D32)),
+                  Icon(icon, size: 16, color: p.accent),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Text(
@@ -165,7 +169,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: const Color(0xFF1A1A1A),
+                        color: p.title,
                       ),
                       overflow: TextOverflow.ellipsis,
                     ),
@@ -194,6 +198,8 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   }
 
   Widget _buildRiwayatCard(DummyRiwayat item) {
+    final p = context.palette;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
     IconData itemIcon;
     Color iconBgColor;
     Color iconColor;
@@ -202,13 +208,17 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
     switch (item.jenisAktivitas) {
       case 'scan':
         itemIcon = Icons.document_scanner_rounded;
-        iconBgColor = item.statusAman ? const Color(0xFFE8F5E9) : const Color(0xFFFFEBEE);
-        iconColor = item.statusAman ? const Color(0xFF2E7D32) : const Color(0xFFD32F2F);
+        iconBgColor = item.statusAman
+            ? p.accentSoft
+            : p.error.withValues(alpha: .12);
+        iconColor = item.statusAman ? p.accent : p.error;
         break;
       case 'siram':
         itemIcon = Icons.water_drop_rounded;
-        iconBgColor = const Color(0xFFE3F2FD);
-        iconColor = const Color(0xFF1976D2);
+        iconBgColor =
+            isDark ? const Color(0xFF0F2A3A) : const Color(0xFFE3F2FD);
+        iconColor =
+            isDark ? const Color(0xFF7DD3FC) : const Color(0xFF1976D2);
         break;
       case 'pupuk':
         itemIcon = Icons.eco_rounded;
@@ -217,18 +227,18 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
         break;
       default:
         itemIcon = Icons.history_rounded;
-        iconBgColor = Colors.grey.shade200;
-        iconColor = Colors.grey.shade700;
+        iconBgColor = p.surfaceAlt;
+        iconColor = p.icon;
     }
 
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: p.surface,
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.03),
+            color: p.shadow,
             blurRadius: 10,
             offset: const Offset(0, 4),
           ),
@@ -260,7 +270,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                         style: GoogleFonts.plusJakartaSans(
                           fontSize: 14,
                           fontWeight: FontWeight.w700,
-                          color: const Color(0xFF1A1A1A),
+                          color: p.title,
                         ),
                       ),
                     ),
@@ -269,7 +279,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 11,
                         fontWeight: FontWeight.w500,
-                        color: Colors.grey.shade500,
+                        color: p.subtitle,
                       ),
                     ),
                   ],
@@ -280,7 +290,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 12,
                     fontWeight: FontWeight.w600,
-                    color: const Color(0xFF2E7D32),
+                    color: p.accent,
                   ),
                 ),
                 const SizedBox(height: 8),
@@ -290,7 +300,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                     fontSize: 12,
                     height: 1.4,
                     fontWeight: FontWeight.w400,
-                    color: Colors.grey.shade700,
+                    color: p.subtitle,
                   ),
                 ),
               ],
@@ -303,6 +313,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
   // --- WIDGET KETIKA RIWAYAT KOSONG ---
   Widget _buildEmptyState() {
+    final p = context.palette;
     return Center(
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 32),
@@ -313,12 +324,12 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
               width: 80,
               height: 80,
               decoration: BoxDecoration(
-                color: const Color(0xFFE8F5E9),
+                color: p.accentSoft,
                 borderRadius: BorderRadius.circular(20),
               ),
-              child: const Icon(
+              child: Icon(
                 Icons.history_rounded,
-                color: Color(0xFF2E7D32),
+                color: p.accent,
                 size: 40,
               ),
             ),
@@ -328,7 +339,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 18,
                 fontWeight: FontWeight.w700,
-                color: const Color(0xFF1A1A1A),
+                color: p.title,
               ),
             ),
             const SizedBox(height: 8),
@@ -339,7 +350,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                 fontSize: 13,
                 height: 1.5,
                 fontWeight: FontWeight.w400,
-                color: Colors.grey.shade600,
+                color: p.subtitle,
               ),
             ),
             const SizedBox(height: 32),
@@ -358,8 +369,8 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                   ),
                 ),
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFF2E7D32),
-                  foregroundColor: Colors.white,
+                  backgroundColor: p.primary,
+                  foregroundColor: p.onPrimary,
                   padding: const EdgeInsets.symmetric(vertical: 14),
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(30),

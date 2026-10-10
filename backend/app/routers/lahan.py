@@ -99,7 +99,10 @@ def detail_lahan(id_lahan: str, id_pengguna: str = Depends(verifikasi_token)):
         cur = conn.cursor()
         pastikan_lahan_milik_pengguna(cur, id_lahan, id_pengguna)
         cur.execute("SELECT * FROM lahan WHERE id = %s", (id_lahan,))
-        return {"lahan": row_to_dict(cur, cur.fetchone())}
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Lahan tidak ditemukan")
+        return {"lahan": row_to_dict(cur, row)}
 
 
 @router.put("/{id_lahan}")
@@ -141,7 +144,10 @@ def edit_lahan(
             """,
             values,
         )
-        return {"lahan": row_to_dict(cur, cur.fetchone())}
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Lahan tidak ditemukan")
+        return {"lahan": row_to_dict(cur, row)}
 
 
 @router.delete("/{id_lahan}", status_code=200)

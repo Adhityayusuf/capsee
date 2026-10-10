@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
-import '../../core/app_colors.dart';
+import '../../core/app_theme.dart';
 import 'panduan_screen.dart';
 
 class BantuanFaqScreen extends StatefulWidget {
@@ -59,7 +59,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
   List<Map<String, dynamic>> get _filteredFaqs {
     return _faqs.where((faq) {
       final matchesCategory = _selectedCategory == 'Semua' || faq['category'] == _selectedCategory;
-      final matchesSearch = _searchQuery.isEmpty || 
+      final matchesSearch = _searchQuery.isEmpty ||
           faq['question'].toString().toLowerCase().contains(_searchQuery.toLowerCase());
       return matchesCategory && matchesSearch;
     }).toList();
@@ -67,14 +67,15 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Scaffold(
-      backgroundColor: C.surface,
+      backgroundColor: p.background,
       appBar: AppBar(
-        backgroundColor: C.surface,
+        backgroundColor: p.surface,
         elevation: 0,
         centerTitle: true,
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: C.onSurface),
+          icon: Icon(Icons.arrow_back, color: p.title),
           onPressed: () => Navigator.of(context).pop(),
         ),
         title: Text(
@@ -82,16 +83,16 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
           style: GoogleFonts.plusJakartaSans(
             fontSize: 18,
             fontWeight: FontWeight.w600,
-            color: C.onSurface,
+            color: p.title,
           ),
         ),
         actions: [
           Padding(
             padding: const EdgeInsets.only(right: 16),
             child: CircleAvatar(
-              backgroundColor: C.primary,
+              backgroundColor: p.primary,
               radius: 16,
-              child: const Icon(Icons.person, size: 18, color: C.onPrimary),
+              child: Icon(Icons.person, size: 18, color: p.onPrimary),
             ),
           ),
         ],
@@ -103,18 +104,18 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16),
             decoration: BoxDecoration(
-              color: C.surfaceHigh,
+              color: p.surfaceAlt,
               borderRadius: BorderRadius.circular(12),
             ),
             child: TextField(
               onChanged: (val) => setState(() => _searchQuery = val),
+              style: GoogleFonts.plusJakartaSans(color: p.title, fontSize: 14),
               decoration: InputDecoration(
-                icon: const Icon(Icons.search, color: C.outline),
+                icon: Icon(Icons.search, color: p.icon),
                 hintText: 'Cari topik bantuan atau pertanyaan...',
-                hintStyle: GoogleFonts.plusJakartaSans(color: C.onSurfaceVariant),
+                hintStyle: GoogleFonts.plusJakartaSans(color: p.subtitle),
                 border: InputBorder.none,
               ),
-              style: GoogleFonts.plusJakartaSans(color: C.onSurface, fontSize: 14),
             ),
           ),
           const SizedBox(height: 16),
@@ -133,13 +134,13 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
                         fontWeight: FontWeight.w600,
-                        color: isSelected ? C.onPrimary : C.onSurface,
+                        color: isSelected ? p.onPrimary : p.title,
                       ),
                     ),
                     selected: isSelected,
                     onSelected: (_) => setState(() => _selectedCategory = category),
-                    backgroundColor: C.surfaceHigh,
-                    selectedColor: C.primaryContainer,
+                    backgroundColor: p.surfaceAlt,
+                    selectedColor: p.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(20),
                     ),
@@ -161,7 +162,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
             child: Container(
               padding: const EdgeInsets.all(16),
               decoration: BoxDecoration(
-                color: C.surfaceHigh.withValues(alpha: 0.5),
+                color: p.surfaceAlt.withValues(alpha: 0.5),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
@@ -170,10 +171,10 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                     width: 48,
                     height: 48,
                     decoration: BoxDecoration(
-                      color: C.primary.withValues(alpha: 0.1),
+                      color: p.accentSoft,
                       borderRadius: BorderRadius.circular(8),
                     ),
-                    child: const Icon(Icons.psychology_alt, color: C.primary, size: 26),
+                    child: Icon(Icons.psychology_alt, color: p.onAccentSoft, size: 26),
                   ),
                   const SizedBox(width: 16),
                   Expanded(
@@ -185,7 +186,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 10,
                             fontWeight: FontWeight.w700,
-                            color: C.primary,
+                            color: p.accent,
                             letterSpacing: 0.5,
                           ),
                         ),
@@ -194,14 +195,14 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 16,
                             fontWeight: FontWeight.w700,
-                            color: C.onSurface,
+                            color: p.title,
                           ),
                         ),
                         Text(
                           'Temukan jawaban akurat seputar kecerdasan buatan & kesehatan cabai Anda.',
                           style: GoogleFonts.plusJakartaSans(
                             fontSize: 12,
-                            color: C.onSurfaceVariant,
+                            color: p.subtitle,
                           ),
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
@@ -221,14 +222,14 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
               padding: const EdgeInsets.all(32),
               child: Column(
                 children: [
-                  const Icon(Icons.search_off, size: 48, color: C.outline),
+                  Icon(Icons.search_off, size: 48, color: p.icon),
                   const SizedBox(height: 16),
                   Text(
                     'Topik tidak ditemukan',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 18,
                       fontWeight: FontWeight.w600,
-                      color: C.onSurface,
+                      color: p.title,
                     ),
                   ),
                 ],
@@ -245,14 +246,15 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
   }
 
   Widget _buildFaqItem(Map<String, dynamic> faq) {
+    final p = context.palette;
     return Container(
       margin: const EdgeInsets.only(bottom: 8),
       decoration: BoxDecoration(
-        color: C.surface,
+        color: p.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: p.shadow,
             blurRadius: 4,
             offset: const Offset(0, 1),
           )
@@ -261,16 +263,16 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
       child: Theme(
         data: Theme.of(context).copyWith(dividerColor: Colors.transparent),
         child: ExpansionTile(
-          iconColor: C.onSurfaceVariant,
-          collapsedIconColor: C.onSurfaceVariant,
+          iconColor: p.subtitle,
+          collapsedIconColor: p.subtitle,
           tilePadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
-          leading: Icon(faq['icon'] as IconData, color: C.primary, size: 22),
+          leading: Icon(faq['icon'] as IconData, color: p.accent, size: 22),
           title: Text(
             faq['question'],
             style: GoogleFonts.plusJakartaSans(
               fontSize: 14,
               fontWeight: FontWeight.w600,
-              color: C.onSurface,
+              color: p.title,
             ),
           ),
           children: [
@@ -281,7 +283,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                 style: GoogleFonts.plusJakartaSans(
                   fontSize: 14,
                   height: 1.5,
-                  color: C.onSurfaceVariant,
+                  color: p.subtitle,
                 ),
               ),
             ),
@@ -292,14 +294,17 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
   }
 
   Widget _buildContactSection() {
+    final p = context.palette;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    final supportBlue = isDark ? const Color(0xFF7DD3FC) : const Color(0xFF005B8C);
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: C.surface,
+        color: p.surface,
         borderRadius: BorderRadius.circular(12),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: p.shadow,
             blurRadius: 4,
             offset: const Offset(0, 1),
           )
@@ -312,11 +317,11 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
               Container(
                 width: 40,
                 height: 40,
-                decoration: const BoxDecoration(
-                  color: AppColors.secondaryContainer,
+                decoration: BoxDecoration(
+                  color: p.accentSoft,
                   shape: BoxShape.circle,
                 ),
-                child: const Icon(Icons.forum, color: AppColors.onSecondaryContainer, size: 22),
+                child: Icon(Icons.forum, color: p.onAccentSoft, size: 22),
               ),
               const SizedBox(width: 12),
               Expanded(
@@ -328,14 +333,14 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 16,
                         fontWeight: FontWeight.w700,
-                        color: C.onSurface,
+                        color: p.title,
                       ),
                     ),
                     Text(
                       'Tim ahli agronomis kami siap mendampingi lahan Anda.',
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 12,
-                        color: C.onSurfaceVariant,
+                        color: p.subtitle,
                       ),
                     ),
                   ],
@@ -347,7 +352,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
 
           _buildContactCard(
             icon: Icons.mail,
-            iconColor: C.tertiary,
+            iconColor: supportBlue,
             title: 'Email Dukungan Teknis',
             subtitle: 'bantuan@capsee.id',
           ),
@@ -357,7 +362,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
             height: 48,
             child: ElevatedButton.icon(
               onPressed: () {},
-              icon: const Icon(Icons.send, size: 20),
+              icon: Icon(Icons.send, size: 20, color: p.onPrimary),
               label: Text(
                 'Hubungi Tim Ahli Agronomis',
                 style: GoogleFonts.plusJakartaSans(
@@ -366,8 +371,8 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                 ),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: C.primaryContainer,
-                foregroundColor: C.onPrimary,
+                backgroundColor: p.primary,
+                foregroundColor: p.onPrimary,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -381,8 +386,8 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
             child: TextButton(
               onPressed: () => Navigator.of(context).pop(),
               style: TextButton.styleFrom(
-                backgroundColor: C.surfaceHigh,
-                foregroundColor: C.onSurface,
+                backgroundColor: p.surfaceAlt,
+                foregroundColor: p.title,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(8),
                 ),
@@ -407,10 +412,11 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
     required String title,
     required String subtitle,
   }) {
+    final p = context.palette;
     return Container(
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
-        color: C.surfaceHigh,
+        color: p.surfaceAlt,
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -434,20 +440,20 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 14,
                     fontWeight: FontWeight.w600,
-                    color: C.onSurface,
+                    color: p.title,
                   ),
                 ),
                 Text(
                   subtitle,
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 12,
-                    color: C.onSurfaceVariant,
+                    color: p.subtitle,
                   ),
                 ),
               ],
             ),
           ),
-          const Icon(Icons.chevron_right, color: C.outline, size: 20),
+          Icon(Icons.chevron_right, color: p.icon, size: 20),
         ],
       ),
     );

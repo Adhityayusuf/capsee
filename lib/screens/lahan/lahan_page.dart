@@ -1,6 +1,10 @@
 import 'package:flutter/material.dart';
 
 import '../../core/app_theme.dart';
+import '../../models/land_data.dart';
+import '../../services/services.dart';
+import '../../widgets/popup_notifikasi.dart';
+import 'detail_lahan_screen.dart';
 import 'tambah_lahan_page.dart';
 
 // ───────────────────────── Warna & Tema ─────────────────────────
@@ -125,10 +129,153 @@ class _LahanPageState extends State<LahanPage> {
   int _filter = 0; // 0 semua, 1 perlu tindakan, 2 sehat, 3 dst
   String _query = '';
 
+  List<Map<String, dynamic>>? _lahanList;
+  bool _isLoading = true;
+  String? _error;
+
+  @override
+  void initState() {
+    super.initState();
+    _load();
+  }
+
+  Future<void> _load() async {
+    if (mounted) setState(() => _isLoading = true);
+    try {
+      final list = await getDaftarLahan();
+      if (!mounted) return;
+      setState(() {
+        _lahanList = list;
+        _error = null;
+        _isLoading = false;
+      });
+    } catch (e) {
+      if (!mounted) return;
+      setState(() {
+        _error = e.toString();
+        _isLoading = false;
+      });
+    }
+  }
+
   Future<void> _openAddLand() async {
     await Navigator.of(
       context,
     ).push(MaterialPageRoute(builder: (_) => const TambahLahanPage()));
+    if (mounted) _load();
+  }
+
+  void _openDetail(Map<String, dynamic> land) {
+    Navigator.of(context)
+        .push(
+          MaterialPageRoute(
+            builder: (_) => LandDetailScreen(
+              land: LandData(
+                id: land['id'] as String?,
+                name: (land['nama'] ?? 'Lahan').toString(),
+                province: (land['provinsi'] ?? '').toString(),
+                city: (land['kota'] ?? '').toString(),
+                district: (land['kecamatan'] ?? '').toString(),
+                plantAgeMonths:
+                    (land['umur_tanaman_bulan'] as num?)?.toInt() ?? 1,
+                lastWatered:
+                    DateTime.tryParse(
+                      (land['tanggal_terakhir_siram'] ?? '').toString(),
+                    ) ??
+                    DateTime.now(),
+                lastFertilized:
+                    DateTime.tryParse(
+                      (land['tanggal_terakhir_pupuk'] ?? '').toString(),
+                    ) ??
+                    DateTime.now(),
+                fertilizeIntervalWeeks:
+                    (land['interval_pupuk_minggu'] as num?)?.toInt() ?? 1,
+              ),
+            ),
+          ),
+        )
+        .then((_) => _load());
+  }
+
+  Future<void> _openEdit(Map<String, dynamic> land) async {
+    final id = (land['id'] ?? '').toString();
+    if (id.isEmpty) return;
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => TambahLahanPage(
+          idLahan: id,
+          initial: LandData(
+            id: id,
+            name: (land['nama'] ?? '').toString(),
+            province: (land['provinsi'] ?? '').toString(),
+            city: (land['kota'] ?? '').toString(),
+            district: (land['kecamatan'] ?? '').toString(),
+            plantAgeMonths: (land['umur_tanaman_bulan'] as num?)?.toInt() ?? 1,
+            lastWatered:
+                DateTime.tryParse(
+                  (land['tanggal_terakhir_siram'] ?? '').toString(),
+                ) ??
+                DateTime.now(),
+            lastFertilized:
+                DateTime.tryParse(
+                  (land['tanggal_terakhir_pupuk'] ?? '').toString(),
+                ) ??
+                DateTime.now(),
+            fertilizeIntervalWeeks:
+                (land['interval_pupuk_minggu'] as num?)?.toInt() ?? 1,
+          ),
+        ),
+      ),
+    );
+    if (mounted) _load();
+  }
+
+  Future<void> _hapus(Map<String, dynamic> land) async {
+    final id = (land['id'] ?? '').toString();
+    if (id.isEmpty) return;
+    final p = context.palette;
+    final confirm = await showDialog<bool>(
+      context: context,
+      builder: (ctx) => AlertDialog(
+        title: const Text('Hapus Lahan?'),
+        content: Text(
+          'Lahan "${land['nama']}" beserta jadwal dan riwayatnya akan dihapus permanen.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.pop(ctx, false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            style: FilledButton.styleFrom(backgroundColor: p.error),
+            onPressed: () => Navigator.pop(ctx, true),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+    if (confirm != true || !mounted) return;
+    try {
+      await hapusLahan(id);
+      if (!mounted) return;
+      showSuccessPopup(context, 'Lahan dihapus.');
+      _load();
+    } catch (e) {
+      if (!mounted) return;
+      showErrorPopup(context, 'Gagal menghapus: ${pesanError(e)}');
+    }
+  }
+
+  List<Map<String, dynamic>> get _filteredReal {
+    final list = _lahanList ?? [];
+    final q = _query.toLowerCase();
+    if (q.isEmpty) return list;
+    return list.where((e) {
+      final nama = ((e['nama'] ?? '') as Object).toString().toLowerCase();
+      final kec = ((e['kecamatan'] ?? '') as Object).toString().toLowerCase();
+      final kota = ((e['kota'] ?? '') as Object).toString().toLowerCase();
+      return nama.contains(q) || kec.contains(q) || kota.contains(q);
+    }).toList();
   }
 
   List<Plot> get _filtered {
@@ -151,7 +298,9 @@ class _LahanPageState extends State<LahanPage> {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    final list = _filtered;
+    final real = _filteredReal;
+    final dummy = _filtered;
+    final useReal = _lahanList != null;
     return Scaffold(
       backgroundColor: p.background,
       body: SafeArea(
@@ -160,46 +309,267 @@ class _LahanPageState extends State<LahanPage> {
           children: [
             _TopBar(p: p),
             Expanded(
-              child: ListView(
-                padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
-                children: [
-                  _HeaderSection(
-                    palette: p,
-                    onAdd: _openAddLand,
-                    onFilter: () => setState(() => _filter = (_filter + 1) % 3),
-                  ),
-                  const SizedBox(height: 18),
-                  _SearchField(
-                    palette: p,
-                    onChanged: (v) => setState(() => _query = v),
-                  ),
-                  const SizedBox(height: 14),
-                  _FilterChips(
-                    palette: p,
-                    selected: _filter,
-                    onSelected: (i) => setState(() => _filter = i),
-                  ),
-                  const SizedBox(height: 18),
-                  if (list.isEmpty)
-                    Padding(
-                      padding: const EdgeInsets.symmetric(vertical: 40),
-                      child: Center(
+              child: RefreshIndicator(
+                onRefresh: _load,
+                child: ListView(
+                  padding: const EdgeInsets.fromLTRB(16, 4, 16, 24),
+                  children: [
+                    _HeaderSection(
+                      palette: p,
+                      countText: useReal
+                          ? '${real.length} Petak Aktif'
+                          : '${dummy.length} Petak (Contoh)',
+                      onAdd: _openAddLand,
+                      onFilter: () => setState(() => _filter = (_filter + 1) % 3),
+                    ),
+                    const SizedBox(height: 18),
+                    _SearchField(
+                      palette: p,
+                      onChanged: (v) => setState(() => _query = v),
+                    ),
+                    const SizedBox(height: 14),
+                    _FilterChips(
+                      palette: p,
+                      selected: _filter,
+                      onSelected: (i) => setState(() => _filter = i),
+                    ),
+                    const SizedBox(height: 18),
+                    if (_isLoading)
+                      const Padding(
+                        padding: EdgeInsets.symmetric(vertical: 40),
+                        child: Center(child: CircularProgressIndicator()),
+                      )
+                    else if (_error != null && (_lahanList == null || _lahanList!.isEmpty)) ...[
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 12),
                         child: Text(
-                          'Petak tidak ditemukan',
-                          style: TextStyle(color: p.subtitle),
+                          'Gagal memuat lahan: $_error',
+                          style: TextStyle(color: p.error, fontSize: 12),
                         ),
                       ),
-                    ),
-                  for (final p in list) ...[
-                    _PlotListCard(plot: p, palette: context.palette),
-                    const SizedBox(height: 16),
+                      OutlinedButton.icon(
+                        onPressed: _load,
+                        icon: const Icon(Icons.refresh, size: 16),
+                        label: const Text('Muat ulang'),
+                      ),
+                      const SizedBox(height: 16),
+                      for (final d in dummy) ...[
+                        _PlotListCard(plot: d, palette: context.palette),
+                        const SizedBox(height: 16),
+                      ],
+                    ] else if (useReal && real.isEmpty)
+                      Padding(
+                        padding: const EdgeInsets.symmetric(vertical: 40),
+                        child: Center(
+                          child: Text(
+                            'Belum ada lahan. Tambah lahan pertama Anda.',
+                            style: TextStyle(color: p.subtitle),
+                          ),
+                        ),
+                      )
+                    else if (useReal) ...[
+                      for (final land in real) ...[
+                        _RealLahanCard(
+                          land: land,
+                          palette: context.palette,
+                          onDetail: () => _openDetail(land),
+                          onEdit: () => _openEdit(land),
+                          onDelete: () => _hapus(land),
+                        ),
+                        const SizedBox(height: 16),
+                      ],
+                    ] else ...[
+                      if (dummy.isEmpty)
+                        Padding(
+                          padding: const EdgeInsets.symmetric(vertical: 40),
+                          child: Center(
+                            child: Text(
+                              'Petak tidak ditemukan',
+                              style: TextStyle(color: p.subtitle),
+                            ),
+                          ),
+                        ),
+                      for (final d in dummy) ...[
+                        _PlotListCard(plot: d, palette: context.palette),
+                        const SizedBox(height: 16),
+                      ],
+                    ],
+                    const SizedBox(height: 4),
                   ],
-                  const SizedBox(height: 4),
-                ],
+                ),
               ),
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _RealLahanCard extends StatelessWidget {
+  final Map<String, dynamic> land;
+  final AppPalette palette;
+  final VoidCallback onDetail;
+  final VoidCallback onEdit;
+  final VoidCallback onDelete;
+
+  const _RealLahanCard({
+    required this.land,
+    required this.palette,
+    required this.onDetail,
+    required this.onEdit,
+    required this.onDelete,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final nama = (land['nama'] ?? 'Lahan').toString();
+    final lokasi =
+        '${land['kecamatan'] ?? ''}, ${land['kota'] ?? ''}'.trim();
+    final umur = (land['umur_tanaman_bulan'] ?? '-').toString();
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(18),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(20),
+        boxShadow: [
+          BoxShadow(
+            color: palette.shadow,
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 62,
+                height: 62,
+                decoration: BoxDecoration(
+                  color: palette.accentSoft,
+                  borderRadius: BorderRadius.circular(14),
+                ),
+                child: Icon(
+                  Icons.eco,
+                  color: palette.accent,
+                  size: 30,
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      nama,
+                      maxLines: 2,
+                      overflow: TextOverflow.ellipsis,
+                      style: TextStyle(
+                        color: palette.title,
+                        fontSize: 17,
+                        fontWeight: FontWeight.w700,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '$lokasi\nUmur $umur Bulan',
+                      style: TextStyle(
+                        color: palette.subtitle,
+                        fontSize: 12,
+                        height: 1.35,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              Column(
+                children: [
+                  Tooltip(
+                    message: 'Edit $nama',
+                    child: Material(
+                      color: palette.surfaceAlt,
+                      borderRadius: BorderRadius.circular(10),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(10),
+                        onTap: onEdit,
+                        child: SizedBox(
+                          width: 38,
+                          height: 38,
+                          child: Icon(
+                            Icons.edit_rounded,
+                            color: palette.icon,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(height: 6),
+                  Tooltip(
+                    message: 'Hapus $nama',
+                    child: Material(
+                      color: palette.error.withAlpha(26),
+                      borderRadius: BorderRadius.circular(10),
+                      child: InkWell(
+                        borderRadius: BorderRadius.circular(10),
+                        onTap: onDelete,
+                        child: SizedBox(
+                          width: 38,
+                          height: 38,
+                          child: Icon(
+                            Icons.delete_outline_rounded,
+                            color: palette.error,
+                            size: 20,
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onDetail,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: palette.title,
+                    side: BorderSide(color: palette.border),
+                    minimumSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  child: const Text('Lihat Detail'),
+                ),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onDetail,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: palette.primary,
+                    foregroundColor: palette.onPrimary,
+                    minimumSize: const Size.fromHeight(48),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(14),
+                    ),
+                  ),
+                  icon: const Icon(Icons.visibility_outlined, size: 19),
+                  label: const Text('Buka'),
+                ),
+              ),
+            ],
+          ),
+        ],
       ),
     );
   }
@@ -261,11 +631,13 @@ class _HeaderSection extends StatelessWidget {
   final AppPalette palette;
   final VoidCallback onAdd;
   final VoidCallback onFilter;
+  final String? countText;
 
   const _HeaderSection({
     required this.palette,
     required this.onAdd,
     required this.onFilter,
+    this.countText,
   });
 
   @override
@@ -279,9 +651,9 @@ class _HeaderSection extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  const CircleAvatar(
+                  CircleAvatar(
                     radius: 3.5,
-                    backgroundColor: LahanColors.primary,
+                    backgroundColor: palette.primary,
                   ),
                   const SizedBox(width: 6),
                   Text(
@@ -305,7 +677,7 @@ class _HeaderSection extends StatelessWidget {
               ),
               const SizedBox(height: 4),
               Text(
-                '3 Petak Aktif  •  Total 2.4 Ha',
+                countText ?? '3 Petak Aktif  •  Total 2.4 Ha',
                 style: TextStyle(fontSize: 12, color: palette.subtitle),
               ),
             ],
@@ -376,7 +748,7 @@ class _SearchField extends StatelessWidget {
         borderRadius: BorderRadius.circular(14),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.04),
+            color: palette.shadow,
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -409,13 +781,12 @@ class _FilterChips extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     final items = <(String, IconData?, Color, Color)>[
       ('Semua Petak (3)', null, palette.primary, palette.onPrimary),
       (
         'Perlu Tindakan (1)',
         Icons.warning_amber_rounded,
-        isDark ? const Color(0xFF492621) : LahanColors.dangerBg,
+        palette.error.withValues(alpha: 0.12),
         palette.error,
       ),
       ('Sehat (2)', null, palette.surface, palette.title),
@@ -481,7 +852,6 @@ class _PlotListCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return _Card(
       palette: palette,
       child: Column(
@@ -553,9 +923,7 @@ class _PlotListCard extends StatelessWidget {
                   const SizedBox(height: 6),
                   _PlotActionButton(
                     icon: Icons.delete_outline_rounded,
-                    background: isDark
-                        ? const Color(0xFF492621)
-                        : const Color(0xFFFFE9E7),
+                    background: palette.error.withValues(alpha: 0.12),
                     foreground: palette.error,
                     tooltip: 'Hapus ${plot.name}',
                   ),
@@ -713,6 +1081,7 @@ class PlotCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final isWarning = plot.status == PlotStatus.warning;
+    final p = context.palette;
 
     return _Card(
       child: Column(
@@ -742,9 +1111,10 @@ class PlotCard extends StatelessWidget {
                       children: [
                         Text(
                           plot.name,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 22,
                             fontWeight: FontWeight.w600,
+                            color: p.title,
                           ),
                         ),
                         const SizedBox(width: 8),
@@ -752,9 +1122,9 @@ class PlotCard extends StatelessWidget {
                           child: Text(
                             plot.block,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 14,
-                              color: LahanColors.textMuted,
+                              color: p.subtitle,
                             ),
                           ),
                         ),
@@ -763,9 +1133,9 @@ class PlotCard extends StatelessWidget {
                     const SizedBox(height: 2),
                     Text(
                       plot.crop,
-                      style: const TextStyle(
+                      style: TextStyle(
                         fontSize: 14,
-                        color: LahanColors.textMuted,
+                        color: p.subtitle,
                       ),
                     ),
                   ],
@@ -781,14 +1151,14 @@ class PlotCard extends StatelessWidget {
                       fontWeight: FontWeight.w700,
                       color: isWarning
                           ? const Color(0xFF8A4B00)
-                          : LahanColors.primary,
+                          : p.primary,
                     ),
                   ),
-                  const Text(
+                  Text(
                     'Skor Vitalitas',
                     style: TextStyle(
                       fontSize: 12,
-                      color: LahanColors.textMuted,
+                      color: p.subtitle,
                     ),
                   ),
                 ],
@@ -817,15 +1187,15 @@ class PlotCard extends StatelessWidget {
                     vertical: 3,
                   ),
                   decoration: BoxDecoration(
-                    color: LahanColors.primaryLight,
+                    color: p.accentSoft,
                     borderRadius: BorderRadius.circular(20),
                   ),
                   child: Text(
                     plot.phase,
-                    style: const TextStyle(
+                    style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w600,
-                      color: LahanColors.primary,
+                      color: p.onAccentSoft,
                     ),
                   ),
                 ),
@@ -839,18 +1209,18 @@ class PlotCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.all(12),
               decoration: BoxDecoration(
-                color: LahanColors.dangerBg,
+                color: p.error.withValues(alpha: 0.12),
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const Padding(
-                    padding: EdgeInsets.only(top: 2),
+                  Padding(
+                    padding: const EdgeInsets.only(top: 2),
                     child: Icon(
                       Icons.error_outline,
                       size: 18,
-                      color: LahanColors.danger,
+                      color: p.error,
                     ),
                   ),
                   const SizedBox(width: 10),
@@ -860,18 +1230,18 @@ class PlotCard extends StatelessWidget {
                       children: [
                         Text(
                           plot.alertTitle!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w600,
-                            color: LahanColors.danger,
+                            color: p.error,
                           ),
                         ),
                         const SizedBox(height: 2),
                         Text(
                           plot.alertDesc!,
-                          style: const TextStyle(
+                          style: TextStyle(
                             fontSize: 13,
-                            color: Color(0xFF5C3B38),
+                            color: p.title,
                           ),
                         ),
                       ],
@@ -887,8 +1257,8 @@ class PlotCard extends StatelessWidget {
                   child: _PillButton(
                     icon: Icons.medical_services_outlined,
                     label: 'Rekomendasi',
-                    bg: const Color(0xFFFFCFCB),
-                    fg: LahanColors.danger,
+                    bg: p.error.withValues(alpha: 0.12),
+                    fg: p.error,
                     onTap: () {},
                   ),
                 ),
@@ -897,8 +1267,8 @@ class PlotCard extends StatelessWidget {
                   child: _PillButton(
                     icon: Icons.visibility_outlined,
                     label: 'Detail Petak',
-                    bg: LahanColors.softBlue,
-                    fg: LahanColors.text,
+                    bg: p.surfaceAlt,
+                    fg: p.title,
                     onTap: () {},
                   ),
                 ),
@@ -911,12 +1281,12 @@ class PlotCard extends StatelessWidget {
               width: double.infinity,
               padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
               decoration: BoxDecoration(
-                color: LahanColors.softBlue,
+                color: p.surfaceAlt,
                 borderRadius: BorderRadius.circular(12),
               ),
               child: Row(
                 children: [
-                  const Icon(Icons.alarm, size: 20, color: LahanColors.primary),
+                  Icon(Icons.alarm, size: 20, color: p.accent),
                   const SizedBox(width: 10),
                   Expanded(
                     child: Text(
@@ -924,10 +1294,10 @@ class PlotCard extends StatelessWidget {
                       style: const TextStyle(fontSize: 13),
                     ),
                   ),
-                  const Icon(
+                  Icon(
                     Icons.chevron_right,
                     size: 20,
-                    color: LahanColors.textMuted,
+                    color: p.subtitle,
                   ),
                 ],
               ),
@@ -939,8 +1309,8 @@ class PlotCard extends StatelessWidget {
               child: FilledButton(
                 onPressed: () {},
                 style: FilledButton.styleFrom(
-                  backgroundColor: LahanColors.softBlue,
-                  foregroundColor: LahanColors.text,
+                  backgroundColor: p.surfaceAlt,
+                  foregroundColor: p.title,
                   shape: RoundedRectangleBorder(
                     borderRadius: BorderRadius.circular(24),
                   ),
@@ -965,15 +1335,15 @@ class PlotCard extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Row(
-                  children: const [
-                    Icon(Icons.water, size: 18, color: LahanColors.primary),
-                    SizedBox(width: 6),
+                  children: [
+                    Icon(Icons.water, size: 18, color: p.accent),
+                    const SizedBox(width: 6),
                     Text(
                       'Irigasi Tetes Aktif',
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w500,
-                        color: LahanColors.primary,
+                        color: p.accent,
                       ),
                     ),
                   ],
@@ -981,8 +1351,8 @@ class PlotCard extends StatelessWidget {
                 FilledButton(
                   onPressed: () {},
                   style: FilledButton.styleFrom(
-                    backgroundColor: LahanColors.softBlue,
-                    foregroundColor: LahanColors.text,
+                    backgroundColor: p.surfaceAlt,
+                    foregroundColor: p.title,
                     padding: const EdgeInsets.symmetric(
                       horizontal: 18,
                       vertical: 12,
@@ -1017,10 +1387,11 @@ class _InfoItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Row(
       mainAxisSize: MainAxisSize.min,
       children: [
-        Icon(icon, size: 17, color: LahanColors.textMuted),
+        Icon(icon, size: 17, color: p.subtitle),
         const SizedBox(width: 6),
         Text(text, style: const TextStyle(fontSize: 13)),
       ],

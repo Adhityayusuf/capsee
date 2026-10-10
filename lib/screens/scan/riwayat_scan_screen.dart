@@ -9,7 +9,20 @@ class ScanHistoryItem {
   final String imagePath;
   final DateTime scannedAt;
 
-  const ScanHistoryItem({required this.imagePath, required this.scannedAt});
+  /// Data dari backend (nullable agar file lokal lama tetap jalan).
+  final String? idScan;
+  final String? idLahan;
+  final String? urlGambar;
+  final String? statusHasil;
+
+  const ScanHistoryItem({
+    required this.imagePath,
+    required this.scannedAt,
+    this.idScan,
+    this.idLahan,
+    this.urlGambar,
+    this.statusHasil,
+  });
 }
 
 class RiwayatScanScreen extends StatefulWidget {
@@ -326,7 +339,11 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
       );
 
   Widget _card(ScanHistoryItem item, AppPalette p) {
+    final hasUrl = (item.urlGambar ?? '').isNotEmpty;
     final file = File(item.imagePath);
+    final status = (item.statusHasil ?? '').toLowerCase();
+    final isSehat = status == 'sehat';
+    final isTidakSehat = status == 'tidak_sehat';
     return Card(
       elevation: 1,
       color: p.surface,
@@ -336,7 +353,23 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
           children: [
             ClipRRect(
               borderRadius: BorderRadius.circular(8),
-              child: file.existsSync()
+              child: hasUrl
+                  ? Image.network(
+                      item.urlGambar!,
+                      width: 56,
+                      height: 56,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Container(
+                        width: 56,
+                        height: 56,
+                        color: p.surfaceAlt,
+                        child: Icon(
+                          Icons.image_not_supported_outlined,
+                          color: p.icon,
+                        ),
+                      ),
+                    )
+                  : file.existsSync()
                   ? Image.file(
                       file,
                       width: 56,
@@ -373,12 +406,28 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
               decoration: BoxDecoration(
-                color: p.surfaceAlt,
+                color: isSehat
+                    ? const Color(0xFFDCFCE7)
+                    : isTidakSehat
+                    ? const Color(0xFFFFDAD6)
+                    : p.surfaceAlt,
                 borderRadius: BorderRadius.circular(20),
               ),
               child: Text(
-                'Menunggu analisis',
-                style: _style(10, p.subtitle, FontWeight.w600),
+                isSehat
+                    ? 'Sehat'
+                    : isTidakSehat
+                    ? 'Tidak sehat'
+                    : 'Menunggu analisis',
+                style: _style(
+                  10,
+                  isSehat
+                      ? const Color(0xFF166534)
+                      : isTidakSehat
+                      ? const Color(0xFF93000A)
+                      : p.subtitle,
+                  FontWeight.w600,
+                ),
               ),
             ),
           ],

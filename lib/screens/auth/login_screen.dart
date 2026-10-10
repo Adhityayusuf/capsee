@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/app_colors.dart';
+import '../../core/app_theme.dart';
 import '../../core/validators.dart';
 import '../../widgets/auth_widgets.dart';
+import '../../widgets/popup_notifikasi.dart';
 import '../../services/services.dart';
 import '../home/dashboard_screen.dart';
 import 'onboarding_screen.dart';
@@ -59,9 +60,7 @@ class _LoginScreenState extends State<LoginScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      showErrorPopup(context, pesanError(e));
     }
   }
 
@@ -88,6 +87,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildFormCard() {
+    final p = context.palette;
     return AuthCard(
       child: Form(
         key: _formKey,
@@ -101,7 +101,9 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
+              style: GoogleFonts.plusJakartaSans(fontSize: 15, color: p.title),
               decoration: capseeInputDecoration(
+                context,
                 hint: 'nama@email.com',
                 prefixIcon: Icons.mail_outline_rounded,
               ),
@@ -133,7 +135,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 13,
                       fontWeight: FontWeight.w700,
-                      color: AppColors.primaryDark,
+                      color: p.accent,
                     ),
                   ),
                 ),
@@ -145,7 +147,9 @@ class _LoginScreenState extends State<LoginScreen> {
               obscureText: _obscurePassword,
               textInputAction: TextInputAction.done,
               onFieldSubmitted: (_) => _submit(),
+              style: GoogleFonts.plusJakartaSans(fontSize: 15, color: p.title),
               decoration: capseeInputDecoration(
+                context,
                 hint: 'Masukkan kata sandi',
                 prefixIcon: Icons.lock_outline_rounded,
                 suffix: IconButton(
@@ -155,7 +159,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     _obscurePassword
                         ? Icons.visibility_outlined
                         : Icons.visibility_off_outlined,
-                    color: AppColors.icon,
+                    color: p.icon,
                   ),
                 ),
               ),
@@ -171,7 +175,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   height: 24,
                   child: Checkbox(
                     value: _rememberMe,
-                    activeColor: AppColors.primaryDark,
+                    activeColor: p.primary,
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(5),
                     ),
@@ -185,7 +189,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     'Ingat akun di perangkat ini',
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 14,
-                      color: AppColors.title,
+                      color: p.title,
                     ),
                   ),
                 ),
@@ -208,6 +212,7 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildRegisterRow() {
+    final p = context.palette;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -215,7 +220,7 @@ class _LoginScreenState extends State<LoginScreen> {
           'Belum punya akun?',
           style: GoogleFonts.plusJakartaSans(
             fontSize: 16,
-            color: AppColors.title,
+            color: p.title,
           ),
         ),
         const SizedBox(width: 8),
@@ -230,7 +235,7 @@ class _LoginScreenState extends State<LoginScreen> {
             style: GoogleFonts.plusJakartaSans(
               fontSize: 16,
               fontWeight: FontWeight.w800,
-              color: AppColors.primaryDark,
+              color: p.accent,
             ),
           ),
         ),
@@ -239,10 +244,11 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildFooter() {
+    final p = context.palette;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        const Icon(Icons.view_agenda_outlined, size: 18, color: AppColors.icon),
+        Icon(Icons.view_agenda_outlined, size: 18, color: p.icon),
         const SizedBox(width: 8),
         Flexible(
           child: Text(
@@ -251,7 +257,7 @@ class _LoginScreenState extends State<LoginScreen> {
               fontSize: 11,
               fontWeight: FontWeight.w700,
               letterSpacing: 0.3,
-              color: AppColors.icon,
+              color: p.icon,
             ),
           ),
         ),

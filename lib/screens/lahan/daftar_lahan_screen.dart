@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/app_colors.dart';
+import '../../core/app_theme.dart';
 import '../../widgets/home_top_bar.dart';
 import '../../widgets/land_card.dart';
 
@@ -53,6 +53,7 @@ class DaftarLahanScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return SafeArea(
       bottom: false,
       child: Column(
@@ -63,13 +64,13 @@ class DaftarLahanScreen extends StatelessWidget {
             onNotifikasi: onNotifikasi,
             onAkun: onAkun,
           ),
-          _header(),
+          _header(p),
           Expanded(
             child: isLoading
                 ? const Center(child: CircularProgressIndicator())
                 : RefreshIndicator(
                     onRefresh: onRefresh,
-                    child: _body(context),
+                    child: _body(context, p),
                   ),
           ),
         ],
@@ -77,16 +78,16 @@ class DaftarLahanScreen extends StatelessWidget {
     );
   }
 
-  Widget _header() => Container(
+  Widget _header(AppPalette p) => Container(
     padding: const EdgeInsets.fromLTRB(16, 12, 16, 8),
     child: Row(
       children: [
-        const Icon(Icons.grass_rounded, color: AppColors.primary, size: 22),
+        Icon(Icons.grass_rounded, color: p.accent, size: 22),
         const SizedBox(width: 8),
         Expanded(
           child: Text(
             'Lahan Anda',
-            style: _style(17, AppColors.title, FontWeight.w700),
+            style: _style(17, p.title, FontWeight.w700),
           ),
         ),
         FilledButton.icon(
@@ -98,7 +99,7 @@ class DaftarLahanScreen extends StatelessWidget {
     ),
   );
 
-  Widget _body(BuildContext context) {
+  Widget _body(BuildContext context, AppPalette p) {
     if (lahanList == null || lahanList!.isEmpty) {
       return ListView(
         physics: const AlwaysScrollableScrollPhysics(),
@@ -107,20 +108,20 @@ class DaftarLahanScreen extends StatelessWidget {
           Icon(
             Icons.eco_outlined,
             size: 56,
-            color: AppColors.primary.withAlpha(120),
+            color: p.accent.withAlpha(120),
           ),
           const SizedBox(height: 16),
           Text(
             'Belum ada data lahan.',
             textAlign: TextAlign.center,
-            style: _style(15, AppColors.title, FontWeight.w700),
+            style: _style(15, p.title, FontWeight.w700),
           ),
           const SizedBox(height: 6),
           Text(
             'Tambahkan petak lahan pertama Anda untuk mulai memantau '
             'kondisi tanaman cabai.',
             textAlign: TextAlign.center,
-            style: _style(12, AppColors.subtitle, FontWeight.w400, height: 1.4),
+            style: _style(12, p.subtitle, FontWeight.w400, height: 1.4),
           ),
           const SizedBox(height: 20),
           Center(

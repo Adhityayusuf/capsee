@@ -3,7 +3,7 @@ import 'dart:math';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/app_colors.dart';
+import '../../core/app_theme.dart';
 import '../../widgets/auth_widgets.dart';
 import '../bantuan/panduan_screen.dart';
 import '../home/dashboard_screen.dart';
@@ -12,15 +12,11 @@ import '../lahan/tambah_lahan_page.dart';
 /// Data satu kartu fitur di onboarding.
 class _Feature {
   final IconData icon;
-  final Color iconBg;
-  final Color iconColor;
   final String title;
   final String description;
 
   const _Feature({
     required this.icon,
-    required this.iconBg,
-    required this.iconColor,
     required this.title,
     required this.description,
   });
@@ -29,24 +25,18 @@ class _Feature {
 const _features = [
   _Feature(
     icon: Icons.location_on_outlined,
-    iconBg: AppColors.primarySoft,
-    iconColor: AppColors.primaryDark,
     title: 'Catat Lokasi & Luas Petak',
     description:
         'Petakan koordinat mikro-iklim, varietas cabai, dan populasi bibit.',
   ),
   _Feature(
     icon: Icons.document_scanner_outlined,
-    iconBg: AppColors.infoSoft,
-    iconColor: AppColors.info,
     title: 'Deteksi Dini Hama & Daun',
     description:
         'Diagnosis otomatis bercak bakteri, antraknosa, dan thrips secara instan.',
   ),
   _Feature(
     icon: Icons.query_stats_rounded,
-    iconBg: AppColors.tertiaryFixed,
-    iconColor: AppColors.tertiary,
     title: 'Rekomendasi & Jadwal Panen',
     description:
         'Panduan dosis pupuk terukur dan prediksi tanggal panen puncak.',
@@ -58,8 +48,9 @@ class OnboardingScreen extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: p.background,
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
@@ -72,7 +63,7 @@ class OnboardingScreen extends StatelessWidget {
                   const SizedBox(height: 18),
                   const _HeroCard(),
                   const SizedBox(height: 22),
-                  _buildHeadline(),
+                  _buildHeadline(context),
                   const SizedBox(height: 20),
                   for (final feature in _features) ...[
                     _FeatureCard(feature: feature),
@@ -112,13 +103,14 @@ class OnboardingScreen extends StatelessWidget {
   // Baris atas: chip "MULAI CEPAT • 1/1" + "Lewati untuk nanti"
   // ---------------------------------------------------------------
   Widget _buildTopBar(BuildContext context) {
+    final p = context.palette;
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
-            color: AppColors.primarySoft,
+            color: p.accentSoft,
             borderRadius: BorderRadius.circular(20),
           ),
           child: Row(
@@ -127,8 +119,8 @@ class OnboardingScreen extends StatelessWidget {
               Container(
                 width: 8,
                 height: 8,
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryDark,
+                decoration: BoxDecoration(
+                  color: p.accent,
                   shape: BoxShape.circle,
                 ),
               ),
@@ -139,7 +131,7 @@ class OnboardingScreen extends StatelessWidget {
                   fontSize: 11,
                   fontWeight: FontWeight.w800,
                   letterSpacing: 0.4,
-                  color: AppColors.primaryDark,
+                  color: p.onAccentSoft,
                 ),
               ),
             ],
@@ -156,7 +148,7 @@ class OnboardingScreen extends StatelessWidget {
             style: GoogleFonts.plusJakartaSans(
               fontSize: 13,
               fontWeight: FontWeight.w600,
-              color: AppColors.title,
+              color: p.title,
             ),
           ),
         ),
@@ -167,7 +159,8 @@ class OnboardingScreen extends StatelessWidget {
   // ---------------------------------------------------------------
   // Judul + deskripsi
   // ---------------------------------------------------------------
-  Widget _buildHeadline() {
+  Widget _buildHeadline(BuildContext context) {
+    final p = context.palette;
     return Column(
       children: [
         Text(
@@ -176,7 +169,7 @@ class OnboardingScreen extends StatelessWidget {
           style: GoogleFonts.plusJakartaSans(
             fontSize: 24,
             fontWeight: FontWeight.w800,
-            color: AppColors.title,
+            color: p.title,
           ),
         ),
         const SizedBox(height: 10),
@@ -187,7 +180,7 @@ class OnboardingScreen extends StatelessWidget {
           style: GoogleFonts.plusJakartaSans(
             fontSize: 14.5,
             height: 1.5,
-            color: AppColors.subtitle,
+            color: p.subtitle,
           ),
         ),
       ],
@@ -198,23 +191,24 @@ class OnboardingScreen extends StatelessWidget {
   // Link "Pelajari cara kerja Capsee"
   // ---------------------------------------------------------------
   Widget _buildLearnMore(BuildContext context) {
+    final p = context.palette;
     return TextButton.icon(
       onPressed: () {
         Navigator.of(context).push(
           MaterialPageRoute(builder: (_) => PanduanScreen()),
         );
       },
-      icon: const Icon(
+      icon: Icon(
         Icons.menu_book_outlined,
         size: 20,
-        color: AppColors.primaryDark,
+        color: p.accent,
       ),
       label: Text(
         'Pelajari cara kerja Capsee',
         style: GoogleFonts.plusJakartaSans(
           fontSize: 14,
           fontWeight: FontWeight.w700,
-          color: AppColors.primaryDark,
+          color: p.accent,
         ),
       ),
     );
@@ -229,21 +223,22 @@ class _HeroCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Container(
       width: double.infinity,
       height: 250,
       decoration: BoxDecoration(
         borderRadius: BorderRadius.circular(24),
-        gradient: const LinearGradient(
+        gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [AppColors.primarySoft, Colors.white],
+          colors: [p.accentSoft, p.surface],
         ),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
+            color: p.shadow,
             blurRadius: 20,
-            offset: Offset(0, 8),
+            offset: const Offset(0, 8),
           ),
         ],
       ),
@@ -254,14 +249,14 @@ class _HeroCard extends StatelessWidget {
           Container(
             width: 170,
             height: 170,
-            decoration: const BoxDecoration(
-              color: Colors.white,
+            decoration: BoxDecoration(
+              color: p.surface,
               shape: BoxShape.circle,
               boxShadow: [
                 BoxShadow(
-                  color: AppColors.primaryShadow,
+                  color: p.shadow,
                   blurRadius: 30,
-                  offset: Offset(0, 10),
+                  offset: const Offset(0, 10),
                 ),
               ],
             ),
@@ -271,29 +266,32 @@ class _HeroCard extends StatelessWidget {
             width: 112,
             height: 112,
             child: CustomPaint(
-              painter: _ScanFramePainter(),
-              child: const Center(
+              painter: _ScanFramePainter(
+                bracketColor: p.accent,
+                dashColor: p.accent.withValues(alpha: 0.4),
+              ),
+              child: Center(
                 child: Icon(
                   Icons.eco_rounded,
                   size: 62,
-                  color: AppColors.primary,
+                  color: p.accent,
                 ),
               ),
             ),
           ),
 
           // Badge "AI Ready"
-          const Positioned(
+          Positioned(
             top: 26,
             right: 64,
             child: _Pill(
               leading: Icon(
                 Icons.center_focus_strong_rounded,
                 size: 14,
-                color: AppColors.primaryDark,
+                color: p.accent,
               ),
               text: 'AI Ready',
-              textColor: AppColors.primaryDark,
+              textColor: p.accent,
             ),
           ),
           // Badge "Model v2.4"
@@ -304,27 +302,27 @@ class _HeroCard extends StatelessWidget {
               leading: Container(
                 width: 8,
                 height: 8,
-                decoration: const BoxDecoration(
-                  color: AppColors.primaryFixed,
+                decoration: BoxDecoration(
+                  color: p.accent,
                   shape: BoxShape.circle,
                 ),
               ),
               text: 'Model v2.4',
-              textColor: AppColors.title,
+              textColor: p.title,
             ),
           ),
           // Badge "Capsee Smart Agronomy"
-          const Positioned(
+          Positioned(
             bottom: 18,
             child: _Pill(
               leading: Icon(
                 Icons.bolt_rounded,
                 size: 14,
-                color: AppColors.primaryDark,
+                color: p.accent,
               ),
               text: 'Capsee Smart Agronomy',
-              textColor: AppColors.primaryDark,
-              background: AppColors.chipBg,
+              textColor: p.accent,
+              background: p.surfaceAlt,
               shadow: false,
             ),
           ),
@@ -338,31 +336,32 @@ class _HeroCard extends StatelessWidget {
 class _Pill extends StatelessWidget {
   final Widget leading;
   final String text;
-  final Color textColor;
-  final Color background;
+  final Color? textColor;
+  final Color? background;
   final bool shadow;
 
   const _Pill({
     required this.leading,
     required this.text,
-    required this.textColor,
-    this.background = Colors.white,
+    this.textColor,
+    this.background,
     this.shadow = true,
   });
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
-        color: background,
+        color: background ?? p.surface,
         borderRadius: BorderRadius.circular(20),
         boxShadow: shadow
-            ? const [
+            ? [
                 BoxShadow(
-                  color: AppColors.shadow,
+                  color: p.shadow,
                   blurRadius: 10,
-                  offset: Offset(0, 4),
+                  offset: const Offset(0, 4),
                 ),
               ]
             : null,
@@ -377,7 +376,7 @@ class _Pill extends StatelessWidget {
             style: GoogleFonts.plusJakartaSans(
               fontSize: 12,
               fontWeight: FontWeight.w700,
-              color: textColor,
+              color: textColor ?? p.title,
             ),
           ),
         ],
@@ -388,6 +387,14 @@ class _Pill extends StatelessWidget {
 
 /// Menggambar 4 sudut bingkai scan + lingkaran putus-putus.
 class _ScanFramePainter extends CustomPainter {
+  final Color bracketColor;
+  final Color dashColor;
+
+  const _ScanFramePainter({
+    required this.bracketColor,
+    required this.dashColor,
+  });
+
   @override
   void paint(Canvas canvas, Size size) {
     final w = size.width;
@@ -395,7 +402,7 @@ class _ScanFramePainter extends CustomPainter {
 
     // --- Sudut bingkai ---
     final bracketPaint = Paint()
-      ..color = AppColors.primary
+      ..color = bracketColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2.5
       ..strokeCap = StrokeCap.round;
@@ -418,7 +425,7 @@ class _ScanFramePainter extends CustomPainter {
 
     // --- Lingkaran putus-putus ---
     final dashPaint = Paint()
-      ..color = const Color(0x6615803D)
+      ..color = dashColor
       ..style = PaintingStyle.stroke
       ..strokeWidth = 1.5
       ..strokeCap = StrokeCap.round;
@@ -433,7 +440,9 @@ class _ScanFramePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter oldDelegate) => false;
+  bool shouldRepaint(covariant _ScanFramePainter oldDelegate) =>
+      oldDelegate.bracketColor != bracketColor ||
+      oldDelegate.dashColor != dashColor;
 }
 
 /// ---------------------------------------------------------------
@@ -445,17 +454,18 @@ class _FeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: p.surface,
         borderRadius: BorderRadius.circular(16),
-        boxShadow: const [
+        boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
+            color: p.shadow,
             blurRadius: 14,
-            offset: Offset(0, 6),
+            offset: const Offset(0, 6),
           ),
         ],
       ),
@@ -466,10 +476,11 @@ class _FeatureCard extends StatelessWidget {
             width: 44,
             height: 44,
             decoration: BoxDecoration(
-              color: feature.iconBg,
+              color: p.accentSoft,
               borderRadius: BorderRadius.circular(12),
             ),
-            child: Icon(feature.icon, size: 22, color: feature.iconColor),
+            child:
+                Icon(feature.icon, size: 22, color: p.onAccentSoft),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -481,7 +492,7 @@ class _FeatureCard extends StatelessWidget {
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 15,
                     fontWeight: FontWeight.w800,
-                    color: AppColors.title,
+                    color: p.title,
                   ),
                 ),
                 const SizedBox(height: 4),
@@ -490,7 +501,7 @@ class _FeatureCard extends StatelessWidget {
                   style: GoogleFonts.plusJakartaSans(
                     fontSize: 13,
                     height: 1.4,
-                    color: AppColors.subtitle,
+                    color: p.subtitle,
                   ),
                 ),
               ],

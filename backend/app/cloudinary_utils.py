@@ -34,4 +34,13 @@ def upload_ke_cloudinary(gambar_bytes: bytes, nama_file: str = "scan.jpg") -> st
     if response.status_code != 200:
         raise CloudinaryUploadError(f"Upload ke Cloudinary gagal: {response.text}")
 
-    return response.json()["secure_url"]
+    try:
+        payload = response.json()
+    except ValueError as exc:
+        raise CloudinaryUploadError(f"Respons Cloudinary tidak valid: {response.text[:200]}") from exc
+
+    secure_url = payload.get("secure_url")
+    if not secure_url:
+        raise CloudinaryUploadError(f"Upload ke Cloudinary gagal: {response.text[:500]}")
+
+    return secure_url

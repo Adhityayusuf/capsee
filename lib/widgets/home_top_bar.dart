@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../core/app_colors.dart';
+import '../core/app_theme.dart';
 
 TextStyle _style(
   double size,
@@ -36,15 +36,16 @@ class HomeTopBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: const BoxDecoration(
-        color: AppColors.background,
+      decoration: BoxDecoration(
+        color: p.surface,
         boxShadow: [
           BoxShadow(
-            color: AppColors.shadow,
+            color: p.shadow,
             blurRadius: 8,
-            offset: Offset(0, 1),
+            offset: const Offset(0, 1),
           ),
         ],
       ),
@@ -54,10 +55,10 @@ class HomeTopBar extends StatelessWidget {
             width: 32,
             height: 32,
             decoration: BoxDecoration(
-              color: AppColors.primary,
+              color: p.primary,
               borderRadius: BorderRadius.circular(8),
             ),
-            child: const Icon(Icons.eco_rounded, color: Colors.white, size: 20),
+            child: Icon(Icons.eco_rounded, color: p.onPrimary, size: 20),
           ),
           const SizedBox(width: 8),
           Column(
@@ -67,26 +68,26 @@ class HomeTopBar extends StatelessWidget {
                 'CAPSEE',
                 style: _style(
                   10,
-                  AppColors.primary,
+                  p.accent,
                   FontWeight.w800,
                   letterSpacing: 1,
                 ),
               ),
               Text(
                 title,
-                style: _style(18, AppColors.title, FontWeight.w700, height: 1),
+                style: _style(18, p.title, FontWeight.w700, height: 1),
               ),
             ],
           ),
           const Spacer(),
-          _bellButton(),
+          _bellButton(context),
           const SizedBox(width: 4),
           GestureDetector(
             onTap: onAkun,
-            child: const CircleAvatar(
+            child: CircleAvatar(
               radius: 16,
-              backgroundColor: AppColors.primary,
-              child: Icon(Icons.person_rounded, color: Colors.white, size: 18),
+              backgroundColor: p.primary,
+              child: Icon(Icons.person_rounded, color: p.onPrimary, size: 18),
             ),
           ),
         ],
@@ -95,36 +96,45 @@ class HomeTopBar extends StatelessWidget {
   }
 
   /// Ikon lonceng dengan badge jumlah notifikasi belum dibaca.
-  Widget _bellButton() => Stack(
-    clipBehavior: Clip.none,
-    children: [
-      IconButton(
-        onPressed: onNotifikasi,
-        tooltip: 'Notifikasi',
-        icon: const Icon(
-          Icons.notifications_none_rounded,
-          color: AppColors.title,
-        ),
-      ),
-      if (unreadCount > 0)
-        Positioned(
-          right: 3,
-          top: 3,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
-            constraints: const BoxConstraints(minWidth: 16),
-            decoration: BoxDecoration(
-              color: AppColors.error,
-              borderRadius: BorderRadius.circular(10),
-              border: Border.all(color: AppColors.background, width: 1.5),
-            ),
-            child: Text(
-              unreadCount > 99 ? '99+' : '$unreadCount',
-              textAlign: TextAlign.center,
-              style: _style(9, Colors.white, FontWeight.w700, height: 1.2),
-            ),
+  Widget _bellButton(BuildContext context) {
+    final p = context.palette;
+    final isDark = Theme.of(context).brightness == Brightness.dark;
+    return Stack(
+      clipBehavior: Clip.none,
+      children: [
+        IconButton(
+          onPressed: onNotifikasi,
+          tooltip: 'Notifikasi',
+          icon: Icon(
+            Icons.notifications_none_rounded,
+            color: p.title,
           ),
         ),
-    ],
-  );
+        if (unreadCount > 0)
+          Positioned(
+            right: 3,
+            top: 3,
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1),
+              constraints: const BoxConstraints(minWidth: 16),
+              decoration: BoxDecoration(
+                color: p.error,
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: p.surface, width: 1.5),
+              ),
+              child: Text(
+                unreadCount > 99 ? '99+' : '$unreadCount',
+                textAlign: TextAlign.center,
+                style: _style(
+                  9,
+                  isDark ? p.surface : Colors.white,
+                  FontWeight.w700,
+                  height: 1.2,
+                ),
+              ),
+            ),
+          ),
+      ],
+    );
+  }
 }

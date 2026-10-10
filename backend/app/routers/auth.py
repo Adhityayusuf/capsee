@@ -79,12 +79,22 @@ def login(data: LoginRequest):
         cur = conn.cursor()
 
         cur.execute(
-            "SELECT id, nama, email, nomor_hp, kata_sandi_hash FROM pengguna WHERE email = %s",
+            "SELECT id, nama, email, nomor_hp, kata_sandi_hash, google_id FROM pengguna WHERE email = %s",
             (data.email,),
         )
         row = cur.fetchone()
 
-        if not row or not verify_password(data.password, row[4]):
+        if not row:
+            raise HTTPException(status_code=401, detail="Email atau password salah")
+
+        # Akun Google (kata_sandi_hash NULL) tidak bisa login pakai password.
+        if not row[4]:
+            raise HTTPException(
+                status_code=401,
+                detail="Akun ini terdaftar via Google. Silakan masuk dengan Google.",
+            )
+
+        if not verify_password(data.password, row[4]):
             raise HTTPException(status_code=401, detail="Email atau password salah")
 
         id_pengguna = row[0]

@@ -2,7 +2,7 @@ import 'package:flutter/material.dart';
 
 import 'core/app_theme.dart';
 import 'core/theme_mode_scope.dart';
-import 'screens/auth/register_screen.dart';
+import 'screens/splash/splash_screen.dart';
 
 void main() {
   runApp(const CapseeApp());
@@ -37,7 +37,7 @@ class _CapseeAppState extends State<CapseeApp> {
           themeMode: themeMode,
           theme: AppTheme.light(),
           darkTheme: AppTheme.dark(),
-          home: const RegisterScreen(),
+          home: const SplashScreen(),
         ),
       ),
     );

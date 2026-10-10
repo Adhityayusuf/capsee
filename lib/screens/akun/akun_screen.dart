@@ -9,7 +9,6 @@ import 'package:flutter/material.dart';
 import 'dart:ui' show ImageFilter;
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/app_colors.dart';
 import '../../core/app_theme.dart';
 import '../auth/login_screen.dart';
 import '../bantuan/bantuan_faq_screen.dart';
@@ -114,6 +113,13 @@ class _AkunScreenState extends State<AkunScreen> {
         iconColor: p.accent,
         title: 'Notifikasi & Sensor Lapangan',
         subtitle: 'Preferensi peringatan cuaca BMKG dan irigasi',
+        onTap: () {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Pengaturan notifikasi mengikuti data BMKG per lahan.'),
+            ),
+          );
+        },
       ),
     ];
   }
@@ -126,7 +132,7 @@ class _AkunScreenState extends State<AkunScreen> {
       _MenuItem(
         icon: Icons.menu_book,
         // Biru lebih terang di mode gelap supaya tetap terbaca
-        iconColor: isDark ? const Color(0xFF60A5FA) : C.tertiary,
+        iconColor: isDark ? const Color(0xFF7DD3FC) : const Color(0xFF005B8C),
         title: 'Panduan & FAQ Petani',
         subtitle: 'Solusi penyakit cabai, dosis pupuk, & tutorial',
         onTap: () {
@@ -162,21 +168,28 @@ class _AkunScreenState extends State<AkunScreen> {
         iconColor: p.icon,
         title: 'Tentang Aplikasi',
         subtitle: 'Capsee v2.4.0 • AI-Powered Precision Agriculture',
+        onTap: () {
+          showAboutDialog(
+            context: context,
+            applicationName: 'Capsee',
+            applicationVersion: '2.4.0',
+            applicationLegalese: 'AI-Powered Precision Agriculture',
+          );
+        },
       ),
     ];
   }
 
   @override
   Widget build(BuildContext context) {
+    final p = context.palette;
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: C.surface,
+        backgroundColor: p.background,
         appBar: _buildAppBar(),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
-
-    final p = context.palette;
 
     return Scaffold(
       backgroundColor: p.background,
@@ -230,8 +243,8 @@ class _AkunScreenState extends State<AkunScreen> {
                     IconButton(
                       tooltip: 'Kembali',
                       onPressed: () => Navigator.of(context).maybePop(),
-                      icon: const Icon(Icons.arrow_back_rounded,
-                          size: 22, color: C.onSurface),
+                      icon: Icon(Icons.arrow_back_rounded,
+                          size: 22, color: p.title),
                       style: IconButton.styleFrom(
                         minimumSize: const Size(40, 40),
                         shape: const CircleBorder(),

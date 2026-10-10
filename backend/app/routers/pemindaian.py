@@ -52,11 +52,28 @@ async def buat_pemindaian(
     gambar: UploadFile = File(...),
     id_pengguna: str = Depends(verifikasi_token),
 ):
-    # 1. Baca + kompres gambar SEBELUM membuka koneksi DB
-    gambar_asli_bytes = await gambar.read()
-    gambar_terkompres = kompres_gambar(gambar_asli_bytes, kualitas=70, lebar_maksimal=1280)
+    # 0. WAJIB cek lahan dulu SEBELUM baca/upload gambar.
+    #    Mencegah Cloudinary penuh oleh upload yang id_lahan-nya
+    #    kosong / milik orang lain / tidak ada.
+    if not id_lahan or not id_lahan.strip():
+        raise HTTPException(status_code=400, detail="Pilih lahan dulu sebelum scan")
+    with get_db_connection() as conn:
+        pastikan_lahan_milik_pengguna(conn.cursor(), id_lahan, id_pengguna)
 
-    # 2. Upload hasil kompresi ke Cloudinary
+    # 1. Baca + kompres gambar.
+    #    File bukan-gambar → 400 (jangan jadi 500, jangan upload).
+    try:
+        gambar_asli_bytes = await gambar.read()
+        if not gambar_asli_bytes:
+            raise HTTPException(status_code=400, detail="File gambar kosong")
+        gambar_terkompres = kompres_gambar(gambar_asli_bytes, kualitas=70, lebar_maksimal=1280)
+    except HTTPException:
+        raise
+    except Exception:
+        raise HTTPException(status_code=400, detail="File bukan gambar yang valid")
+
+    # 2. Upload hasil kompresi ke Cloudinary.
+    #    Gangguan jaringan/timeout → 502 (jangan jadi 500).
     try:
         url_gambar = upload_ke_cloudinary(
             gambar_terkompres,
@@ -64,15 +81,18 @@ async def buat_pemindaian(
         )
     except CloudinaryUploadError as exc:
         raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except Exception as exc:
+        raise HTTPException(status_code=502, detail=f"Upload ke Cloudinary gagal: {exc}") from exc
 
     hasil_ml = _jalankan_model_ml()
     id_scan = str(uuid.uuid4())
 
     # 3. Semua operasi DB dalam SATU blok koneksi
+    #    (cek ulang kepemilikan agar aman dari race delete di tengah upload)
     with get_db_connection() as conn:
         cur = conn.cursor()
 
-        # Pastikan lahan milik pengguna
+        # Pastikan lahan masih milik pengguna setelah upload selesai
         pastikan_lahan_milik_pengguna(cur, id_lahan, id_pengguna)
 
         cur.execute(

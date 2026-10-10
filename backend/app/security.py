@@ -24,8 +24,15 @@ def hash_password(password: str) -> str:
     return bcrypt.hashpw(password.encode(), bcrypt.gensalt()).decode()
 
 
-def verify_password(password: str, password_hash: str) -> bool:
-    return bcrypt.checkpw(password.encode(), password_hash.encode())
+def verify_password(password: str, password_hash: str | None) -> bool:
+    try:
+        if not password or not password_hash:
+            return False
+        return bcrypt.checkpw(password.encode(), password_hash.encode())
+    except (ValueError, TypeError, AttributeError):
+        # Hash korup / NULL (akun Google) / format tidak dikenal
+        # → anggap tidak cocok (401 di caller), jangan biarkan jadi 500.
+        return False
 
 
 def buat_token(id_pengguna: str) -> str:
@@ -48,7 +55,12 @@ def verifikasi_token(authorization: str | None = Header(default=None)) -> str:
     token = authorization.split(" ")[1]
     try:
         payload = jwt.decode(token, JWT_SECRET, algorithms=[JWT_ALGORITHM])
-        return payload["id"]
+        id_pengguna = payload.get("id")
+        if not id_pengguna:
+            raise HTTPException(status_code=403, detail="Token tidak valid")
+        return id_pengguna
+    except HTTPException:
+        raise
     except jwt.ExpiredSignatureError:
         raise HTTPException(status_code=403, detail="Token sudah kedaluwarsa, silakan login ulang")
     except jwt.InvalidTokenError:

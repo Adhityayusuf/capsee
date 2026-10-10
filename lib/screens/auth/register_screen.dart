@@ -2,9 +2,10 @@ import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/app_colors.dart';
+import '../../core/app_theme.dart';
 import '../../core/validators.dart';
 import '../../widgets/auth_widgets.dart';
+import '../../widgets/popup_notifikasi.dart';
 import '../../services/services.dart';
 import '../legal/privasi_screen.dart';
 import '../legal/syarat_screen.dart';
@@ -80,9 +81,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
 
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Akun berhasil dibuat, silakan masuk')),
-      );
+      if (mounted) showSuccessPopup(context, 'Akun berhasil dibuat, silakan masuk.');
 
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => const LoginScreen()),
@@ -90,9 +89,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString())),
-      );
+      showErrorPopup(context, pesanError(e));
     }
   }
 
@@ -160,7 +157,11 @@ class _RegisterScreenState extends State<RegisterScreen> {
       keyboardType: TextInputType.name,
       textCapitalization: TextCapitalization.words,
       textInputAction: TextInputAction.next,
-      decoration: capseeInputDecoration(hint: 'Nama lengkap Anda'),
+      style: GoogleFonts.plusJakartaSans(
+        fontSize: 15,
+        color: context.palette.title,
+      ),
+      decoration: capseeInputDecoration(context, hint: 'Nama lengkap Anda'),
       validator: validateName,
     );
   }
@@ -170,17 +171,24 @@ class _RegisterScreenState extends State<RegisterScreen> {
       controller: _emailController,
       keyboardType: TextInputType.emailAddress,
       textInputAction: TextInputAction.next,
-      decoration: capseeInputDecoration(hint: 'nama@email.com'),
+      style: GoogleFonts.plusJakartaSans(
+        fontSize: 15,
+        color: context.palette.title,
+      ),
+      decoration: capseeInputDecoration(context, hint: 'nama@email.com'),
       validator: validateEmail,
     );
   }
 
   Widget _buildPasswordField() {
+    final p = context.palette;
     return TextFormField(
       controller: _passwordController,
       obscureText: _obscurePassword,
       textInputAction: TextInputAction.next,
+      style: GoogleFonts.plusJakartaSans(fontSize: 15, color: p.title),
       decoration: capseeInputDecoration(
+        context,
         hint: 'Minimal 8 karakter',
         suffix: IconButton(
           onPressed: () => setState(() => _obscurePassword = !_obscurePassword),
@@ -188,7 +196,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             _obscurePassword
                 ? Icons.visibility_outlined
                 : Icons.visibility_off_outlined,
-            color: AppColors.icon,
+            color: p.icon,
           ),
         ),
       ),
@@ -197,11 +205,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildConfirmField() {
+    final p = context.palette;
     return TextFormField(
       controller: _confirmController,
       obscureText: _obscureConfirm,
       textInputAction: TextInputAction.done,
+      style: GoogleFonts.plusJakartaSans(fontSize: 15, color: p.title),
       decoration: capseeInputDecoration(
+        context,
         hint: 'Ulangi kata sandi',
         suffix: IconButton(
           onPressed: () => setState(() => _obscureConfirm = !_obscureConfirm),
@@ -209,7 +220,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             _obscureConfirm
                 ? Icons.visibility_outlined
                 : Icons.visibility_off_outlined,
-            color: AppColors.icon,
+            color: p.icon,
           ),
         ),
       ),
@@ -219,14 +230,15 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildTermsRow() {
+    final p = context.palette;
     final baseStyle = GoogleFonts.plusJakartaSans(
       fontSize: 13,
       height: 1.4,
-      color: AppColors.subtitle,
+      color: p.subtitle,
     );
     final linkStyle = baseStyle.copyWith(
       fontWeight: FontWeight.w800,
-      color: AppColors.primary,
+      color: p.accent,
     );
 
     return Column(
@@ -245,17 +257,17 @@ class _RegisterScreenState extends State<RegisterScreen> {
                 width: 22,
                 height: 22,
                 decoration: BoxDecoration(
-                  color: _agreed ? AppColors.primary : Colors.white,
+                  color: _agreed ? p.primary : p.surface,
                   borderRadius: BorderRadius.circular(6),
                   border: Border.all(
                     color: _showTermsError
-                        ? AppColors.error
-                        : (_agreed ? AppColors.primary : AppColors.border),
+                        ? p.error
+                        : (_agreed ? p.primary : p.border),
                   ),
                 ),
                 child: _agreed
-                    ? const Icon(Icons.check_rounded,
-                        size: 16, color: Colors.white)
+                    ? Icon(Icons.check_rounded,
+                        size: 16, color: p.onPrimary)
                     : null,
               ),
             ),
@@ -291,7 +303,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
               'Anda harus menyetujui syarat & ketentuan',
               style: GoogleFonts.plusJakartaSans(
                 fontSize: 12,
-                color: AppColors.error,
+                color: p.error,
               ),
             ),
           ),
@@ -300,6 +312,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
   }
 
   Widget _buildLoginRow() {
+    final p = context.palette;
     return Row(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
@@ -307,7 +320,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           'Sudah punya akun?',
           style: GoogleFonts.plusJakartaSans(
             fontSize: 14,
-            color: AppColors.subtitle,
+            color: p.subtitle,
           ),
         ),
         const SizedBox(width: 6),
@@ -320,7 +333,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             style: GoogleFonts.plusJakartaSans(
               fontSize: 14,
               fontWeight: FontWeight.w800,
-              color: AppColors.primary,
+              color: p.accent,
             ),
           ),
         ),
