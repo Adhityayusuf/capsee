@@ -1,11 +1,12 @@
 import os
 from contextlib import contextmanager
+from pathlib import Path
 
 from dotenv import load_dotenv
 from psycopg2 import pool, OperationalError
 from psycopg2.extensions import cursor as PgCursor
 
-load_dotenv()
+load_dotenv(Path(__file__).resolve().parents[1] / ".env")
 
 DATABASE_URL = os.getenv("DATABASE_URL")
 
