@@ -121,7 +121,8 @@ const plots = <Plot>[
 
 // ───────────────────────── Halaman Utama ─────────────────────────
 class LahanPage extends StatefulWidget {
-  const LahanPage({super.key});
+  final bool isActive;
+  const LahanPage({super.key, this.isActive = false});
 
   @override
   State<LahanPage> createState() => _LahanPageState();
@@ -139,6 +140,14 @@ class _LahanPageState extends State<LahanPage> {
   void initState() {
     super.initState();
     _load();
+  }
+
+  @override
+  void didUpdateWidget(LahanPage oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) {
+      _load();
+    }
   }
 
   Future<void> _load() async {

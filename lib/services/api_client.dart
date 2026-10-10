@@ -10,7 +10,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 ///   flutter run --dart-define=BASE_URL=http://192.168.1.10:8000
 const String baseUrl = String.fromEnvironment(
   'BASE_URL',
-  defaultValue: 'http://192.168.100.41:8000',
+  defaultValue: 'http://127.0.0.1:8000',
 );
 
 /// Timeout standar untuk semua request HTTP.

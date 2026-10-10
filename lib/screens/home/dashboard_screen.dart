@@ -93,7 +93,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final pages = [
       _buildDashboard(),
       RiwayatScanScreen(items: _scanHistory, onScan: () => _openScan()),
-      const LahanPage(),
+      LahanPage(isActive: _tab == 2),
       const NotifikasiScreen(),
       const AkunScreen(),
     ];

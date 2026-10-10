@@ -185,13 +185,32 @@ def cuaca_lahan(id_lahan: str, id_pengguna: str = Depends(verifikasi_token)):
                 )
 
             # Konversi kode emsifa (tanpa titik, 10 digit) → format BMKG (titik, e.g. "35.07.01.1001")
-            raw = desa_list[0]["id"]   # contoh: "3507011001"
-            adm4 = f"{raw[0:2]}.{raw[2:4]}.{raw[4:6]}.{raw[6:]}"
+            # (kode dipakai di langkah 3; desa pertama belum tentu dikenal BMKG)
 
-            # 3. Panggil API BMKG
-            r = client.get(_BMKG_URL, params={"adm4": adm4})
-            r.raise_for_status()
-            bmkg_data = r.json()
+            # 3. Panggil API BMKG.
+            #    Satu kecamatan punya banyak desa; kode desa pertama tidak
+            #    selalu terdaftar di BMKG (404). Coba desa lain sekecamatan
+            #    sampai ada yang dikenal BMKG.
+            bmkg_data = None
+            adm4 = ""
+            for desa in desa_list[:8]:
+                raw = str(desa.get("id", ""))
+                if len(raw) < 10:
+                    continue
+                adm4 = f"{raw[0:2]}.{raw[2:4]}.{raw[4:6]}.{raw[6:]}"
+                r = client.get(_BMKG_URL, params={"adm4": adm4})
+                if r.status_code == 404:
+                    continue
+                r.raise_for_status()
+                bmkg_data = r.json()
+                break
+
+            if bmkg_data is None:
+                raise HTTPException(
+                    status_code=404,
+                    detail=f"Kecamatan '{nama_kecamatan}' tidak terdaftar di BMKG. "
+                           f"Perbaiki nama provinsi/kota/kecamatan lewat Edit Lahan."
+                )
 
     except httpx.HTTPError as exc:
         raise HTTPException(

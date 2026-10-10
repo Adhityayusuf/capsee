@@ -4,6 +4,7 @@ import 'package:flutter/material.dart';
 
 import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
+import 'scan_detail_screen.dart';
 import '../../widgets/ui_kit.dart';
 
 class ScanHistoryItem {
@@ -282,7 +283,19 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
     final status = (item.statusHasil ?? '').toLowerCase();
     final isSehat = status == 'sehat';
     final isTidakSehat = status == 'tidak_sehat';
-    return CapseeCard(
+    final bisaDibuka = (item.idScan ?? '').isNotEmpty;
+    return InkWell(
+      borderRadius: BorderRadius.circular(AppSpace.radiusCard),
+      onTap: !bisaDibuka
+          ? null
+          : () {
+              Navigator.of(context).push(
+                MaterialPageRoute(
+                  builder: (_) => ScanDetailScreen(idScan: item.idScan!),
+                ),
+              );
+            },
+      child: CapseeCard(
       padding: const EdgeInsets.all(10),
       child: Row(
         children: [
@@ -326,10 +339,19 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
-                  'Foto Daun',
-                  style: AppText.body(context, color: p.title)
-                      .copyWith(fontWeight: FontWeight.w700),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        'Foto Daun',
+                        style: AppText.body(context, color: p.title)
+                            .copyWith(fontWeight: FontWeight.w700),
+                      ),
+                    ),
+                    if (bisaDibuka)
+                      Icon(Icons.chevron_right_rounded,
+                          size: 18, color: p.icon),
+                  ],
                 ),
                 const SizedBox(height: 3),
                 Text(
@@ -352,6 +374,7 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
                     : BadgeKind.info,
           ),
         ],
+      ),
       ),
     );
   }
