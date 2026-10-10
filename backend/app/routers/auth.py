@@ -70,7 +70,13 @@ def register(data: RegisterRequest):
             (str(uuid.uuid4()), data.nama, data.email, data.nomor_hp,
              hash_password(data.password)),
         )
-        return {"pengguna": row_to_dict(cur, cur.fetchone())}
+        pengguna = row_to_dict(cur, cur.fetchone())
+        # Langsung beri token agar aplikasi bisa masuk tanpa login ulang.
+        return {
+            "token": buat_token(pengguna["id"]),
+            "pengguna": pengguna,
+            "sudah_punya_lahan": False,
+        }
 
 
 @router.post("/login")

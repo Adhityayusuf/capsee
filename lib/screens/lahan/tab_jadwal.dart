@@ -3,9 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 
 import '../../core/app_colors.dart';
+import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import '../../services/services.dart';
 import '../../widgets/popup_notifikasi.dart';
+import '../../widgets/ui_kit.dart';
 
 class _AdditionalSchedule {
   const _AdditionalSchedule({
@@ -168,9 +170,8 @@ class _TabJadwalState extends State<TabJadwal> {
 
   Widget _backendSection() {
     final p = context.palette;
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: _box(),
+    return CapseeCard(
+      padding: const EdgeInsets.all(AppSpace.tile),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -179,10 +180,7 @@ class _TabJadwalState extends State<TabJadwal> {
               Expanded(
                 child: Text(
                   'Jadwal Lahan (Server)',
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: p.title),
+                  style: AppText.subtitle(context),
                 ),
               ),
               IconButton(
@@ -207,7 +205,7 @@ class _TabJadwalState extends State<TabJadwal> {
               children: [
                 Text(
                   'Gagal memuat jadwal: $_backendError',
-                  style: TextStyle(fontSize: 12, color: p.error),
+                  style: AppText.bodySm(context, color: p.error),
                 ),
                 const SizedBox(height: 8),
                 OutlinedButton.icon(
@@ -224,7 +222,7 @@ class _TabJadwalState extends State<TabJadwal> {
             if (_siramList.isEmpty)
               Text(
                 'Belum ada jadwal siram.',
-                style: TextStyle(fontSize: 12, color: p.subtitle),
+                style: AppText.bodySm(context),
               ),
             for (final j in _siramList.take(5))
               _backendTile(
@@ -243,7 +241,7 @@ class _TabJadwalState extends State<TabJadwal> {
             if (_pupukList.isEmpty)
               Text(
                 'Belum ada jadwal pupuk.',
-                style: TextStyle(fontSize: 12, color: context.palette.subtitle),
+                style: AppText.bodySm(context),
               ),
             for (final j in _pupukList.take(5))
               _backendTile(
@@ -267,11 +265,8 @@ class _TabJadwalState extends State<TabJadwal> {
       padding: const EdgeInsets.only(bottom: 4, top: 4),
       child: Text(
         text,
-        style: TextStyle(
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-          color: context.palette.subtitle,
-        ),
+        style: AppText.caption(context)
+            .copyWith(fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -286,10 +281,10 @@ class _TabJadwalState extends State<TabJadwal> {
     final p = context.palette;
     return Container(
       margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(AppSpace.tile),
       decoration: BoxDecoration(
         color: p.surfaceAlt,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       ),
       child: Row(
         children: [
@@ -301,15 +296,12 @@ class _TabJadwalState extends State<TabJadwal> {
               children: [
                 Text(
                   title,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: p.title,
-                  ),
+                  style: AppText.bodySm(context, color: p.title)
+                      .copyWith(fontWeight: FontWeight.w700),
                 ),
                 Text(
                   subtitle,
-                  style: TextStyle(fontSize: 11, color: p.subtitle),
+                  style: AppText.caption(context),
                 ),
               ],
             ),
@@ -317,12 +309,12 @@ class _TabJadwalState extends State<TabJadwal> {
           if (onSelesai != null)
             TextButton(
               onPressed: onSelesai,
-              child: const Text('Selesai', style: TextStyle(fontSize: 11)),
+              child: const Text('Selesai'),
             )
           else
-            Text(
-              'Selesai',
-              style: TextStyle(fontSize: 11, color: p.subtitle),
+            const StatusBadge(
+              label: 'Selesai',
+              kind: BadgeKind.success,
             ),
         ],
       ),
@@ -354,9 +346,8 @@ class _TabJadwalState extends State<TabJadwal> {
   }
 
   Widget _plotInfo() {
-    return Container(
-      padding: const EdgeInsets.all(12),
-      decoration: _box(),
+    return CapseeCard(
+      padding: const EdgeInsets.all(AppSpace.tile),
       child: Row(
         children: [
           _iconBox(Icons.local_florist, context.palette.accentSoft),
@@ -367,16 +358,14 @@ class _TabJadwalState extends State<TabJadwal> {
               children: [
                 Text(
                   'Petak Rawit Blok A • Umur 3 Bln',
-                  style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color: context.palette.title),
+                  style: AppText.bodySm(context,
+                          color: context.palette.title)
+                      .copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   'Fase Berbuah Aktif (Generatif II)',
-                  style: TextStyle(
-                      fontSize: 12, color: context.palette.subtitle),
+                  style: AppText.bodySm(context),
                 ),
               ],
             ),
@@ -414,10 +403,10 @@ class _TabJadwalState extends State<TabJadwal> {
       children: [
         const SizedBox(height: 16),
         Container(
-          padding: const EdgeInsets.all(12),
+          padding: const EdgeInsets.all(AppSpace.tile),
           decoration: BoxDecoration(
             color: bmkgBg,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -430,23 +419,17 @@ class _TabJadwalState extends State<TabJadwal> {
                     children: [
                       TextSpan(
                         text: 'SINKRONISASI BMKG AKTIF\n',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w800,
-                          color: bmkgTitle,
-                        ),
+                        style: AppText.bodySm(context, color: bmkgTitle)
+                            .copyWith(fontWeight: FontWeight.w800),
                       ),
                       TextSpan(
                         text: 'Hujan lebat diprediksi terjadi ',
-                        style: TextStyle(fontSize: 12, color: bmkgBody),
+                        style: AppText.bodySm(context, color: bmkgBody),
                       ),
                       TextSpan(
                         text: 'hari Rabu & Sabtu',
-                        style: TextStyle(
-                          fontSize: 12,
-                          fontWeight: FontWeight.w700,
-                          color: bmkgBody,
-                        ),
+                        style: AppText.bodySm(context, color: bmkgBody)
+                            .copyWith(fontWeight: FontWeight.w700),
                       ),
                     ],
                   ),
@@ -456,18 +439,14 @@ class _TabJadwalState extends State<TabJadwal> {
           ),
         ),
         const SizedBox(height: 12),
-        Container(
-          padding: const EdgeInsets.all(12),
-          decoration: _box(),
+        CapseeCard(
+          padding: const EdgeInsets.all(AppSpace.tile),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              _sectionTitle(
-                context,
-                Icons.water_drop,
-                'Jadwal Mingguan',
-                color: context.palette.accent,
-                fontSize: 14,
+              const SectionHeader(
+                icon: Icons.water_drop,
+                title: 'Jadwal Mingguan',
               ),
               const Divider(height: 20, thickness: 1),
               Align(
@@ -490,11 +469,8 @@ class _TabJadwalState extends State<TabJadwal> {
                 const SizedBox(height: 8),
                 Text(
                   'Jadwal tambahan mendekat',
-                  style: TextStyle(
-                    fontSize: 11,
-                    fontWeight: FontWeight.w700,
-                    color: context.palette.subtitle,
-                  ),
+                  style: AppText.caption(context)
+                      .copyWith(fontWeight: FontWeight.w700),
                 ),
                 for (final schedule in upcomingAdditionalSchedules)
                   _additionalScheduleTile(schedule),
@@ -623,10 +599,10 @@ class _TabJadwalState extends State<TabJadwal> {
     final p = context.palette;
     return Container(
       margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(AppSpace.tile),
       decoration: BoxDecoration(
         color: p.accentSoft,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -639,22 +615,19 @@ class _TabJadwalState extends State<TabJadwal> {
               children: [
                 Text(
                   schedule.name,
-                  style: TextStyle(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w700,
-                    color: p.title,
-                  ),
+                  style: AppText.bodySm(context, color: p.title)
+                      .copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   '${_formatDate(schedule.date)} • ${schedule.status}',
-                  style: TextStyle(fontSize: 10, color: p.subtitle),
+                  style: AppText.micro(context),
                 ),
                 if (schedule.description.isNotEmpty) ...[
                   const SizedBox(height: 4),
                   Text(
                     schedule.description,
-                    style: TextStyle(fontSize: 11, color: p.title),
+                    style: AppText.caption(context, color: p.title),
                   ),
                 ],
                 if (schedule.id != null && !isDone) ...[
@@ -667,9 +640,10 @@ class _TabJadwalState extends State<TabJadwal> {
                           padding: const EdgeInsets.symmetric(horizontal: 8),
                         ),
                         onPressed: () => _selesaikanKegiatan(schedule.id!),
-                        child: const Text(
+                        child: Text(
                           'Selesai',
-                          style: TextStyle(fontSize: 11),
+                          style:
+                              AppText.caption(context, color: p.primary),
                         ),
                       ),
                       TextButton(
@@ -680,10 +654,8 @@ class _TabJadwalState extends State<TabJadwal> {
                         onPressed: () => _hapusKegiatan(schedule.id!),
                         child: Text(
                           'Hapus',
-                          style: TextStyle(
-                            fontSize: 11,
-                            color: context.palette.error,
-                          ),
+                          style: AppText.caption(context,
+                              color: context.palette.error),
                         ),
                       ),
                     ],
@@ -793,7 +765,7 @@ class _TabJadwalState extends State<TabJadwal> {
           padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
           decoration: BoxDecoration(
             color: isToday ? p.accentSoft : Colors.transparent,
-            borderRadius: BorderRadius.circular(9),
+            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
           ),
           child: Row(
             children: [
@@ -802,26 +774,24 @@ class _TabJadwalState extends State<TabJadwal> {
                 height: 36,
                 decoration: BoxDecoration(
                   color: isToday ? p.primary : p.surfaceAlt,
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius:
+                      BorderRadius.circular(AppSpace.radiusTile),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       dayLabels[date.weekday - 1],
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w700,
-                        color: isToday ? p.onPrimary : p.subtitle,
-                      ),
+                      style: AppText.micro(context,
+                              color:
+                                  isToday ? p.onPrimary : p.subtitle)
+                          .copyWith(fontWeight: FontWeight.w700),
                     ),
                     Text(
                       date.day.toString().padLeft(2, '0'),
-                      style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w800,
-                        color: isToday ? p.onPrimary : p.title,
-                      ),
+                      style: AppText.bodySm(context,
+                              color: isToday ? p.onPrimary : p.title)
+                          .copyWith(fontWeight: FontWeight.w800),
                     ),
                   ],
                 ),
@@ -833,12 +803,12 @@ class _TabJadwalState extends State<TabJadwal> {
                   children: [
                     Text(
                       title,
-                      style: TextStyle(
-                        fontSize: 12,
+                      style: AppText.bodySm(context,
+                              color: status == 'terlewatkan'
+                                  ? p.subtitle
+                                  : p.title)
+                          .copyWith(
                         fontWeight: FontWeight.w700,
-                        color: status == 'terlewatkan'
-                            ? p.subtitle
-                            : p.title,
                         decoration: status == 'terlewatkan'
                             ? TextDecoration.lineThrough
                             : null,
@@ -866,21 +836,18 @@ class _TabJadwalState extends State<TabJadwal> {
         if (isExpanded)
           Container(
             margin: const EdgeInsets.only(left: 54, right: 8, bottom: 8),
-            padding: const EdgeInsets.all(10),
+            padding: const EdgeInsets.all(AppSpace.tile),
             decoration: BoxDecoration(
               color: p.surfaceAlt,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             ),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
                   'Keterangan kegiatan',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: p.subtitle,
-                  ),
+                  style: AppText.micro(context, color: p.subtitle)
+                      .copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
                 for (var index = 0; index < activities.length; index++) ...[
@@ -890,10 +857,7 @@ class _TabJadwalState extends State<TabJadwal> {
                       Expanded(
                         child: Text(
                           activities[index],
-                          style: TextStyle(
-                            fontSize: 10,
-                            color: p.title,
-                          ),
+                          style: AppText.micro(context, color: p.title),
                         ),
                       ),
                       const SizedBox(width: 8),
@@ -921,10 +885,9 @@ class _TabJadwalState extends State<TabJadwal> {
 
     if (isPast) {
       final isDone = selectedStatus == 'selesai';
-      return _status(
-        isDone ? 'Selesai' : 'Terlewatkan',
-        active: isDone,
-        fontSize: 9,
+      return StatusBadge(
+        label: isDone ? 'Selesai' : 'Terlewatkan',
+        kind: isDone ? BadgeKind.success : BadgeKind.error,
       );
     }
 
@@ -932,22 +895,29 @@ class _TabJadwalState extends State<TabJadwal> {
       child: DropdownButton<String>(
         value: selectedStatus,
         isDense: true,
-        style: TextStyle(fontSize: 10, color: context.palette.title),
+        style: AppText.micro(context,
+            color: context.palette.title),
         dropdownColor: context.palette.surface,
         iconSize: 18,
-        borderRadius: BorderRadius.circular(8),
-        items: const [
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+        items: [
           DropdownMenuItem(
             value: 'belum',
-            child: Text('Belum', style: TextStyle(fontSize: 10)),
+            child: Text('Belum',
+                style: AppText.micro(context,
+                    color: context.palette.title)),
           ),
           DropdownMenuItem(
             value: 'proses',
-            child: Text('Proses', style: TextStyle(fontSize: 10)),
+            child: Text('Proses',
+                style: AppText.micro(context,
+                    color: context.palette.title)),
           ),
           DropdownMenuItem(
             value: 'selesai',
-            child: Text('Selesai', style: TextStyle(fontSize: 10)),
+            child: Text('Selesai',
+                style: AppText.micro(context,
+                    color: context.palette.title)),
           ),
         ],
         onChanged: (value) {
@@ -1014,54 +984,6 @@ class _TabJadwalState extends State<TabJadwal> {
     );
   }
 
-Widget _sectionTitle(
-  BuildContext context,
-  IconData icon,
-  String title, {
-  String? subtitle,
-  Color? color,
-  double fontSize = 14, // Sesuaikan ukuran font
-}) {
-  final p = context.palette;
-  final c = color ?? p.primary;
-  return Row(
-    crossAxisAlignment: CrossAxisAlignment.center,
-    children: [
-      Container(
-        width: 36,
-        height: 36,
-        decoration: BoxDecoration(
-          color: c.withValues(alpha: .12),
-          borderRadius: BorderRadius.circular(11),
-        ),
-        child: Icon(icon, color: c, size: 21),
-      ),
-      const SizedBox(width: 10),
-      Expanded(
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Text(
-              title,
-              style: TextStyle(
-                fontSize: fontSize,
-                fontWeight: FontWeight.w700,
-                color: p.title,
-              ),
-            ),
-            if (subtitle != null)
-              Text(
-                subtitle,
-                style: TextStyle(fontSize: 11, color: p.subtitle),
-              ),
-          ],
-        ),
-      ),
-    ],
-  );
-}
-
   Widget _iconBox(
     IconData icon,
     Color background, {
@@ -1072,44 +994,9 @@ Widget _sectionTitle(
       height: 36,
       decoration: BoxDecoration(
         color: background,
-        borderRadius: BorderRadius.circular(11),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       ),
       child: Icon(icon, color: iconColor ?? context.palette.primary, size: 21),
-    );
-  }
-
-  Widget _status(
-    String text, {
-    bool active = false,
-    double fontSize = 10,
-  }) {
-    final p = context.palette;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 5),
-      decoration: BoxDecoration(
-        color: active ? p.primary : p.accentSoft,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        text,
-        style: TextStyle(
-          fontSize: fontSize,
-          fontWeight: FontWeight.w700,
-          color: active ? p.onPrimary : p.primary,
-        ),
-      ),
-    );
-  }
-
-  BoxDecoration _box() {
-    final p = context.palette;
-    return BoxDecoration(
-      color: p.surface,
-      borderRadius: BorderRadius.circular(12),
-      border: Border.all(color: p.border.withValues(alpha: .6)),
-      boxShadow: [
-        BoxShadow(color: p.shadow, blurRadius: 5, offset: const Offset(0, 2)),
-      ],
     );
   }
 }

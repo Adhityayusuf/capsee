@@ -33,6 +33,19 @@ app.include_router(notifikasi.router)
 app.include_router(cuaca.router)
 
 
+@app.on_event("startup")
+def _log_db_target() -> None:
+    """Tulis database tujuan ke console (tanpa password) agar ketahuan
+    kalau backend nyambung ke project Neon yang salah."""
+    from urllib.parse import urlparse
+
+    try:
+        parts = urlparse(os.getenv("DATABASE_URL", ""))
+        print(f"[capsee] DB target: {parts.hostname}{parts.path}")
+    except Exception:
+        print("[capsee] DB target: tidak terbaca (cek DATABASE_URL)")
+
+
 @app.get("/")
 def root():
     return {"status": "Capsee backend (Python) berjalan dengan baik"}

@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 
+import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import '../../models/land_data.dart';
 import '../../services/services.dart';
 import '../../widgets/popup_notifikasi.dart';
+import '../../widgets/ui_kit.dart';
 
 class TambahLahanPage extends StatefulWidget {
   /// Jika [initial] atau [idLahan] diisi, halaman ini menjadi form edit lahan.
@@ -21,58 +24,195 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
 
   // Controller input
   late final TextEditingController _namaLahanController;
-  late final TextEditingController _siramController;
-  late final TextEditingController _pupukController;
+  late final TextEditingController _provManualController;
+  late final TextEditingController _kotaManualController;
+  late final TextEditingController _kecManualController;
+  late final TextEditingController _intervalPupukController;
+  late final TextEditingController _intervalSiramController;
 
-  // State Dropdown
-  late String _selectedProvince;
-  late String _selectedCity;
-  late String _selectedDistrict;
+  // Dropdown wilayah lengkap (nama asli dari API, bukan kode).
+  List<Wilayah> _provinces = [];
+  List<Wilayah> _cities = [];
+  List<Wilayah> _districts = [];
+  String? _provId;
+  String? _kotaId;
+  String _selectedProvince = '';
+  String _selectedCity = '';
+  String _selectedDistrict = '';
+  bool _loadingProv = true;
+  bool _loadingKota = false;
+  bool _loadingKec = false;
+  bool _manualWilayah = false;
 
-  // State Umur Tanaman & Interval
+  // Tanggal terakhir siram/pupuk (opsional, date picker asli).
+  DateTime? _tglSiram;
+  DateTime? _tglPupuk;
+
+  // State Umur Tanaman
   late int _selectedAgeMonth;
-  late int _selectedIntervalWeek;
 
   @override
   void initState() {
     super.initState();
     final initial = widget.initial;
     _namaLahanController = TextEditingController(
-      text: initial?.name ?? 'Petak Cabai Rawit Blok A',
+      text: initial?.name ?? '',
     );
-    _siramController = TextEditingController(text: '24 Okt 2024');
-    _pupukController = TextEditingController(text: '18 Okt 2024');
-    _selectedProvince = _matchProvince(initial?.province);
-    _selectedCity = _matchCity(initial?.city);
-    _selectedDistrict = _matchDistrict(initial?.district);
+    _provManualController =
+        TextEditingController(text: _legacyName(initial?.province));
+    _kotaManualController =
+        TextEditingController(text: _legacyName(initial?.city));
+    _kecManualController =
+        TextEditingController(text: _legacyName(initial?.district));
+    _tglSiram = initial?.lastWatered;
+    _tglPupuk = initial?.lastFertilized;
+    _intervalPupukController = TextEditingController(
+      text: '${initial?.fertilizeIntervalWeeks ?? 1}',
+    );
+    _intervalSiramController = TextEditingController(
+      text: '${initial?.wateringIntervalWeeks ?? 1}',
+    );
     _selectedAgeMonth = (initial?.plantAgeMonths ?? 3).clamp(1, 5).toInt();
-    _selectedIntervalWeek = initial?.fertilizeIntervalWeeks ?? 1;
+    _loadProvinsi();
   }
 
-  // Nilai dropdown memakai kode; petakan juga nama lengkap dari backend.
-  static String _matchProvince(String? value) => switch ((value ?? '').toLowerCase()) {
-        'jabar' || 'jawa barat' => 'jabar',
-        'jateng' || 'jawa tengah' => 'jateng',
-        'jatim' || 'jawa timur' => 'jatim',
-        'sumut' || 'sumatera utara' => 'sumut',
-        _ => 'jabar',
-      };
+  /// Data lama tersimpan sebagai kode (jabar/kbb/...) → tampilkan nama lengkap.
+  static String _legacyName(String? value) {
+    const map = {
+      'jabar': 'Jawa Barat',
+      'jateng': 'Jawa Tengah',
+      'jatim': 'Jawa Timur',
+      'sumut': 'Sumatera Utara',
+      'kbb': 'Kab. Bandung Barat',
+      'bdg': 'Kab. Bandung',
+      'grt': 'Kab. Garut',
+      'cjr': 'Kab. Cianjur',
+      'lembang': 'Lembang',
+      'parongpong': 'Parongpong',
+      'cisarua': 'Cisarua',
+      'ngamprah': 'Ngamprah',
+    };
+    final v = (value ?? '').trim();
+    if (v.isEmpty) return '';
+    return map[v.toLowerCase()] ?? v;
+  }
 
-  static String _matchCity(String? value) => switch ((value ?? '').toLowerCase()) {
-        'kbb' || 'kab. bandung barat' || 'bandung barat' => 'kbb',
-        'bdg' || 'kab. bandung' || 'bandung' => 'bdg',
-        'grt' || 'kab. garut' || 'garut' => 'grt',
-        'cjr' || 'kab. cianjur' || 'cianjur' => 'cjr',
-        _ => 'kbb',
-      };
+  static Wilayah? _cariNama(List<Wilayah> list, String target) {
+    final t = target.trim().toLowerCase();
+    if (t.isEmpty) return null;
+    for (final w in list) {
+      if (w.name.toLowerCase() == t) return w;
+    }
+    // Hilangkan awalan kab./kota agar "Bandung Barat" cocok dengan "Kab. Bandung Barat".
+    String norm(String s) => s
+        .toLowerCase()
+        .replaceFirst(RegExp(r'^(kab\.|kota adm\.|kota)\s*'), '')
+        .trim();
+    for (final w in list) {
+      if (norm(w.name) == norm(t)) return w;
+    }
+    for (final w in list) {
+      if (w.name.toLowerCase().contains(t) || t.contains(w.name.toLowerCase())) {
+        return w;
+      }
+    }
+    return null;
+  }
 
-  static String _matchDistrict(String? value) => switch ((value ?? '').toLowerCase()) {
-        'lembang' => 'lembang',
-        'parongpong' => 'parongpong',
-        'cisarua' => 'cisarua',
-        'ngamprah' => 'ngamprah',
-        _ => 'lembang',
-      };
+  Future<void> _loadProvinsi() async {
+    try {
+      final list = await getProvinsi();
+      if (!mounted) return;
+      setState(() {
+        _provinces = list;
+        _loadingProv = false;
+      });
+      // Cocokkan nilai awal (mode edit) ke daftar lengkap.
+      final awal = _legacyName(widget.initial?.province);
+      final cocok = _cariNama(list, awal);
+      if (cocok != null) await _pilihProvinsi(cocok, awalKota: _legacyName(widget.initial?.city), awalKec: _legacyName(widget.initial?.district));
+    } catch (e) {
+      // API gagal (offline) → jatuh ke input manual agar user tidak buntu.
+      if (!mounted) return;
+      setState(() {
+        _loadingProv = false;
+        _manualWilayah = true;
+      });
+    }
+  }
+
+  Future<void> _pilihProvinsi(Wilayah prov, {String? awalKota, String? awalKec}) async {
+    setState(() {
+      _provId = prov.id;
+      _selectedProvince = prov.name;
+      _provManualController.text = prov.name;
+      _cities = [];
+      _districts = [];
+      _kotaId = null;
+      _selectedCity = '';
+      _selectedDistrict = '';
+      _loadingKota = true;
+    });
+    try {
+      final list = await getKota(prov.id);
+      if (!mounted) return;
+      setState(() {
+        _cities = list;
+        _loadingKota = false;
+      });
+      if (awalKota != null && awalKota.isNotEmpty) {
+        final cocok = _cariNama(list, awalKota);
+        if (cocok != null) await _pilihKota(cocok, awalKec: awalKec);
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loadingKota = false);
+      showErrorPopup(context, 'Gagal memuat kota: ${pesanError(e)}');
+    }
+  }
+
+  Future<void> _pilihKota(Wilayah kota, {String? awalKec}) async {
+    setState(() {
+      _kotaId = kota.id;
+      _selectedCity = kota.name;
+      _kotaManualController.text = kota.name;
+      _districts = [];
+      _selectedDistrict = '';
+      _loadingKec = true;
+    });
+    try {
+      final list = await getKecamatan(kota.id);
+      if (!mounted) return;
+      setState(() {
+        _districts = list;
+        _loadingKec = false;
+      });
+      if (awalKec != null && awalKec.isNotEmpty) {
+        final cocok = _cariNama(list, awalKec);
+        if (cocok != null && mounted) {
+          setState(() {
+            _selectedDistrict = cocok.name;
+            _kecManualController.text = cocok.name;
+          });
+        }
+      }
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _loadingKec = false);
+      showErrorPopup(context, 'Gagal memuat kecamatan: ${pesanError(e)}');
+    }
+  }
+
+  String _iso(DateTime d) =>
+      '${d.year.toString().padLeft(4, '0')}-${d.month.toString().padLeft(2, '0')}-${d.day.toString().padLeft(2, '0')}';
+
+  String _tglIndo(DateTime d) {
+    const bulan = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    return '${d.day} ${bulan[d.month - 1]} ${d.year}';
+  }
 
   final Map<int, String> _agePhases = {
     1: 'Fase Vegetatif Awal',
@@ -85,8 +225,11 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
   @override
   void dispose() {
     _namaLahanController.dispose();
-    _siramController.dispose();
-    _pupukController.dispose();
+    _provManualController.dispose();
+    _kotaManualController.dispose();
+    _kecManualController.dispose();
+    _intervalPupukController.dispose();
+    _intervalSiramController.dispose();
     super.dispose();
   }
 
@@ -97,43 +240,74 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
       showErrorPopup(context, 'Nama lahan tidak boleh kosong.');
       return;
     }
+    final provinsi = _manualWilayah
+        ? _provManualController.text.trim()
+        : _selectedProvince.trim();
+    final kota = _manualWilayah
+        ? _kotaManualController.text.trim()
+        : _selectedCity.trim();
+    final kecamatan = _manualWilayah
+        ? _kecManualController.text.trim()
+        : _selectedDistrict.trim();
+    if (provinsi.isEmpty || kota.isEmpty || kecamatan.isEmpty) {
+      showErrorPopup(context, 'Lengkapi provinsi, kota, dan kecamatan dulu.');
+      return;
+    }
+    final intervalPupuk =
+        int.tryParse(_intervalPupukController.text.trim()) ?? 0;
+    if (intervalPupuk < 1 || intervalPupuk > 12) {
+      showErrorPopup(context, 'Interval pupuk 1–12 minggu (contoh: 4).');
+      return;
+    }
+    final intervalSiram =
+        int.tryParse(_intervalSiramController.text.trim()) ?? 0;
+    if (intervalSiram < 1 || intervalSiram > 12) {
+      showErrorPopup(context, 'Interval siram 1–12 minggu (contoh: 1).');
+      return;
+    }
 
     setState(() => _isLoading = true);
 
     try {
       final nama = _namaLahanController.text.trim();
-      final Map<String, dynamic> lahan;
 
       if (_isEdit) {
         final id = widget.idLahan ?? widget.initial?.id;
         if (id == null || id.isEmpty) {
           throw ApiException('ID lahan tidak ditemukan.', 0);
         }
-        lahan = await editLahan(
+        await editLahan(
           id,
           nama: nama,
-          provinsi: _selectedProvince,
-          kota: _selectedCity,
-          kecamatan: _selectedDistrict,
+          provinsi: provinsi,
+          kota: kota,
+          kecamatan: kecamatan,
           umurTanamanBulan: _selectedAgeMonth,
-          intervalPupukMinggu: _selectedIntervalWeek,
+          intervalPupukMinggu: intervalPupuk,
+          intervalSiramMinggu: intervalSiram,
         );
       } else {
-        lahan = await tambahLahan(
+        await tambahLahan(
           nama: nama,
-          provinsi: _selectedProvince,
-          kota: _selectedCity,
-          kecamatan: _selectedDistrict,
+          provinsi: provinsi,
+          kota: kota,
+          kecamatan: kecamatan,
           umurTanamanBulan: _selectedAgeMonth,
-          intervalPupukMinggu: _selectedIntervalWeek,
+          intervalPupukMinggu: intervalPupuk,
+          intervalSiramMinggu: intervalSiram,
+          tanggalTerakhirSiram: _tglSiram == null ? null : _iso(_tglSiram!),
+          tanggalTerakhirPupuk: _tglPupuk == null ? null : _iso(_tglPupuk!),
         );
       }
 
       if (!mounted) return;
       setState(() => _isLoading = false);
 
+      // Tunggu user tutup dialog sukses DULU, baru keluar halaman.
+      // (Kalau dialog masih terbuka saat pop, yang tertutup cuma dialognya
+      // dan halaman input tidak jadi keluar.)
       if (mounted) {
-        showSuccessPopup(
+        await showSuccessPopup(
           context,
           _isEdit
               ? 'Data kebun berhasil diperbarui!'
@@ -141,10 +315,8 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
         );
       }
 
-      // Pop dan kirimkan data lahan terbaru agar pemanggil bisa merefresh.
-      Future.delayed(const Duration(milliseconds: 800), () {
-        if (mounted) Navigator.maybePop(context, lahan);
-      });
+      // Keluar + kirim true agar pemanggil merefresh dari server.
+      if (mounted) Navigator.maybePop(context, true);
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -172,11 +344,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
             Expanded(
               child: Text(
                 _isEdit ? 'Edit Data Lahan' : 'Tambah Data Lahan',
-                style: TextStyle(
-                  color: p.title,
-                  fontWeight: FontWeight.bold,
-                  fontSize: 18,
-                ),
+                style: AppText.headline(context),
                 overflow: TextOverflow.ellipsis,
               ),
             ),
@@ -202,13 +370,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
         child: Column(
           children: [
             // Banner Kalibrasi Presisi ML
-            Container(
-              padding: const EdgeInsets.all(16),
-              decoration: BoxDecoration(
-                color: p.surface,
-                borderRadius: BorderRadius.circular(16),
-                border: Border.all(color: p.border),
-              ),
+            CapseeCard(
               child: Column(
                 children: [
                   Row(
@@ -218,7 +380,9 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                         padding: const EdgeInsets.all(10),
                         decoration: BoxDecoration(
                           color: p.accentSoft,
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                            AppSpace.radiusTile,
+                          ),
                         ),
                         child: Icon(
                           Icons.eco,
@@ -233,20 +397,12 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                           children: [
                             Text(
                               'Kalibrasi Presisi ML',
-                              style: TextStyle(
-                                fontWeight: FontWeight.bold,
-                                fontSize: 15,
-                                color: p.title,
-                              ),
+                              style: AppText.title(context),
                             ),
                             const SizedBox(height: 4),
                             Text(
                               'Lengkapi parameter kebun untuk kalibrasi algoritma pemantauan tanaman cabai Anda secara akurat.',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: p.subtitle,
-                                height: 1.4,
-                              ),
+                              style: AppText.bodySm(context),
                             ),
                           ],
                         ),
@@ -263,11 +419,10 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                       Expanded(
                         child: Text(
                           'Akurasi deteksi patogen meningkat hingga 94.8%',
-                          style: TextStyle(
+                          style: AppText.bodySm(
+                            context,
                             color: p.accent,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                          ),
+                          ).copyWith(fontWeight: FontWeight.w600),
                         ),
                       ),
                     ],
@@ -292,7 +447,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                 const SizedBox(height: 8),
                 TextFormField(
                   controller: _namaLahanController,
-                  style: TextStyle(color: p.title),
+                  style: AppText.body(context, color: p.title),
                   decoration: _buildInputDecoration(
                     prefixIcon: Icons.label_outline,
                     hint: 'Misal: Petak Cabai Rawit Blok A',
@@ -301,22 +456,28 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                 const SizedBox(height: 16),
                 _buildFieldLabel(icon: Icons.map_outlined, label: 'Provinsi'),
                 const SizedBox(height: 8),
-                _buildDropdown(
-                  value: _selectedProvince,
-                  items: const [
-                    DropdownMenuItem(value: 'jabar', child: Text('Jawa Barat')),
-                    DropdownMenuItem(
-                      value: 'jateng',
-                      child: Text('Jawa Tengah'),
+                if (_manualWilayah)
+                  TextFormField(
+                    controller: _provManualController,
+                    style: AppText.body(context, color: p.title),
+                    decoration: _buildInputDecoration(
+                      prefixIcon: Icons.map_outlined,
+                      hint: 'Tulis provinsi (offline)',
                     ),
-                    DropdownMenuItem(value: 'jatim', child: Text('Jawa Timur')),
-                    DropdownMenuItem(
-                      value: 'sumut',
-                      child: Text('Sumatera Utara'),
+                  )
+                else if (_loadingProv)
+                  const LinearProgressIndicator(),
+                if (!_manualWilayah && !_loadingProv)
+                  _buildWilayahPicker(
+                    icon: Icons.map_outlined,
+                    hint: 'Pilih provinsi (${_provinces.length} tersedia)',
+                    selected: _selectedProvince,
+                    onTap: () => _showWilayahDialog(
+                      label: 'Provinsi',
+                      items: _provinces,
+                      onSelect: (w) => _pilihProvinsi(w),
                     ),
-                  ],
-                  onChanged: (val) => setState(() => _selectedProvince = val!),
-                ),
+                  ),
                 const SizedBox(height: 16),
                 Row(
                   children: [
@@ -330,19 +491,31 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                _buildDropdown(
-                  value: _selectedCity,
-                  items: const [
-                    DropdownMenuItem(
-                      value: 'kbb',
-                      child: Text('Kab. Bandung Barat'),
+                if (_manualWilayah)
+                  TextFormField(
+                    controller: _kotaManualController,
+                    style: AppText.body(context, color: p.title),
+                    decoration: _buildInputDecoration(
+                      prefixIcon: Icons.location_city,
+                      hint: 'Tulis kota/kabupaten (offline)',
                     ),
-                    DropdownMenuItem(value: 'bdg', child: Text('Kab. Bandung')),
-                    DropdownMenuItem(value: 'grt', child: Text('Kab. Garut')),
-                    DropdownMenuItem(value: 'cjr', child: Text('Kab. Cianjur')),
-                  ],
-                  onChanged: (val) => setState(() => _selectedCity = val!),
-                ),
+                  )
+                else if (_loadingKota)
+                  const LinearProgressIndicator(),
+                if (!_manualWilayah && !_loadingKota)
+                  _buildWilayahPicker(
+                    icon: Icons.location_city,
+                    hint: _provId == null
+                        ? 'Pilih provinsi dulu'
+                        : 'Pilih kota (${_cities.length} tersedia)',
+                    selected: _selectedCity,
+                    enabled: _provId != null,
+                    onTap: () => _showWilayahDialog(
+                      label: 'Kota / Kabupaten',
+                      items: _cities,
+                      onSelect: (w) => _pilihKota(w),
+                    ),
+                  ),
                 const SizedBox(height: 16),
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -355,21 +528,50 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                   ],
                 ),
                 const SizedBox(height: 8),
-                _buildDropdown(
-                  value: _selectedDistrict,
-                  items: const [
-                    DropdownMenuItem(value: 'lembang', child: Text('Lembang')),
-                    DropdownMenuItem(
-                      value: 'parongpong',
-                      child: Text('Parongpong'),
+                if (_manualWilayah)
+                  TextFormField(
+                    controller: _kecManualController,
+                    style: AppText.body(context, color: p.title),
+                    decoration: _buildInputDecoration(
+                      prefixIcon: Icons.pin_drop_outlined,
+                      hint: 'Tulis kecamatan (offline)',
                     ),
-                    DropdownMenuItem(value: 'cisarua', child: Text('Cisarua')),
-                    DropdownMenuItem(
-                      value: 'ngamprah',
-                      child: Text('Ngamprah'),
+                  )
+                else if (_loadingKec)
+                  const LinearProgressIndicator(),
+                if (!_manualWilayah && !_loadingKec)
+                  _buildWilayahPicker(
+                    icon: Icons.pin_drop_outlined,
+                    hint: _kotaId == null
+                        ? 'Pilih kota dulu'
+                        : 'Pilih kecamatan (${_districts.length} tersedia)',
+                    selected: _selectedDistrict,
+                    enabled: _kotaId != null,
+                    onTap: () => _showWilayahDialog(
+                      label: 'Kecamatan',
+                      items: _districts,
+                      onSelect: (w) => setState(() {
+                        _selectedDistrict = w.name;
+                        _kecManualController.text = w.name;
+                      }),
                     ),
-                  ],
-                  onChanged: (val) => setState(() => _selectedDistrict = val!),
+                  ),
+                const SizedBox(height: 8),
+                Align(
+                  alignment: Alignment.centerRight,
+                  child: TextButton(
+                    onPressed: () => setState(() {
+                      _manualWilayah = !_manualWilayah;
+                      if (_manualWilayah) {
+                        _provManualController.text = _selectedProvince;
+                        _kotaManualController.text = _selectedCity;
+                        _kecManualController.text = _selectedDistrict;
+                      }
+                    }),
+                    child: Text(_manualWilayah
+                        ? 'Muat daftar lengkap'
+                        : 'Isi manual (offline)'),
+                  ),
                 ),
               ],
             ),
@@ -396,15 +598,16 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                       ),
                       decoration: BoxDecoration(
                         color: p.accentSoft,
-                        borderRadius: BorderRadius.circular(6),
+                        borderRadius: BorderRadius.circular(
+                          AppSpace.radiusPill,
+                        ),
                       ),
                       child: Text(
                         _agePhases[_selectedAgeMonth] ?? '',
-                        style: TextStyle(
-                          fontSize: 11,
-                          fontWeight: FontWeight.bold,
+                        style: AppText.micro(
+                          context,
                           color: p.onAccentSoft,
-                        ),
+                        ).copyWith(fontWeight: FontWeight.w700),
                       ),
                     ),
                   ],
@@ -414,7 +617,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                   padding: const EdgeInsets.all(4),
                   decoration: BoxDecoration(
                     color: p.surfaceAlt,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                   ),
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -431,17 +634,20 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                               color: isSelected
                                   ? p.primary
                                   : Colors.transparent,
-                              borderRadius: BorderRadius.circular(8),
+                              borderRadius: BorderRadius.circular(
+                                AppSpace.radiusTile,
+                              ),
                             ),
                             alignment: Alignment.center,
                             child: Text(
                               '$month Bln',
-                              style: TextStyle(
-                                fontSize: 13,
-                                fontWeight: isSelected
-                                    ? FontWeight.bold
-                                    : FontWeight.w500,
+                              style: AppText.body(
+                                context,
                                 color: isSelected ? p.onPrimary : p.title,
+                              ).copyWith(
+                                fontWeight: isSelected
+                                    ? FontWeight.w700
+                                    : FontWeight.w500,
                               ),
                             ),
                           ),
@@ -453,59 +659,48 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                 const SizedBox(height: 16),
                 _buildFieldLabel(
                   icon: Icons.water_drop_outlined,
-                  label: 'Tanggal Terakhir Siram',
+                  label: 'Tanggal Terakhir Siram (opsional)',
                 ),
                 const SizedBox(height: 8),
-                TextFormField(
-                  controller: _siramController,
-                  style: TextStyle(color: p.title),
-                  decoration: _buildInputDecoration(
-                    prefixIcon: Icons.calendar_today,
-                    suffixTextBadge: 'Hari ini',
-                  ),
+                _buildDatePicker(
+                  value: _tglSiram,
+                  hint: 'Pilih tanggal',
+                  onPick: (d) => setState(() => _tglSiram = d),
+                  onClear: () => setState(() => _tglSiram = null),
                 ),
                 const SizedBox(height: 16),
                 _buildFieldLabel(
                   icon: Icons.science_outlined,
-                  label: 'Tanggal Terakhir Pemupukan',
+                  label: 'Tanggal Terakhir Pemupukan (opsional)',
                 ),
                 const SizedBox(height: 8),
-                TextFormField(
-                  controller: _pupukController,
-                  style: TextStyle(color: p.title),
-                  decoration: _buildInputDecoration(
-                    prefixIcon: Icons.compost,
-                    suffixTextBadge: '6 hari lalu',
-                    badgeBg: p.surfaceAlt,
-                    badgeTextColor: p.title,
-                  ),
+                _buildDatePicker(
+                  value: _tglPupuk,
+                  hint: 'Pilih tanggal',
+                  onPick: (d) => setState(() => _tglPupuk = d),
+                  onClear: () => setState(() => _tglPupuk = null),
+                ),
+                const SizedBox(height: 16),
+                _buildFieldLabel(
+                  icon: Icons.water_drop_outlined,
+                  label: 'Interval Penyiraman',
+                ),
+                const SizedBox(height: 8),
+                _buildNumberField(
+                  controller: _intervalSiramController,
+                  hint: 'Contoh: 1',
+                  suffix: 'minggu sekali',
                 ),
                 const SizedBox(height: 16),
                 _buildFieldLabel(
                   icon: Icons.repeat,
                   label: 'Interval Pemupukan',
                 ),
-                const SizedBox(height: 10),
-                Row(
-                  children: [
-                    Expanded(
-                      child: _buildIntervalButton(
-                        weeks: 1,
-                        label: '1 Minggu',
-                        isSelected: _selectedIntervalWeek == 1,
-                        onTap: () => setState(() => _selectedIntervalWeek = 1),
-                      ),
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: _buildIntervalButton(
-                        weeks: 2,
-                        label: '2 Minggu',
-                        isSelected: _selectedIntervalWeek == 2,
-                        onTap: () => setState(() => _selectedIntervalWeek = 2),
-                      ),
-                    ),
-                  ],
+                const SizedBox(height: 8),
+                _buildNumberField(
+                  controller: _intervalPupukController,
+                  hint: 'Contoh: 4',
+                  suffix: 'minggu sekali',
                 ),
               ],
             ),
@@ -528,16 +723,12 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                   _isLoading
                       ? 'Menyimpan...'
                       : (_isEdit ? 'Simpan Perubahan' : 'Simpan Data Lahan'),
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.bold,
-                    color: p.onPrimary,
-                  ),
+                  style: AppText.title(context, color: p.onPrimary),
                 ),
                 style: ElevatedButton.styleFrom(
                   backgroundColor: p.primary,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                   ),
                   elevation: 2,
                 ),
@@ -552,15 +743,15 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                 style: TextButton.styleFrom(
                   backgroundColor: p.surfaceAlt,
                   shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(14),
+                    borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                   ),
                 ),
                 child: Text(
                   'Batal & Kembali',
-                  style: TextStyle(
+                  style: AppText.subtitle(
+                    context,
                     color: p.subtitle,
-                    fontWeight: FontWeight.w600,
-                  ),
+                  ).copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
             ),
@@ -573,7 +764,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                 Flexible(
                   child: Text(
                     'Data lahan dapat diperbarui sewaktu-waktu melalui menu pengaturan.',
-                    style: TextStyle(fontSize: 12, color: p.subtitle),
+                    style: AppText.bodySm(context),
                     textAlign: TextAlign.center,
                   ),
                 ),
@@ -596,20 +787,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
     required List<Widget> children,
   }) {
     final p = context.palette;
-    return Container(
-      padding: const EdgeInsets.all(18),
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: p.border),
-        boxShadow: [
-          BoxShadow(
-            color: p.shadow,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return CapseeCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -631,34 +809,16 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                       child: Text(
                         title,
                         overflow: TextOverflow.ellipsis,
-                        style: TextStyle(
-                          fontWeight: FontWeight.bold,
-                          fontSize: 16,
-                          color: p.title,
-                        ),
+                        style: AppText.title(context),
                       ),
                     ),
                   ],
                 ),
               ),
               Flexible(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: tagColor,
-                    borderRadius: BorderRadius.circular(20),
-                  ),
-                  child: Text(
-                    sectionTag,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
-                      color: tagTextColor,
-                    ),
-                  ),
+                child: StatusBadge(
+                  label: sectionTag,
+                  kind: BadgeKind.success,
                 ),
               ),
             ],
@@ -683,19 +843,18 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
         RichText(
           text: TextSpan(
             text: label,
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
+            style: AppText.body(
+              context,
               color: p.title,
-            ),
+            ).copyWith(fontWeight: FontWeight.w600),
             children: [
               if (isRequired)
                 TextSpan(
                   text: ' *',
-                  style: TextStyle(
+                  style: AppText.body(
+                    context,
                     color: p.error,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  ).copyWith(fontWeight: FontWeight.w700),
                 ),
             ],
           ),
@@ -710,9 +869,9 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
       decoration: BoxDecoration(
         color: p.surfaceAlt,
-        borderRadius: BorderRadius.circular(6),
+        borderRadius: BorderRadius.circular(AppSpace.radiusPill),
       ),
-      child: Text(text, style: TextStyle(fontSize: 11, color: p.subtitle)),
+      child: Text(text, style: AppText.caption(context)),
     );
   }
 
@@ -730,7 +889,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
       filled: true,
       fillColor: p.surfaceAlt,
       hintText: hint,
-      hintStyle: TextStyle(color: p.hint),
+      hintStyle: AppText.bodySm(context, color: p.hint),
       prefixIcon: Icon(prefixIcon, color: p.accent, size: 20),
       suffixIcon: suffixTextBadge != null
           ? Padding(
@@ -745,15 +904,14 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                   ),
                   decoration: BoxDecoration(
                     color: bg,
-                    borderRadius: BorderRadius.circular(6),
+                    borderRadius: BorderRadius.circular(AppSpace.radiusPill),
                   ),
                   child: Text(
                     suffixTextBadge,
-                    style: TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.bold,
+                    style: AppText.micro(
+                      context,
                       color: fg,
-                    ),
+                    ).copyWith(fontWeight: FontWeight.w700),
                   ),
                 ),
               ),
@@ -761,87 +919,222 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
           : null,
       contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
         borderSide: BorderSide.none,
       ),
       focusedBorder: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
         borderSide: BorderSide(color: p.primary, width: 1.5),
       ),
     );
   }
 
-  Widget _buildDropdown({
-    required String value,
-    required List<DropdownMenuItem<String>> items,
-    required ValueChanged<String?> onChanged,
+  Widget _buildDatePicker({
+    required DateTime? value,
+    required String hint,
+    required ValueChanged<DateTime> onPick,
+    required VoidCallback onClear,
   }) {
     final p = context.palette;
-    return DropdownButtonFormField<String>(
-      initialValue: value,
-      items: items,
-      onChanged: onChanged,
-      icon: Icon(Icons.expand_more, color: p.icon),
-      dropdownColor: p.surface,
-      style: TextStyle(color: p.title),
-      decoration: InputDecoration(
-        filled: true,
-        fillColor: p.surfaceAlt,
-        contentPadding: const EdgeInsets.symmetric(
-          horizontal: 16,
-          vertical: 14,
+    return Row(
+      children: [
+        Expanded(
+          child: OutlinedButton.icon(
+            onPressed: () async {
+              final now = DateTime.now();
+              final picked = await showDatePicker(
+                context: context,
+                initialDate: value ?? now,
+                firstDate: DateTime(now.year - 2),
+                lastDate: now,
+              );
+              if (picked != null) onPick(picked);
+            },
+            icon: Icon(Icons.calendar_today, size: 18, color: p.accent),
+            label: Align(
+              alignment: Alignment.centerLeft,
+              child: Text(
+                value == null ? hint : _tglIndo(value),
+                style: value == null
+                    ? AppText.bodySm(context, color: p.hint)
+                    : AppText.body(context, color: p.title),
+              ),
+            ),
+            style: OutlinedButton.styleFrom(
+              backgroundColor: p.surfaceAlt,
+              side: BorderSide.none,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+              ),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+            ),
+          ),
         ),
-        border: OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
-          borderSide: BorderSide.none,
+        if (value != null) ...[
+          const SizedBox(width: 8),
+          IconButton(
+            tooltip: 'Kosongkan',
+            onPressed: onClear,
+            icon: Icon(Icons.clear, color: p.icon),
+          ),
+        ],
+      ],
+    );
+  }
+
+  /// Field pilih wilayah dengan dialog + pencarian (pengganti dropdown
+  /// biasa yang kepanjangan dan naik-turun saat item puluhan/ratusan).
+  Widget _buildWilayahPicker({
+    required IconData icon,
+    required String hint,
+    required String selected,
+    required VoidCallback onTap,
+    bool enabled = true,
+  }) {
+    final p = context.palette;
+    final active = enabled;
+    return InkWell(
+      onTap: active ? onTap : null,
+      borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+      child: Container(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        decoration: BoxDecoration(
+          color: active
+              ? p.surfaceAlt
+              : p.surfaceAlt.withValues(alpha: .5),
+          borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+        ),
+        child: Row(
+          children: [
+            Icon(icon, color: active ? p.accent : p.hint, size: 20),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Text(
+                selected.isEmpty ? hint : selected,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: selected.isEmpty
+                    ? AppText.bodySm(context, color: p.hint)
+                    : AppText.body(context, color: p.title),
+              ),
+            ),
+            Icon(Icons.search, color: active ? p.icon : p.hint, size: 20),
+          ],
         ),
       ),
     );
   }
 
-  Widget _buildIntervalButton({
-    required int weeks,
+  /// Dialog daftar wilayah + kolom cari. Tinggi dikunci agar rapi.
+  Future<void> _showWilayahDialog({
     required String label,
-    required bool isSelected,
-    required VoidCallback onTap,
-  }) {
-    final p = context.palette;
-    return GestureDetector(
-      onTap: onTap,
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 150),
-        height: 50,
-        decoration: BoxDecoration(
-          color: isSelected ? p.primary : p.surfaceAlt,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: isSelected
-              ? [
-                  BoxShadow(
-                    color: p.primary.withValues(alpha: 0.3),
-                    blurRadius: 6,
-                    offset: const Offset(0, 3),
+    required List<Wilayah> items,
+    required ValueChanged<Wilayah> onSelect,
+  }) async {
+    final query = TextEditingController();
+    List<Wilayah> filtered = items;
+    final picked = await showDialog<Wilayah>(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (ctx, setD) => AlertDialog(
+          title: Text('Pilih $label', style: AppText.title(ctx)),
+          content: SizedBox(
+            width: double.maxFinite,
+            height: 420,
+            child: Column(
+              children: [
+                TextField(
+                  controller: query,
+                  autofocus: true,
+                  decoration: InputDecoration(
+                    hintText: 'Cari $label...',
+                    prefixIcon: const Icon(Icons.search),
+                    border: const OutlineInputBorder(),
+                    contentPadding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 10,
+                    ),
                   ),
-                ]
-              : [],
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              isSelected ? Icons.check_circle : Icons.schedule,
-              color: isSelected ? p.onPrimary : p.icon,
-              size: 18,
+                  onChanged: (q) => setD(() {
+                    final s = q.trim().toLowerCase();
+                    filtered = s.isEmpty
+                        ? items
+                        : items
+                            .where((w) =>
+                                w.name.toLowerCase().contains(s))
+                            .toList();
+                  }),
+                ),
+                const SizedBox(height: 8),
+                Expanded(
+                  child: filtered.isEmpty
+                      ? Center(
+                          child: Text(
+                            'Tidak ditemukan.',
+                            style: AppText.bodySm(ctx),
+                          ),
+                        )
+                      : ListView.separated(
+                          shrinkWrap: true,
+                          itemCount: filtered.length,
+                          separatorBuilder: (_, _) =>
+                              const Divider(height: 1),
+                          itemBuilder: (_, i) {
+                            final w = filtered[i];
+                            return ListTile(
+                              dense: true,
+                              title: Text(
+                                w.name,
+                                style: AppText.body(ctx),
+                              ),
+                              onTap: () => Navigator.of(ctx).pop(w),
+                            );
+                          },
+                        ),
+                ),
+              ],
             ),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: TextStyle(
-                color: isSelected ? p.onPrimary : p.title,
-                fontWeight: isSelected ? FontWeight.bold : FontWeight.w500,
-                fontSize: 14,
-              ),
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.of(ctx).pop(),
+              child: const Text('Batal'),
             ),
           ],
+        ),
+      ),
+    );
+    query.dispose();
+    if (picked != null) onSelect(picked);
+  }
+
+  Widget _buildNumberField({
+    required TextEditingController controller,
+    required String hint,
+    required String suffix,
+  }) {
+    final p = context.palette;
+    return TextFormField(
+      controller: controller,
+      keyboardType: TextInputType.number,
+      inputFormatters: [FilteringTextInputFormatter.digitsOnly],
+      style: AppText.body(context, color: p.title),
+      decoration: InputDecoration(
+        filled: true,
+        fillColor: p.surfaceAlt,
+        hintText: hint,
+        hintStyle: AppText.bodySm(context, color: p.hint),
+        suffixText: suffix,
+        suffixStyle: AppText.caption(context),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        border: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+          borderSide: BorderSide.none,
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+          borderSide: BorderSide(color: p.primary, width: 1.5),
         ),
       ),
     );

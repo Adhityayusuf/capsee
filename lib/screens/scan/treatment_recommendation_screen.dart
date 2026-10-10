@@ -1,9 +1,10 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../../core/app_colors.dart';
+import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import '../../models/treatment_recommendation.dart';
+import '../../widgets/ui_kit.dart';
 
 class TreatmentRecommendationScreen extends StatefulWidget {
   final DiagnosisSummary diagnosis;
@@ -28,6 +29,12 @@ class _TreatmentRecommendationScreenState
     );
   }
 
+  BadgeKind _badgeKindFor(TreatmentOption option) {
+    if (option.badgeColor == AppColors.warningSoft) return BadgeKind.warning;
+    if (option.badgeColor == AppColors.infoSoft) return BadgeKind.info;
+    return BadgeKind.success;
+  }
+
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
@@ -37,7 +44,8 @@ class _TreatmentRecommendationScreenState
       backgroundColor: p.background,
       appBar: _buildAppBar(),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        padding: const EdgeInsets.fromLTRB(
+            AppSpace.page, 12, AppSpace.page, 24),
         children: [
           Center(
             child: ConstrainedBox(
@@ -53,17 +61,14 @@ class _TreatmentRecommendationScreenState
                         const SizedBox(width: 6),
                         Text(
                           'ID Diagnosa ${widget.diagnosis.diagnosisId}',
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w600,
-                            color: p.subtitle,
-                          ),
+                          style: AppText.caption(context)
+                              .copyWith(fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
                   ),
                   _buildDiagnosisCard(),
-                  const SizedBox(height: 12),
+                  const SizedBox(height: AppSpace.gapMd),
                   Row(
                     children: [
                       Expanded(
@@ -77,7 +82,7 @@ class _TreatmentRecommendationScreenState
                           progressColor: AppColors.warning,
                         ),
                       ),
-                      const SizedBox(width: 12),
+                      const SizedBox(width: AppSpace.gapMd),
                       Expanded(
                         child: _buildMetricCard(
                           icon: Icons.verified_rounded,
@@ -107,24 +112,18 @@ class _TreatmentRecommendationScreenState
                           _showTodo('Rekomendasi disimpan ke riwayat tanaman'),
                       icon: const Icon(Icons.bookmark_added_outlined,
                           size: 20),
-                      label: Text(
-                        'Simpan ke Riwayat Tanaman',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
+                      label: const Text('Simpan ke Riwayat Tanaman'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: p.primary,
                         foregroundColor: p.onPrimary,
                         elevation: 0,
                         shape: RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(12),
+                          borderRadius: BorderRadius.circular(
+                              AppSpace.radiusTile),
                         ),
                       ),
                     ),
                   ),
-
                 ],
               ),
             ),
@@ -151,11 +150,7 @@ class _TreatmentRecommendationScreenState
       ),
       title: Text(
         'Rekomendasi Penanganan',
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 15.5,
-          fontWeight: FontWeight.w700,
-          color: p.title,
-        ),
+        style: AppText.subtitle(context),
       ),
       actions: [
         IconButton(
@@ -177,20 +172,8 @@ class _TreatmentRecommendationScreenState
   Widget _buildDiagnosisCard() {
     final p = context.palette;
     final d = widget.diagnosis;
-    return Container(
-      width: double.infinity,
+    return CapseeCard(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: p.shadow,
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -199,7 +182,8 @@ class _TreatmentRecommendationScreenState
             height: 56,
             decoration: BoxDecoration(
               color: p.surfaceAlt,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius:
+                  BorderRadius.circular(AppSpace.radiusTile),
             ),
             child: Icon(Icons.eco_outlined,
                 size: 26, color: p.icon),
@@ -216,56 +200,31 @@ class _TreatmentRecommendationScreenState
                         d.plantName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 13.5,
-                          fontWeight: FontWeight.w700,
-                          color: p.subtitle,
-                        ),
+                        style: AppText.body(context, color: p.subtitle)
+                            .copyWith(fontWeight: FontWeight.w700),
                       ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 10, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppColors.warningSoft,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        d.statusLabel,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: AppColors.warning,
-                        ),
-                      ),
+                    StatusBadge(
+                      label: d.statusLabel,
+                      kind: BadgeKind.warning,
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Text(
                   d.diseaseName,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 16.5,
-                    fontWeight: FontWeight.w800,
-                    color: p.title,
-                  ),
+                  style: AppText.title(context),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   d.latinName,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12.5,
-                    fontStyle: FontStyle.italic,
-                    color: p.subtitle,
-                  ),
+                  style: AppText.bodySm(context, color: p.subtitle)
+                      .copyWith(fontStyle: FontStyle.italic),
                 ),
                 const SizedBox(height: 6),
                 Text(
                   d.dateTime,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11.5,
-                    color: p.hint,
-                  ),
+                  style: AppText.caption(context),
                 ),
               ],
             ),
@@ -288,19 +247,8 @@ class _TreatmentRecommendationScreenState
     required Color progressColor,
   }) {
     final p = context.palette;
-    return Container(
+    return CapseeCard(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: p.shadow,
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -313,23 +261,18 @@ class _TreatmentRecommendationScreenState
           const SizedBox(height: 10),
           Text(
             label,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 11.5,
-              color: p.subtitle,
-            ),
+            style: AppText.caption(context),
           ),
           const SizedBox(height: 3),
           Text(
             value,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12.5,
-              fontWeight: FontWeight.w800,
-              color: p.title,
-            ),
+            style: AppText.subtitle(context, color: p.title)
+                .copyWith(fontSize: 12.5, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           ClipRRect(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius:
+                BorderRadius.circular(AppSpace.radiusPill),
             child: LinearProgressIndicator(
               value: progress.clamp(0, 1),
               minHeight: 6,
@@ -350,69 +293,31 @@ class _TreatmentRecommendationScreenState
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            const Text('🚩 ', style: TextStyle(fontSize: 15)),
-            Expanded(
-              child: Text(
-                'Langkah Tindakan Segera',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: p.title,
-                ),
-              ),
-            ),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: p.accentSoft,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Text(
-                'Hari Ini',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  color: p.onAccentSoft,
-                ),
-              ),
-            ),
-          ],
+        const SectionHeader(
+          icon: Icons.flag_rounded,
+          title: 'Langkah Tindakan Segera',
+          trailing: StatusBadge(
+            label: 'Hari Ini',
+            kind: BadgeKind.success,
+          ),
         ),
         const SizedBox(height: 8),
         Text(
           'Lakukan isolasi mekanis dalam 24 jam pertama agar spora tidak '
           'terbawa percikan air atau angin ke bibit sehat di sekitarnya.',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 13,
-            height: 1.45,
-            color: p.subtitle,
-          ),
+          style: AppText.body(context),
         ),
         const SizedBox(height: 14),
-        Container(
-          width: double.infinity,
-          padding: const EdgeInsets.symmetric(vertical: 6),
-          decoration: BoxDecoration(
-            color: p.surface,
-            borderRadius: BorderRadius.circular(16),
-            boxShadow: [
-              BoxShadow(
-                color: p.shadow,
-                blurRadius: 14,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
+        CapseeCard(
+          padding: EdgeInsets.zero,
           child: Column(
             children: [
               for (var i = 0; i < sampleActionSteps.length; i++) ...[
-                _buildActionStepTile(sampleActionSteps[i], i + 1),
+                _buildActionStepTile(sampleActionSteps[i]),
                 if (i != sampleActionSteps.length - 1)
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 14),
+                    padding:
+                        const EdgeInsets.symmetric(horizontal: 14),
                     child: Divider(height: 1, color: p.border),
                   ),
               ],
@@ -423,7 +328,7 @@ class _TreatmentRecommendationScreenState
     );
   }
 
-  Widget _buildActionStepTile(ActionStep step, int number) {
+  Widget _buildActionStepTile(ActionStep step) {
     final p = context.palette;
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
@@ -446,20 +351,13 @@ class _TreatmentRecommendationScreenState
               children: [
                 Text(
                   step.title,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w800,
-                    color: p.title,
-                  ),
+                  style: AppText.body(context, color: p.title)
+                      .copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   step.description,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12.5,
-                    height: 1.45,
-                    color: p.subtitle,
-                  ),
+                  style: AppText.bodySm(context),
                 ),
               ],
             ),
@@ -473,47 +371,16 @@ class _TreatmentRecommendationScreenState
   // Seksi "Opsi Solusi Penanganan"
   // ---------------------------------------------------------------
   Widget _buildTreatmentOptionSection(TreatmentOption option) {
-    final p = context.palette;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Row(
-          children: [
-            Expanded(
-              child: Text(
-                'Opsi Solusi Penanganan',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 16,
-                  fontWeight: FontWeight.w800,
-                  color: p.title,
-                ),
-              ),
-            ),
-            Container(
-              padding:
-                  const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(
-                color: p.surfaceAlt,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.check_circle_rounded,
-                      size: 13, color: p.accent),
-                  const SizedBox(width: 5),
-                  Text(
-                    'Terverifikasi',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w700,
-                      color: p.subtitle,
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
+        const SectionHeader(
+          icon: Icons.medical_services_outlined,
+          title: 'Opsi Solusi Penanganan',
+          trailing: StatusBadge(
+            label: 'Terverifikasi',
+            kind: BadgeKind.info,
+          ),
         ),
         const SizedBox(height: 12),
         _buildOptionTabs(),
@@ -540,7 +407,8 @@ class _TreatmentRecommendationScreenState
                   color: _selectedOption == i
                       ? p.primary
                       : p.surface,
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(
+                      AppSpace.radiusTile),
                   border: Border.all(
                     color: _selectedOption == i
                         ? p.primary
@@ -551,21 +419,16 @@ class _TreatmentRecommendationScreenState
                   children: [
                     Text(
                       sampleTreatmentOptions[i].tabLabel,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w800,
-                        color: _selectedOption == i
-                            ? p.onPrimary
-                            : p.title,
-                      ),
+                      style: AppText.subtitle(context,
+                          color: _selectedOption == i
+                              ? p.onPrimary
+                              : p.title),
                     ),
                     if (sampleTreatmentOptions[i].recommended) ...[
                       const SizedBox(height: 2),
                       Text(
                         '(Direkomendasikan)',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w600,
+                        style: AppText.micro(context,
                           color: _selectedOption == i
                               ? p.onPrimary.withValues(alpha: 0.7)
                               : p.subtitle,
@@ -585,20 +448,7 @@ class _TreatmentRecommendationScreenState
   // Kartu detail opsi terpilih
   Widget _buildOptionDetailCard(TreatmentOption option) {
     final p = context.palette;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: p.shadow,
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
+    return CapseeCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -608,40 +458,22 @@ class _TreatmentRecommendationScreenState
               Expanded(
                 child: Text(
                   option.title,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: p.title,
-                  ),
+                  style: AppText.subtitle(context,
+                          color: p.title)
+                      .copyWith(fontSize: 15, fontWeight: FontWeight.w800),
                 ),
               ),
               const SizedBox(width: 8),
-              Container(
-                padding: const EdgeInsets.symmetric(
-                    horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: option.badgeColor,
-                  borderRadius: BorderRadius.circular(20),
-                ),
-                child: Text(
-                  option.badge,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w800,
-                    color: option.badgeTextColor,
-                  ),
-                ),
+              StatusBadge(
+                label: option.badge,
+                kind: _badgeKindFor(option),
               ),
             ],
           ),
           const SizedBox(height: 8),
           Text(
             option.description,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 13,
-              height: 1.45,
-              color: p.subtitle,
-            ),
+            style: AppText.body(context),
           ),
           const SizedBox(height: 14),
           Row(
@@ -665,10 +497,11 @@ class _TreatmentRecommendationScreenState
           const SizedBox(height: 14),
           Container(
             width: double.infinity,
-            padding: const EdgeInsets.all(12),
+            padding: const EdgeInsets.all(AppSpace.tile),
             decoration: BoxDecoration(
               color: p.surfaceAlt,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius:
+                  BorderRadius.circular(AppSpace.radiusTile),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -679,11 +512,7 @@ class _TreatmentRecommendationScreenState
                 Expanded(
                   child: Text(
                     option.applicationNote,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12,
-                      height: 1.45,
-                      color: p.title,
-                    ),
+                    style: AppText.bodySm(context, color: p.title),
                   ),
                 ),
               ],
@@ -703,20 +532,14 @@ class _TreatmentRecommendationScreenState
         Text(
           label,
           textAlign: TextAlign.center,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 10.5,
-            color: p.subtitle,
-          ),
+          style: AppText.micro(context, color: p.subtitle),
         ),
         const SizedBox(height: 2),
         Text(
           value,
           textAlign: TextAlign.center,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 12,
-            fontWeight: FontWeight.w800,
-            color: p.title,
-          ),
+          style: AppText.caption(context, color: p.title)
+              .copyWith(fontWeight: FontWeight.w800, fontSize: 12),
         ),
       ],
     );
@@ -736,17 +559,12 @@ class _TreatmentRecommendationScreenState
   // Seksi "Pencegahan Jangka Panjang"
   // ---------------------------------------------------------------
   Widget _buildPreventionSection() {
-    final p = context.palette;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          'Pencegahan Jangka Panjang',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            color: p.title,
-          ),
+        const SectionHeader(
+          icon: Icons.shield_outlined,
+          title: 'Pencegahan Jangka Panjang',
         ),
         const SizedBox(height: 12),
         for (final tip in samplePreventionTips) ...[
@@ -762,20 +580,8 @@ class _TreatmentRecommendationScreenState
     final isDark = Theme.of(context).brightness == Brightness.dark;
     final infoBg = isDark ? const Color(0xFF0F2A3A) : AppColors.infoSoft;
     final infoFg = isDark ? const Color(0xFF7DD3FC) : AppColors.info;
-    return Container(
-      width: double.infinity,
+    return CapseeCard(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: p.shadow,
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -784,7 +590,8 @@ class _TreatmentRecommendationScreenState
             height: 36,
             decoration: BoxDecoration(
               color: infoBg,
-              borderRadius: BorderRadius.circular(10),
+              borderRadius:
+                  BorderRadius.circular(AppSpace.radiusTile),
             ),
             child: Icon(tip.icon, size: 18, color: infoFg),
           ),
@@ -795,20 +602,13 @@ class _TreatmentRecommendationScreenState
               children: [
                 Text(
                   tip.title,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13.5,
-                    fontWeight: FontWeight.w800,
-                    color: p.title,
-                  ),
+                  style: AppText.body(context, color: p.title)
+                      .copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   tip.description,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12.5,
-                    height: 1.45,
-                    color: p.subtitle,
-                  ),
+                  style: AppText.bodySm(context),
                 ),
               ],
             ),

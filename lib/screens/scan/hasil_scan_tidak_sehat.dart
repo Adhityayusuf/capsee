@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
 
+import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import '../../widgets/popup_notifikasi.dart';
+import '../../widgets/ui_kit.dart';
 import 'treatment_recommendation_screen.dart';
 
 class HasilScanTidakSehatPage extends StatelessWidget {
@@ -23,11 +25,7 @@ class HasilScanTidakSehatPage extends StatelessWidget {
         title: Text(
           'Detail Lahan • Petak Cabai Rawit Blok A',
           overflow: TextOverflow.ellipsis,
-          style: TextStyle(
-            fontSize: 15,
-            fontWeight: FontWeight.w700,
-            color: p.title,
-          ),
+          style: AppText.subtitle(context),
         ),
         actions: [
           IconButton(
@@ -47,25 +45,26 @@ class HasilScanTidakSehatPage extends StatelessWidget {
         ],
       ),
       body: SingleChildScrollView(
-        padding: const EdgeInsets.fromLTRB(16, 12, 16, 32),
+        padding: const EdgeInsets.fromLTRB(
+            AppSpace.page, 12, AppSpace.page, 32),
         child: Column(
           children: [
             _diagnosisHero(context, p),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.gapMd),
             _aboutDisease(context, p),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.gapMd),
             _visualFindings(context, p),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.gapMd),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
                 Text('Model: Capsee-Vision v2.4 (FP16)',
-                    style: TextStyle(fontSize: 10, color: p.hint)),
+                    style: AppText.micro(context)),
                 Text('ID Scan: #CPS-8849A',
-                    style: TextStyle(fontSize: 10, color: p.hint)),
+                    style: AppText.micro(context)),
               ],
             ),
-            const SizedBox(height: 12),
+            const SizedBox(height: AppSpace.gapMd),
             _actions(context, p),
           ],
         ),
@@ -74,99 +73,102 @@ class HasilScanTidakSehatPage extends StatelessWidget {
   }
 
   Widget _diagnosisHero(BuildContext context, AppPalette p) {
-    return Container(
-      decoration: _box(p),
-      clipBehavior: Clip.antiAlias,
+    return CapseeCard(
+      padding: EdgeInsets.zero,
       child: Column(
         children: [
-          AspectRatio(
-            aspectRatio: 4 / 3,
-            child: Stack(
-              children: [
-                Container(
-                  color: p.surfaceAlt,
-                  width: double.infinity,
-                  child: Center(
-                    child: Icon(Icons.local_florist,
-                        size: 110, color: p.icon),
-                  ),
-                ),
-                Positioned.fill(
-                  child: DecoratedBox(
-                    decoration: BoxDecoration(
-                      gradient: LinearGradient(
-                        begin: Alignment.topCenter,
-                        end: Alignment.bottomCenter,
-                        colors: [
-                          Colors.transparent,
-                          Colors.black.withValues(alpha: .65),
-                        ],
-                      ),
-                    ),
-                  ),
-                ),
-                Positioned(
-                  top: 12,
-                  left: 12,
-                  right: 12,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      _pill(
-                        'PERLU TINDAKAN CEPAT',
-                        p.error.withValues(alpha: .15),
-                        p.error,
-                        icon: Icons.circle,
-                      ),
-                      _pill(
-                        'Capsee AI 96.4%',
-                        p.title,
-                        p.background,
-                        icon: Icons.verified,
-                      ),
-                    ],
-                  ),
-                ),
-                Center(
-                  child: Container(
-                    width: 128,
-                    height: 128,
-                    decoration: BoxDecoration(
-                      border: Border.all(color: p.error, width: 2),
-                      borderRadius: BorderRadius.circular(9),
-                    ),
+          ClipRRect(
+            borderRadius: const BorderRadius.vertical(
+              top: Radius.circular(AppSpace.radiusCard),
+            ),
+            child: AspectRatio(
+              aspectRatio: 4 / 3,
+              child: Stack(
+                children: [
+                  Container(
+                    color: p.surfaceAlt,
+                    width: double.infinity,
                     child: Center(
-                      child: Icon(Icons.warning_amber_rounded,
-                          color: p.error, size: 34),
+                      child: Icon(Icons.local_florist,
+                          size: 110, color: p.icon),
                     ),
                   ),
-                ),
-                Positioned(
-                  bottom: 10,
-                  left: 12,
-                  right: 12,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: const [
-                      Expanded(
-                        child: Text(
-                          'Petak Cabai Rawit Blok A • Daun Bawah & Tengah',
-                          style: TextStyle(color: Colors.white, fontSize: 10),
-                          overflow: TextOverflow.ellipsis,
+                  Positioned.fill(
+                    child: DecoratedBox(
+                      decoration: BoxDecoration(
+                        gradient: LinearGradient(
+                          begin: Alignment.topCenter,
+                          end: Alignment.bottomCenter,
+                          colors: [
+                            Colors.transparent,
+                            Colors.black.withValues(alpha: .65),
+                          ],
                         ),
                       ),
-                      SizedBox(width: 8),
-                      Text('10:15 WIB',
-                          style: TextStyle(
-                              color: Colors.white70, fontSize: 10)),
-                    ],
+                    ),
                   ),
-                ),
-              ],
+                  const Positioned(
+                    top: 12,
+                    left: 12,
+                    right: 12,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        StatusBadge(
+                          label: 'PERLU TINDAKAN CEPAT',
+                          kind: BadgeKind.error,
+                        ),
+                        StatusBadge(
+                          label: 'Capsee AI 96.4%',
+                          kind: BadgeKind.info,
+                        ),
+                      ],
+                    ),
+                  ),
+                  Center(
+                    child: Container(
+                      width: 128,
+                      height: 128,
+                      decoration: BoxDecoration(
+                        border: Border.all(color: p.error, width: 2),
+                        borderRadius:
+                            BorderRadius.circular(AppSpace.radiusTile),
+                      ),
+                      child: Center(
+                        child: Icon(Icons.warning_amber_rounded,
+                            color: p.error, size: 34),
+                      ),
+                    ),
+                  ),
+                  Positioned(
+                    bottom: 10,
+                    left: 12,
+                    right: 12,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Text(
+                            'Petak Cabai Rawit Blok A • Daun Bawah & Tengah',
+                            style: AppText.micro(context,
+                                    color: Colors.white)
+                                .copyWith(fontWeight: FontWeight.w600),
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Text('10:15 WIB',
+                            style: AppText.micro(context,
+                                color: Colors.white70)),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpace.card),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -175,26 +177,22 @@ class HasilScanTidakSehatPage extends StatelessWidget {
                     Icon(Icons.coronavirus, size: 16, color: p.error),
                     const SizedBox(width: 4),
                     Text('Patologi Daun Terdeteksi',
-                        style: TextStyle(
-                            color: p.error,
-                            fontSize: 12,
-                            fontWeight: FontWeight.w700)),
+                        style: AppText.caption(context, color: p.error)
+                            .copyWith(fontWeight: FontWeight.w700)),
                   ],
                 ),
                 const SizedBox(height: 3),
                 Text('Bercak Daun Cercospora',
-                    style: TextStyle(
-                        fontSize: 22,
-                        fontWeight: FontWeight.w700,
-                        color: p.title)),
+                    style: AppText.display(context)),
                 Text('Cercospora capsici (Frogeye Leaf Spot)',
-                    style: TextStyle(
-                        fontSize: 12, color: p.hint, fontStyle: FontStyle.italic)),
-                const SizedBox(height: 12),
+                    style: AppText.bodySm(context, color: p.hint)
+                        .copyWith(fontStyle: FontStyle.italic)),
+                const SizedBox(height: AppSpace.gapMd),
                 Row(
                   children: [
                     Expanded(
                       child: _metric(
+                        context,
                         p,
                         'Tingkat Keparahan',
                         'Sedang (Stage 2)',
@@ -205,6 +203,7 @@ class HasilScanTidakSehatPage extends StatelessWidget {
                     const SizedBox(width: 8),
                     Expanded(
                       child: _metric(
+                        context,
                         p,
                         'Potensi Transmisi',
                         'Tinggi',
@@ -218,12 +217,10 @@ class HasilScanTidakSehatPage extends StatelessWidget {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Text('Level Progresi Penyakit',
-                        style: TextStyle(fontSize: 10, color: p.hint)),
+                        style: AppText.micro(context)),
                     Text('Tahap 2 dari 4',
-                        style: TextStyle(
-                            fontSize: 10,
-                            color: p.error,
-                            fontWeight: FontWeight.w700)),
+                        style: AppText.micro(context, color: p.error)
+                            .copyWith(fontWeight: FontWeight.w700)),
                   ],
                 ),
                 const SizedBox(height: 6),
@@ -242,15 +239,12 @@ class HasilScanTidakSehatPage extends StatelessWidget {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Text('Aman', style: TextStyle(fontSize: 9, color: p.hint)),
+                    Text('Aman', style: AppText.micro(context)),
                     Text('Sedang',
-                        style: TextStyle(
-                            fontSize: 9,
-                            color: p.error,
-                            fontWeight: FontWeight.w600)),
-                    Text('Kritis', style: TextStyle(fontSize: 9, color: p.hint)),
-                    Text('Defoliasi',
-                        style: TextStyle(fontSize: 9, color: p.hint)),
+                        style: AppText.micro(context, color: p.error)
+                            .copyWith(fontWeight: FontWeight.w600)),
+                    Text('Kritis', style: AppText.micro(context)),
+                    Text('Defoliasi', style: AppText.micro(context)),
                   ],
                 ),
               ],
@@ -262,34 +256,26 @@ class HasilScanTidakSehatPage extends StatelessWidget {
   }
 
   Widget _aboutDisease(BuildContext context, AppPalette p) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: _box(p),
+    return CapseeCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.info, color: p.accent, size: 20),
-              const SizedBox(width: 7),
-              Text('Tentang Penyakit Ini',
-                  style: TextStyle(
-                      fontSize: 18,
-                      fontWeight: FontWeight.w700,
-                      color: p.title)),
-            ],
+          const SectionHeader(
+            icon: Icons.info,
+            title: 'Tentang Penyakit Ini',
           ),
           const SizedBox(height: 10),
           Text(
             'Disebabkan oleh cendawan Cercospora capsici, ditandai dengan bercak bulat konsentris berwarna cokelat keabuan dengan halo klorotik kuning pada helai daun. Jika tidak ditangani, dapat memicu defoliasi daun prematur dan menurunkan produksi buah hingga 40%.',
-            style: TextStyle(fontSize: 13, height: 1.5, color: p.subtitle),
+            style: AppText.body(context),
           ),
-          const SizedBox(height: 12),
-          _parameter(p, Icons.pie_chart, 'Luas Permukaan Terinfeksi',
+          const SizedBox(height: AppSpace.gapMd),
+          _parameter(context, p, Icons.pie_chart,
+              'Luas Permukaan Terinfeksi',
               '~18% permukaan helai daun menunjukkan nekrosis aktif.'),
-          _parameter(p, Icons.water_drop, 'Faktor Pemicu Spora',
+          _parameter(context, p, Icons.water_drop, 'Faktor Pemicu Spora',
               'Suhu 27°C - 30°C dengan periode daun basah lebih dari 6 jam.'),
-          _parameter(p, Icons.shield, 'Risiko Penyebaran Lahan',
+          _parameter(context, p, Icons.shield, 'Risiko Penyebaran Lahan',
               'Tinggi pada tanaman sekitarnya dalam radius 1.5 - 3 meter.'),
         ],
       ),
@@ -297,29 +283,20 @@ class HasilScanTidakSehatPage extends StatelessWidget {
   }
 
   Widget _visualFindings(BuildContext context, AppPalette p) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: _box(p),
+    return CapseeCard(
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Row(
-            children: [
-              Icon(Icons.biotech, color: p.accent, size: 20),
-              const SizedBox(width: 7),
-              Text('Temuan Diagnosa Visual & Lingkungan',
-                  style: TextStyle(
-                      fontSize: 14,
-                      fontWeight: FontWeight.w700,
-                      color: p.title)),
-            ],
+          const SectionHeader(
+            icon: Icons.biotech,
+            title: 'Temuan Diagnosa Visual & Lingkungan',
           ),
           const SizedBox(height: 10),
-          _finding(p, Icons.lens, 'Bercak Mata Katak',
+          _finding(context, p, Icons.lens, 'Bercak Mata Katak',
               'Titik nekrotik putih-abu di pusat lesi', 'Konfirmasi'),
-          _finding(p, Icons.water_drop, 'Kelembapan Udara',
+          _finding(context, p, Icons.water_drop, 'Kelembapan Udara',
               'Tercatat 82% berdasar data cuaca', 'API BMKG'),
-          _finding(p, Icons.forest, 'Kerapatan Kanopi',
+          _finding(context, p, Icons.forest, 'Kerapatan Kanopi',
               'Sirkulasi udara bawah terhambat', 'Perlu Pruning'),
         ],
       ),
@@ -344,7 +321,7 @@ class HasilScanTidakSehatPage extends StatelessWidget {
             label: const Text('Lihat Rekomendasi Penanganan'),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpace.gapSm),
         SizedBox(
           width: double.infinity,
           height: 48,
@@ -355,7 +332,7 @@ class HasilScanTidakSehatPage extends StatelessWidget {
             label: const Text('Tandai Isolasi Petak Blok A'),
           ),
         ),
-        const SizedBox(height: 8),
+        const SizedBox(height: AppSpace.gapSm),
         SizedBox(
           width: double.infinity,
           child: OutlinedButton.icon(
@@ -368,27 +345,26 @@ class HasilScanTidakSehatPage extends StatelessWidget {
     );
   }
 
-  Widget _metric(AppPalette p, String label, String value, String note,
+  Widget _metric(BuildContext context, AppPalette p, String label,
+      String value, String note,
       {bool error = false}) {
     final bg = error ? p.error.withValues(alpha: .12) : p.surfaceAlt;
     final fg = error ? p.error : p.accent;
     final sub = error ? p.error.withValues(alpha: .8) : p.hint;
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.all(AppSpace.tile),
       decoration: BoxDecoration(
         color: bg,
-        borderRadius: BorderRadius.circular(9),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(label, style: TextStyle(fontSize: 9, color: sub)),
+          Text(label, style: AppText.micro(context, color: sub)),
           const SizedBox(height: 3),
-          Text(value,
-              style: TextStyle(
-                  fontSize: 14, fontWeight: FontWeight.w700, color: fg)),
+          Text(value, style: AppText.subtitle(context, color: fg)),
           const SizedBox(height: 3),
-          Text(note, style: TextStyle(fontSize: 10, color: sub)),
+          Text(note, style: AppText.micro(context, color: sub)),
         ],
       ),
     );
@@ -403,19 +379,19 @@ class HasilScanTidakSehatPage extends StatelessWidget {
                 ? p.error
                 : p.accent
             : p.border,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppSpace.radiusPill),
       ),
     );
   }
 
-  Widget _parameter(
-      AppPalette p, IconData icon, String title, String description) {
+  Widget _parameter(BuildContext context, AppPalette p, IconData icon,
+      String title, String description) {
     return Container(
       margin: const EdgeInsets.only(top: 7),
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(AppSpace.tile),
       decoration: BoxDecoration(
         color: p.surfaceAlt,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -426,14 +402,9 @@ class HasilScanTidakSehatPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: p.title)),
+                Text(title, style: AppText.subtitle(context)),
                 const SizedBox(height: 2),
-                Text(description,
-                    style: TextStyle(fontSize: 11, color: p.subtitle)),
+                Text(description, style: AppText.caption(context)),
               ],
             ),
           ),
@@ -442,14 +413,14 @@ class HasilScanTidakSehatPage extends StatelessWidget {
     );
   }
 
-  Widget _finding(AppPalette p, IconData icon, String title, String description,
-      String badge) {
+  Widget _finding(BuildContext context, AppPalette p, IconData icon,
+      String title, String description, String badge) {
     return Container(
       margin: const EdgeInsets.only(top: 8),
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.all(AppSpace.tile),
       decoration: BoxDecoration(
         color: p.surfaceAlt,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       ),
       child: Row(
         children: [
@@ -458,7 +429,8 @@ class HasilScanTidakSehatPage extends StatelessWidget {
             height: 32,
             decoration: BoxDecoration(
               color: p.border.withValues(alpha: .5),
-              borderRadius: BorderRadius.circular(8),
+              borderRadius:
+                  BorderRadius.circular(AppSpace.radiusTile),
             ),
             child: Icon(icon, size: 18, color: p.icon),
           ),
@@ -467,67 +439,15 @@ class HasilScanTidakSehatPage extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title,
-                    style: TextStyle(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w700,
-                        color: p.title)),
-                Text(description,
-                    style: TextStyle(fontSize: 10, color: p.subtitle)),
+                Text(title, style: AppText.subtitle(context)),
+                Text(description, style: AppText.micro(context)),
               ],
             ),
           ),
           const SizedBox(width: 5),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 4),
-            decoration: BoxDecoration(
-              color: p.error.withValues(alpha: .12),
-              borderRadius: BorderRadius.circular(20),
-            ),
-            child: Text(badge,
-                style: TextStyle(
-                    fontSize: 9, color: p.error, fontWeight: FontWeight.w600)),
-          ),
+          StatusBadge(label: badge, kind: BadgeKind.error),
         ],
       ),
     );
   }
-
-  Widget _pill(String text, Color background, Color foreground,
-      {IconData? icon}) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: background,
-        borderRadius: BorderRadius.circular(8),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 12, color: foreground),
-            const SizedBox(width: 4),
-          ],
-          Text(text,
-              style: TextStyle(
-                  fontSize: 9,
-                  color: foreground,
-                  fontWeight: FontWeight.w700)),
-        ],
-      ),
-    );
-  }
-
-  BoxDecoration _box(AppPalette p) => BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: p.border.withValues(alpha: .6)),
-        boxShadow: [
-          BoxShadow(
-            color: p.shadow,
-            blurRadius: 5,
-            offset: const Offset(0, 2),
-          ),
-        ],
-      );
 }

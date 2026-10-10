@@ -1,21 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../core/app_text.dart';
 import '../core/app_theme.dart';
-
-TextStyle _style(
-  double size,
-  Color color,
-  FontWeight weight, {
-  double? height,
-  double? letterSpacing,
-}) => GoogleFonts.plusJakartaSans(
-  fontSize: size,
-  color: color,
-  fontWeight: weight,
-  height: height,
-  letterSpacing: letterSpacing,
-);
 
 /// Bar atas Beranda dan tab Lahan: logo, judul, lonceng notifikasi, dan avatar.
 ///
@@ -56,7 +42,7 @@ class HomeTopBar extends StatelessWidget {
             height: 32,
             decoration: BoxDecoration(
               color: p.primary,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             ),
             child: Icon(Icons.eco_rounded, color: p.onPrimary, size: 20),
           ),
@@ -64,19 +50,8 @@ class HomeTopBar extends StatelessWidget {
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text(
-                'CAPSEE',
-                style: _style(
-                  10,
-                  p.accent,
-                  FontWeight.w800,
-                  letterSpacing: 1,
-                ),
-              ),
-              Text(
-                title,
-                style: _style(18, p.title, FontWeight.w700, height: 1),
-              ),
+              Text('CAPSEE', style: AppText.overline(context, color: p.accent)),
+              Text(title, style: AppText.headline(context)),
             ],
           ),
           const Spacer(),
@@ -98,7 +73,6 @@ class HomeTopBar extends StatelessWidget {
   /// Ikon lonceng dengan badge jumlah notifikasi belum dibaca.
   Widget _bellButton(BuildContext context) {
     final p = context.palette;
-    final isDark = Theme.of(context).brightness == Brightness.dark;
     return Stack(
       clipBehavior: Clip.none,
       children: [
@@ -119,18 +93,16 @@ class HomeTopBar extends StatelessWidget {
               constraints: const BoxConstraints(minWidth: 16),
               decoration: BoxDecoration(
                 color: p.error,
-                borderRadius: BorderRadius.circular(10),
+                borderRadius: BorderRadius.circular(AppSpace.radiusPill),
                 border: Border.all(color: p.surface, width: 1.5),
               ),
               child: Text(
                 unreadCount > 99 ? '99+' : '$unreadCount',
                 textAlign: TextAlign.center,
-                style: _style(
-                  9,
-                  isDark ? p.surface : Colors.white,
-                  FontWeight.w700,
-                  height: 1.2,
-                ),
+                style: AppText.micro(
+                  context,
+                  color: Colors.white,
+                ).copyWith(fontWeight: FontWeight.w700, height: 1.2),
               ),
             ),
           ),

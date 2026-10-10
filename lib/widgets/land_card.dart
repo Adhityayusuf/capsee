@@ -1,22 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../core/app_text.dart';
 import '../core/app_theme.dart';
 import '../models/land_data.dart';
-
-TextStyle _style(
-  double size,
-  Color color,
-  FontWeight weight, {
-  double? height,
-  double? letterSpacing,
-}) => GoogleFonts.plusJakartaSans(
-  fontSize: size,
-  color: color,
-  fontWeight: weight,
-  height: height,
-  letterSpacing: letterSpacing,
-);
+import 'ui_kit.dart';
 
 /// Ubah satu map lahan dari API menjadi [LandData].
 LandData landDataFromMap(Map<String, dynamic> land) {
@@ -35,6 +22,8 @@ LandData landDataFromMap(Map<String, dynamic> land) {
     lastWatered: parseDate(land['tanggal_terakhir_siram']),
     lastFertilized: parseDate(land['tanggal_terakhir_pupuk']),
     fertilizeIntervalWeeks: land['interval_pupuk_minggu'] ?? 1,
+    wateringIntervalWeeks:
+        (land['interval_siram_minggu'] as num?)?.toInt() ?? 1,
   );
 }
 
@@ -69,63 +58,48 @@ class LandCard extends StatelessWidget {
     final statusDetail = warning
         ? 'Ada Indikasi Penyakit'
         : 'Data Tersinkronisasi';
-    final notice = 'Interval pupuk tiap ${land['interval_pupuk_minggu']} minggu.';
+    final notice = 'Siram tiap ${land['interval_siram_minggu'] ?? 1} minggu • Pupuk tiap ${land['interval_pupuk_minggu']} minggu.';
 
     final color = warning ? p.error : p.accent;
-    return Card(
-      elevation: 1,
-      color: p.surface,
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: warning
-                        ? p.error.withValues(alpha: 0.12)
-                        : p.accentSoft,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.eco_rounded, color: color, size: 30),
+    return CapseeCard(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Container(
+                width: 64,
+                height: 64,
+                decoration: BoxDecoration(
+                  color: warning
+                      ? p.error.withValues(alpha: 0.12)
+                      : p.accentSoft,
+                  borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        category,
-                        style: _style(
-                          10,
-                          color,
-                          FontWeight.w700,
-                          letterSpacing: .4,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: _style(13, p.title, FontWeight.w700),
-                      ),
-                      Text(
-                        location,
-                        style: _style(11, p.subtitle, FontWeight.w400),
-                      ),
-                      Text(
-                        phase,
-                        style: _style(11, p.title, FontWeight.w600),
-                      ),
-                    ],
-                  ),
+                child: Icon(Icons.eco_rounded, color: color, size: 30),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(category, style: AppText.overline(context, color: color)),
+                    const SizedBox(height: 3),
+                    Text(
+                      title,
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
+                      style: AppText.subtitle(context),
+                    ),
+                    Text(location, style: AppText.caption(context)),
+                    Text(
+                      phase,
+                      style: AppText.caption(context, color: p.title),
+                    ),
+                  ],
                 ),
+              ),
                 if (onEdit != null || onDelete != null)
                   PopupMenuButton<String>(
                     tooltip: 'Opsi lahan',
@@ -162,7 +136,7 @@ class LandCard extends StatelessWidget {
                             ),
                             title: Text(
                               'Hapus',
-                              style: TextStyle(color: p.error),
+                              style: AppText.body(context, color: p.error),
                             ),
                           ),
                         ),
@@ -177,7 +151,7 @@ class LandCard extends StatelessWidget {
                 color: warning
                     ? p.error.withValues(alpha: 0.12)
                     : p.accentSoft,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppSpace.radiusTile),
               ),
               child: Row(
                 children: [
@@ -186,12 +160,15 @@ class LandCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       status,
-                      style: _style(12, color, FontWeight.w700),
+                      style: AppText.bodySm(
+                        context,
+                        color: color,
+                      ).copyWith(fontWeight: FontWeight.w700),
                     ),
                   ),
                   Text(
                     statusDetail,
-                    style: _style(10, color, FontWeight.w600),
+                    style: AppText.micro(context, color: color),
                   ),
                 ],
               ),
@@ -201,7 +178,7 @@ class LandCard extends StatelessWidget {
               padding: const EdgeInsets.all(9),
               decoration: BoxDecoration(
                 color: p.surfaceAlt,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppSpace.radiusTile),
               ),
               child: Row(
                 crossAxisAlignment: CrossAxisAlignment.start,
@@ -217,12 +194,7 @@ class LandCard extends StatelessWidget {
                   Expanded(
                     child: Text(
                       notice,
-                      style: _style(
-                        11,
-                        p.title,
-                        FontWeight.w400,
-                        height: 1.3,
-                      ),
+                      style: AppText.caption(context, color: p.title),
                     ),
                   ),
                 ],
@@ -249,7 +221,6 @@ class LandCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 }

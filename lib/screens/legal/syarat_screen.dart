@@ -15,7 +15,9 @@ import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
+import '../../widgets/ui_kit.dart';
 
 const _kImgCabai =
     'https://lh3.googleusercontent.com/aida-public/AB6AXuACXKFh4uJJo_9LdD7gVIMkBulVs-nN_Lh8BrSPNR5yiexRNG2sMplxELObCVynXUHbWbFAneF85ql3sX4Iah7dUk-2saIkGskfjUxFwLsF2bTU-P6Qd2nDc-tXBS6K9HmwnnBVMuDCW-f9kSvCidnd3jYNZNxbjQ2NCtRxKTkZ7OvSn_-yvPmjRqPCTqLEJVJAtT-gPqI3VcAmNT1W_tdNkYFEi6JwYElFOwcA6JVYJYkQCeCCi6sQSQ';
@@ -129,7 +131,7 @@ class _SyaratScreenState extends State<SyaratScreen> {
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 576),
             child: Padding(
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+              padding: const EdgeInsets.all(AppSpace.page),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -197,8 +199,7 @@ class _SyaratScreenState extends State<SyaratScreen> {
                       'Syarat & Ketentuan',
                       textAlign: TextAlign.center,
                       overflow: TextOverflow.ellipsis,
-                      style: _ts(18, 24, FontWeight.w600, context.palette.title,
-                          letterSpacing: -0.2),
+                      style: AppText.headline(context),
                     ),
                   ),
                   const SizedBox(width: 44),
@@ -216,28 +217,12 @@ class _SyaratScreenState extends State<SyaratScreen> {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-          decoration: BoxDecoration(
-            color: context.palette.surfaceAlt,
-            borderRadius: BorderRadius.circular(999),
-          ),
-          child: Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.history, size: 14, color: context.palette.accent),
-              const SizedBox(width: 4),
-              Text('Versi Dokumen: 2.4.0',
-                  style: _ts(10, 14, FontWeight.w700, context.palette.subtitle)),
-            ],
-          ),
-        ),
+        const StatusBadge(label: 'Versi Dokumen: 2.4.0', kind: BadgeKind.success),
         const SizedBox(height: 4),
-        Text('Syarat & Ketentuan',
-            style: _ts(28, 36, FontWeight.w700, context.palette.title, letterSpacing: -0.3)),
+        Text('Syarat & Ketentuan', style: AppText.display(context)),
         const SizedBox(height: 4),
         Text('Terakhir diperbarui: 15 Mei 2024',
-            style: _ts(12, 16, FontWeight.w400, context.palette.hint)),
+            style: AppText.caption(context, color: context.palette.hint)),
       ],
     );
   }
@@ -248,7 +233,7 @@ class _SyaratScreenState extends State<SyaratScreen> {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: context.palette.surfaceAlt,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSpace.radiusCard),
         boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
       ),
       child: Stack(
@@ -266,7 +251,7 @@ class _SyaratScreenState extends State<SyaratScreen> {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpace.page),
             child: Column(
               children: [
                 Row(
@@ -277,7 +262,8 @@ class _SyaratScreenState extends State<SyaratScreen> {
                       height: 48,
                       decoration: BoxDecoration(
                         color: context.palette.primary,
-                        borderRadius: BorderRadius.circular(12),
+                        borderRadius:
+                            BorderRadius.circular(AppSpace.radiusTile),
                         boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
                       ),
                       child: Icon(Icons.verified_user_outlined,
@@ -289,7 +275,7 @@ class _SyaratScreenState extends State<SyaratScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text('Panduan Kemitraan Digital',
-                              style: _ts(18, 24, FontWeight.w600, context.palette.title)),
+                              style: AppText.title(context)),
                           const SizedBox(height: 4),
                           _rich(
                             const [
@@ -307,10 +293,10 @@ class _SyaratScreenState extends State<SyaratScreen> {
                 ),
                 const SizedBox(height: 16),
                 Container(
-                  padding: const EdgeInsets.all(16),
+                  padding: const EdgeInsets.all(AppSpace.page),
                   decoration: BoxDecoration(
                     color: context.palette.surface,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                   ),
                   child: Row(
                     children: [
@@ -345,9 +331,9 @@ class _SyaratScreenState extends State<SyaratScreen> {
         separatorBuilder: (_, _) => const SizedBox(width: 4),
         itemBuilder: (_, i) => Material(
           color: context.palette.surfaceAlt,
-          borderRadius: BorderRadius.circular(999),
+          borderRadius: BorderRadius.circular(AppSpace.radiusPill),
           child: InkWell(
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(AppSpace.radiusPill),
             onTap: () => _jumpTo(i),
             child: Container(
               alignment: Alignment.center,
@@ -363,38 +349,27 @@ class _SyaratScreenState extends State<SyaratScreen> {
 
   // ───────── Kerangka pasal ─────────
   Widget _section(int index, String title, List<Widget> children) {
-    return Container(
+    return CapseeCard(
       key: _keys[index],
-      padding: const EdgeInsets.all(24),
-      decoration: BoxDecoration(
-        color: context.palette.surface,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
-      ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          Row(
-            children: [
-              Container(
-                width: 32,
-                height: 32,
-                alignment: Alignment.center,
-                decoration: BoxDecoration(
-                  color: context.palette.surfaceAlt,
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: Text('${index + 1}',
-                    style: _ts(18, 24, FontWeight.w600, context.palette.accent)),
+          SectionHeader(
+            icon: Icons.article_outlined,
+            title: title,
+            trailing: Container(
+              width: 32,
+              height: 32,
+              alignment: Alignment.center,
+              decoration: BoxDecoration(
+                color: context.palette.surfaceAlt,
+                borderRadius: BorderRadius.circular(AppSpace.radiusTile),
               ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: Text(title,
-                    style: _ts(18, 24, FontWeight.w600, context.palette.title)),
-              ),
-            ],
+              child: Text('${index + 1}',
+                  style: AppText.headline(context, color: context.palette.accent)),
+            ),
           ),
-          const SizedBox(height: 16),
+          const SizedBox(height: AppSpace.page),
           ...children,
         ],
       ),
@@ -468,7 +443,7 @@ class _SyaratScreenState extends State<SyaratScreen> {
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: context.palette.surfaceAlt,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -487,12 +462,12 @@ class _SyaratScreenState extends State<SyaratScreen> {
   // ───────── Banner selingan ─────────
   Widget _buildInterlude() {
     return Container(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpace.page),
       decoration: BoxDecoration(
         gradient: LinearGradient(
           colors: [context.palette.surfaceAlt, context.palette.surface],
         ),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSpace.radiusCard),
       ),
       child: Row(
         children: [
@@ -503,17 +478,17 @@ class _SyaratScreenState extends State<SyaratScreen> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('PRINSIP KEBERLANJUTAN',
-                    style: _ts(10, 14, FontWeight.w700, context.palette.accent,
-                        letterSpacing: 1.0)),
+                    style: AppText.overline(context,
+                        color: context.palette.accent)),
                 Text('Agronomi Presisi Ramah Lingkungan',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: _ts(12, 16, FontWeight.w600, context.palette.title)),
+                    style: AppText.subtitle(context)),
                 Text(
                   'Efisiensi penggunaan input kimiawi melalui deteksi sedini mungkin.',
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
-                  style: _ts(12, 16, FontWeight.w400, context.palette.subtitle),
+                  style: AppText.bodySm(context),
                 ),
               ],
             ),
@@ -532,10 +507,10 @@ class _SyaratScreenState extends State<SyaratScreen> {
       ),
       const SizedBox(height: 16),
       Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpace.page),
         decoration: BoxDecoration(
           color: context.palette.error.withValues(alpha: 0.12),
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSpace.radiusCard),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
@@ -547,7 +522,8 @@ class _SyaratScreenState extends State<SyaratScreen> {
                 const SizedBox(width: 4),
                 Expanded(
                   child: Text('Penting: Panduan Pendukung Keputusan',
-                      style: _ts(14, 20, FontWeight.w700, context.palette.error)),
+                      style: AppText.subtitle(context,
+                          color: context.palette.error)),
                 ),
               ],
             ),
@@ -584,7 +560,7 @@ class _SyaratScreenState extends State<SyaratScreen> {
         padding: const EdgeInsets.all(8),
         decoration: BoxDecoration(
           color: context.palette.surfaceAlt,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppSpace.radiusTile),
         ),
         child: Row(
           children: [
@@ -595,10 +571,10 @@ class _SyaratScreenState extends State<SyaratScreen> {
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
                   Text('Enkripsi Data Standar Industri',
-                      style: _ts(12, 16, FontWeight.w600, context.palette.title)),
+                      style: AppText.subtitle(context)),
                   Text(
                     'Seluruh data riwayat petak tersimpan aman di server terenkripsi.',
-                    style: _ts(12, 16, FontWeight.w400, context.palette.hint),
+                    style: AppText.bodySm(context),
                   ),
                 ],
               ),
@@ -634,16 +610,16 @@ class _SyaratScreenState extends State<SyaratScreen> {
       ),
       const SizedBox(height: 16),
       Container(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpace.page),
         decoration: BoxDecoration(
           color: context.palette.surfaceAlt,
-          borderRadius: BorderRadius.circular(8),
+          borderRadius: BorderRadius.circular(AppSpace.radiusTile),
         ),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
             Text('Pusat Resolusi Masalah Pertanian:',
-                style: _ts(12, 16, FontWeight.w600, context.palette.title)),
+                style: AppText.subtitle(context)),
             const SizedBox(height: 4),
             InkWell(
               onTap: () async {
@@ -663,7 +639,8 @@ class _SyaratScreenState extends State<SyaratScreen> {
                     const SizedBox(width: 4),
                     Text(
                       'bantuan@capsee.id',
-                      style: _ts(18, 24, FontWeight.w600, context.palette.accent).copyWith(
+                      style: AppText.headline(context, color: context.palette.accent)
+                          .copyWith(
                         decoration: TextDecoration.underline,
                         decorationColor: context.palette.accent,
                       ),
@@ -701,7 +678,8 @@ class _SyaratScreenState extends State<SyaratScreen> {
             ),
             const SizedBox(width: 8),
             Text('Menyimpan Persetujuan...',
-                style: _ts(14, 20, FontWeight.w600, context.palette.onPrimary)),
+                style: AppText.subtitle(context,
+                    color: context.palette.onPrimary)),
           ],
         );
         break;
@@ -712,7 +690,8 @@ class _SyaratScreenState extends State<SyaratScreen> {
             Icon(Icons.check_circle, size: 20, color: context.palette.onPrimary),
             const SizedBox(width: 8),
             Text('Persetujuan Tersimpan',
-                style: _ts(14, 20, FontWeight.w600, context.palette.onPrimary)),
+                style: AppText.subtitle(context,
+                    color: context.palette.onPrimary)),
           ],
         );
         break;
@@ -723,7 +702,8 @@ class _SyaratScreenState extends State<SyaratScreen> {
             Icon(Icons.task_alt, size: 20, color: context.palette.onPrimary),
             const SizedBox(width: 8),
             Text('Saya Mengerti & Setuju',
-                style: _ts(14, 20, FontWeight.w600, context.palette.onPrimary)),
+                style: AppText.subtitle(context,
+                    color: context.palette.onPrimary)),
           ],
         );
         break;
@@ -734,9 +714,9 @@ class _SyaratScreenState extends State<SyaratScreen> {
       children: [
         Material(
           color: context.palette.surfaceAlt,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSpace.radiusCard),
           child: InkWell(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSpace.radiusCard),
             onTap: busy ? null : () => setState(() => _consent = !_consent),
             child: Padding(
               padding: const EdgeInsets.all(16),
@@ -769,7 +749,7 @@ class _SyaratScreenState extends State<SyaratScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('Konfirmasi Pemahaman',
-                            style: _ts(14, 20, FontWeight.w600, context.palette.title)),
+                            style: AppText.subtitle(context)),
                         Text(
                           'Saya telah membaca, memahami, serta menerima seluruh ketentuan pemanfaatan platform Capsee demi keberhasilan panen cabai saya.',
                           style: _small,
@@ -788,10 +768,10 @@ class _SyaratScreenState extends State<SyaratScreen> {
           opacity: (_consent || busy) ? 1 : 0.45,
           child: Material(
             color: saved ? context.palette.accent : context.palette.primary,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             elevation: 2,
             child: InkWell(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
               onTap: enabled ? _handleAgree : null,
               child: SizedBox(height: 56, child: btnContent),
             ),
@@ -800,15 +780,16 @@ class _SyaratScreenState extends State<SyaratScreen> {
         const SizedBox(height: 16),
         Material(
           color: context.palette.surfaceAlt,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSpace.radiusTile),
           child: InkWell(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             onTap: busy ? null : () => Navigator.maybePop(context),
             child: SizedBox(
               height: 48,
               child: Center(
                 child: Text('Kembali ke Pengaturan Akun',
-                    style: _ts(12, 16, FontWeight.w600, context.palette.title)),
+                    style: AppText.bodySm(context, color: context.palette.title)
+                        .copyWith(fontWeight: FontWeight.w700)),
               ),
             ),
           ),
@@ -830,11 +811,11 @@ class _RoundedImage extends StatelessWidget {
       width: size,
       height: size,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
         boxShadow: shadow ? [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))] : null,
       ),
       child: ClipRRect(
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
         child: Image.network(
           url,
           fit: BoxFit.cover,

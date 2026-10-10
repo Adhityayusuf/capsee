@@ -40,7 +40,8 @@ CREATE TABLE IF NOT EXISTS lahan (
   umur_tanaman_bulan SMALLINT NOT NULL CHECK (umur_tanaman_bulan BETWEEN 1 AND 5),
   tanggal_terakhir_siram DATE,
   tanggal_terakhir_pupuk DATE,
-  interval_pupuk_minggu SMALLINT NOT NULL CHECK (interval_pupuk_minggu IN (1, 2)),
+  interval_pupuk_minggu SMALLINT NOT NULL CHECK (interval_pupuk_minggu BETWEEN 1 AND 12),
+  interval_siram_minggu SMALLINT NOT NULL DEFAULT 1 CHECK (interval_siram_minggu BETWEEN 1 AND 12),
   status_kesehatan VARCHAR NOT NULL DEFAULT 'belum_discan'
     CHECK (status_kesehatan IN ('sehat', 'tidak_sehat', 'belum_discan')),
   dibuat_pada TIMESTAMPTZ NOT NULL DEFAULT now(),

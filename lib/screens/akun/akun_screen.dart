@@ -7,9 +7,10 @@
 
 import 'package:flutter/material.dart';
 import 'dart:ui' show ImageFilter;
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
+import '../../widgets/ui_kit.dart';
 import '../auth/login_screen.dart';
 import '../bantuan/bantuan_faq_screen.dart';
 import '../legal/privasi_screen.dart';
@@ -23,16 +24,6 @@ const String _kLogoUrl =
 
 const String _kAvatarUrl =
     'https://lh3.googleusercontent.com/aida-public/AB6AXuD9yzTTPbdLCm8UF7S10zskIXze-Iztg7iXPtN_yLtbjMgVJFf622RK8iDPg3zs34Zgmvzr-3eP0M69khUrRTVIl0PLCMmM1y1hVGB97EpVLHtlnm82aGyadJeOmtF02lZKnvK7D8cMX_Sn0t7eztxJ_iNnt56NrCCmKmtRo6I9dCrBdhvfcfKio97cfmdKq9alKshbFGQ7_2HuXJzF7laagR4yJ4pcrcc-tUfgWobAUXnQP6OqSeusdg';
-
-TextStyle _ts(double size, double height, FontWeight w, Color color,
-        {double? letterSpacing}) =>
-    GoogleFonts.plusJakartaSans(
-      fontSize: size,
-      height: height / size,
-      fontWeight: w,
-      color: color,
-      letterSpacing: letterSpacing,
-    );
 
 // ─────────────────────────── Model menu ───────────────────────────
 class _MenuItem {
@@ -195,7 +186,8 @@ class _AkunScreenState extends State<AkunScreen> {
       backgroundColor: p.background,
       appBar: _buildAppBar(),
       body: ListView(
-        padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+        padding: const EdgeInsets.fromLTRB(
+            AppSpace.page, 8, AppSpace.page, AppSpace.gapXl),
         children: [
           _buildGreeting(),
           const SizedBox(height: 16),
@@ -261,7 +253,8 @@ class _AkunScreenState extends State<AkunScreen> {
                       height: 32,
                       decoration: BoxDecoration(
                         color: p.accentSoft,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius:
+                            BorderRadius.circular(AppSpace.radiusTile),
                       ),
                       child: Icon(Icons.eco, size: 20, color: p.accent),
                     ),
@@ -273,11 +266,10 @@ class _AkunScreenState extends State<AkunScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('PROFIL & PENGATURAN',
-                            style: _ts(10, 14, FontWeight.w700, p.accent,
-                                letterSpacing: 1.0)),
+                            style: AppText.overline(context, color: p.accent)),
                         Text('Akun Saya',
                             overflow: TextOverflow.ellipsis,
-                            style: _ts(18, 24, FontWeight.w600, p.title)),
+                            style: AppText.headline(context)),
                       ],
                     ),
                   ),
@@ -304,107 +296,79 @@ class _AkunScreenState extends State<AkunScreen> {
 
   // ───────── Kartu profil ─────────
   Widget _buildProfileCard() {
-    final p = context.palette;
-
-    return Container(
-      clipBehavior: Clip.antiAlias,
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [
-          BoxShadow(
-              color: p.shadow,
-              blurRadius: 20,
-              spreadRadius: -4,
-              offset: const Offset(0, 4)),
-        ],
-      ),
-      child: Stack(
-        children: [
-          // Aksen hijau samar di pojok kanan atas
-          Positioned(
-            top: -48,
-            right: -48,
-            child: IgnorePointer(
-              child: ImageFiltered(
-                imageFilter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
-                child: Container(
-                  width: 144,
-                  height: 144,
-                  decoration: BoxDecoration(
-                    color: p.accentSoft,
-                    shape: BoxShape.circle,
+    return CapseeCard(
+      padding: EdgeInsets.zero,
+      child: ClipRRect(
+        borderRadius: BorderRadius.circular(AppSpace.radiusCard),
+        child: Stack(
+          children: [
+            // Aksen hijau samar di pojok kanan atas
+            Positioned(
+              top: -48,
+              right: -48,
+              child: IgnorePointer(
+                child: ImageFiltered(
+                  imageFilter: ImageFilter.blur(sigmaX: 24, sigmaY: 24),
+                  child: Container(
+                    width: 144,
+                    height: 144,
+                    decoration: BoxDecoration(
+                      color: context.palette.accentSoft,
+                      shape: BoxShape.circle,
+                    ),
                   ),
                 ),
               ),
             ),
-          ),
-          Padding(
-            padding: const EdgeInsets.all(16),
-            child: Column(
-              children: [
-                Row(
-                  children: [
-                    _buildAvatar(),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        children: [
-                          Text(_profil?['nama'] ?? 'Pengguna',
-                              overflow: TextOverflow.ellipsis,
-                              style: _ts(18, 24, FontWeight.w600, p.title)),
-                          const SizedBox(height: 2),
-                          Row(
-                            children: [
-                              Icon(Icons.eco, size: 15, color: p.accent),
-                              const SizedBox(width: 4),
-                              Expanded(
-                                child: Text(
-                                  'Mitra Tani Cabai Rawit • Jawa Timur',
-                                  overflow: TextOverflow.ellipsis,
-                                  style: _ts(
-                                      12, 16, FontWeight.w600, p.subtitle),
-                                ),
-                              ),
-                            ],
-                          ),
-                          const SizedBox(height: 6),
-                          Container(
-                            padding: const EdgeInsets.symmetric(
-                                horizontal: 8, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: p.surfaceAlt,
-                              borderRadius: BorderRadius.circular(999),
-                            ),
-                            child: Row(
-                              mainAxisSize: MainAxisSize.min,
+            Padding(
+              padding: const EdgeInsets.all(AppSpace.card),
+              child: Column(
+                children: [
+                  Row(
+                    children: [
+                      _buildAvatar(),
+                      const SizedBox(width: AppSpace.gapMd),
+                      Expanded(
+                        child: Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
+                          children: [
+                            Text(_profil?['nama'] ?? 'Pengguna',
+                                overflow: TextOverflow.ellipsis,
+                                style: AppText.headline(context)),
+                            const SizedBox(height: 2),
+                            Row(
                               children: [
-                                Container(
-                                  width: 6,
-                                  height: 6,
-                                  decoration: BoxDecoration(
-                                      color: p.accent,
-                                      shape: BoxShape.circle),
-                                ),
+                                Icon(Icons.eco,
+                                    size: 15,
+                                    color: context.palette.accent),
                                 const SizedBox(width: 4),
-                                Text('Petani Komersial',
-                                    style: _ts(10, 14, FontWeight.w600,
-                                        p.subtitle)),
+                                Expanded(
+                                  child: Text(
+                                    'Mitra Tani Cabai Rawit • Jawa Timur',
+                                    overflow: TextOverflow.ellipsis,
+                                    style: AppText.bodySm(context).copyWith(
+                                        fontWeight: FontWeight.w600),
+                                  ),
+                                ),
                               ],
                             ),
-                          ),
-                        ],
+                            const SizedBox(height: 6),
+                            const StatusBadge(
+                              label: 'Petani Komersial',
+                              kind: BadgeKind.success,
+                            ),
+                          ],
+                        ),
                       ),
-                    ),
-                  ],
-                ),
-                const SizedBox(height: 16),
-                _buildContactPanel(),
-              ],
+                    ],
+                  ),
+                  const SizedBox(height: AppSpace.gapMd),
+                  _buildContactPanel(),
+                ],
+              ),
             ),
-          ),
-        ],
+          ],
+        ),
       ),
     );
   }
@@ -466,7 +430,7 @@ class _AkunScreenState extends State<AkunScreen> {
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: p.surfaceAlt,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       ),
       child: Column(
         children: [
@@ -479,12 +443,14 @@ class _AkunScreenState extends State<AkunScreen> {
                     Icon(Icons.location_on, size: 18, color: p.accent),
                     const SizedBox(width: 8),
                     Text('Lahan Aktif',
-                        style: _ts(12, 16, FontWeight.w600, p.subtitle)),
+                        style: AppText.bodySm(context)
+                            .copyWith(fontWeight: FontWeight.w600)),
                   ],
                 ),
               ),
               Text('2 Petak Terdaftar',
-                  style: _ts(12, 16, FontWeight.w600, p.title)),
+                  style: AppText.bodySm(context, color: p.title)
+                      .copyWith(fontWeight: FontWeight.w600)),
             ],
           ),
           const SizedBox(height: 8),
@@ -500,7 +466,7 @@ class _AkunScreenState extends State<AkunScreen> {
                       child: Text(
                           _profil?['email'] ?? 'budi.santoso@agrimail.id',
                           overflow: TextOverflow.ellipsis,
-                          style: _ts(12, 16, FontWeight.w400, p.subtitle)),
+                          style: AppText.bodySm(context)),
                     ),
                   ],
                 ),
@@ -520,12 +486,12 @@ class _AkunScreenState extends State<AkunScreen> {
                     Expanded(
                       child: Text(_profil?['nomor_hp'] ?? '+62 812-3456-7890',
                           overflow: TextOverflow.ellipsis,
-                          style: _ts(12, 16, FontWeight.w400, p.subtitle)),
+                          style: AppText.bodySm(context)),
                     ),
                   ],
                 ),
               ),
-              Text('Aktif WA', style: _ts(10, 14, FontWeight.w600, p.accent)),
+              const StatusBadge(label: 'Aktif WA', kind: BadgeKind.success),
             ],
           ),
         ],
@@ -554,37 +520,30 @@ class _AkunScreenState extends State<AkunScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(title.toUpperCase(),
-                  style: _ts(10, 14, FontWeight.w700, p.icon,
-                      letterSpacing: 1.0)),
+                  style: AppText.overline(context, color: p.icon)),
               Text(trailing,
-                  style: _ts(10, 14, FontWeight.w600, trailingColor)),
+                  style: AppText.micro(context, color: trailingColor)),
             ],
           ),
         ),
-        Container(
-          clipBehavior: Clip.antiAlias,
-          decoration: BoxDecoration(
-            color: p.surface,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                  color: p.shadow,
-                  blurRadius: 12,
-                  offset: const Offset(0, 2)),
-            ],
-          ),
-          child: Column(
-            children: [
-              for (int i = 0; i < items.length; i++) ...[
-                _MenuTile(item: items[i]),
-                if (i != items.length - 1)
-                  Container(
-                    height: 1,
-                    margin: const EdgeInsets.symmetric(horizontal: 16),
-                    color: p.border,
-                  ),
+        CapseeCard(
+          padding: EdgeInsets.zero,
+          child: ClipRRect(
+            borderRadius: BorderRadius.circular(AppSpace.radiusCard),
+            child: Column(
+              children: [
+                for (int i = 0; i < items.length; i++) ...[
+                  _MenuTile(item: items[i]),
+                  if (i != items.length - 1)
+                    Container(
+                      height: 1,
+                      margin: const EdgeInsets.symmetric(
+                          horizontal: AppSpace.card),
+                      color: p.border,
+                    ),
+                ],
               ],
-            ],
+            ),
           ),
         ),
       ],
@@ -598,21 +557,21 @@ class _AkunScreenState extends State<AkunScreen> {
 
     return Material(
       color: p.error.withAlpha(isDark ? 40 : 26),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       child: InkWell(
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
         onTap: () => _confirmLogout(context),
         child: ConstrainedBox(
           constraints: const BoxConstraints(minHeight: 48),
           child: Padding(
-            padding: const EdgeInsets.all(16),
+            padding: const EdgeInsets.all(AppSpace.card),
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: [
                 Icon(Icons.logout, size: 20, color: p.error),
                 const SizedBox(width: 8),
                 Text('Keluar dari Akun',
-                    style: _ts(14, 20, FontWeight.w700, p.error)),
+                    style: AppText.subtitle(context, color: p.error)),
               ],
             ),
           ),
@@ -629,14 +588,15 @@ class _AkunScreenState extends State<AkunScreen> {
       builder: (ctx) => AlertDialog(
         backgroundColor: p.surface,
         title: Text('Keluar dari akun?',
-            style: _ts(18, 24, FontWeight.w600, p.title)),
+            style: AppText.headline(context)),
         content: Text('Anda perlu masuk lagi untuk memantau lahan.',
-            style: _ts(14, 20, FontWeight.w400, p.subtitle)),
+            style: AppText.body(context)),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
             child: Text('Batal',
-                style: _ts(14, 20, FontWeight.w600, p.subtitle)),
+                style: AppText.subtitle(context, color: p.subtitle)
+                    .copyWith(fontWeight: FontWeight.w600)),
           ),
           TextButton(
             onPressed: () async {
@@ -649,7 +609,8 @@ class _AkunScreenState extends State<AkunScreen> {
                 );
               }
             },
-            child: Text('Keluar', style: _ts(14, 20, FontWeight.w700, p.error)),
+            child:
+                Text('Keluar', style: AppText.subtitle(context, color: p.error)),
           ),
         ],
       ),
@@ -667,16 +628,15 @@ class _AkunScreenState extends State<AkunScreen> {
             Icon(Icons.psychology_outlined, size: 16, color: p.icon),
             const SizedBox(width: 6),
             Text('CAPSEE PRECISION AGRI',
-                style: _ts(10, 14, FontWeight.w600, p.icon,
-                    letterSpacing: 1.0)),
+                style: AppText.overline(context, color: p.icon)),
           ],
         ),
         const SizedBox(height: 4),
         Text(
           'Versi 2.4.0 (Build 2024.11) • Sistem Terenkripsi',
           textAlign: TextAlign.center,
-          style:
-              _ts(12, 16, FontWeight.w400, p.subtitle.withValues(alpha: 0.8)),
+          style: AppText.bodySm(context,
+              color: p.subtitle.withValues(alpha: 0.8)),
         ),
       ],
     );
@@ -695,7 +655,7 @@ class _MenuTile extends StatelessWidget {
     return InkWell(
       onTap: item.onTap ?? () {},
       child: Padding(
-        padding: const EdgeInsets.all(16),
+        padding: const EdgeInsets.all(AppSpace.card),
         child: Row(
           children: [
             Container(
@@ -703,7 +663,7 @@ class _MenuTile extends StatelessWidget {
               height: 40,
               decoration: BoxDecoration(
                 color: p.surfaceAlt,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppSpace.radiusTile),
               ),
               child: Icon(item.icon, size: 20, color: item.iconColor),
             ),
@@ -714,10 +674,11 @@ class _MenuTile extends StatelessWidget {
                 children: [
                   Text(item.title,
                       overflow: TextOverflow.ellipsis,
-                      style: _ts(14, 20, FontWeight.w600, p.title)),
+                      style: AppText.subtitle(context)
+                          .copyWith(fontWeight: FontWeight.w600)),
                   Text(item.subtitle,
                       overflow: TextOverflow.ellipsis,
-                      style: _ts(12, 16, FontWeight.w400, p.subtitle)),
+                      style: AppText.bodySm(context)),
                 ],
               ),
             ),

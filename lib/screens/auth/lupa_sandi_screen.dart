@@ -14,20 +14,11 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import '../../core/validators.dart';
-
-TextStyle _ts(double size, double height, FontWeight w, Color color,
-        {double? letterSpacing}) =>
-    GoogleFonts.plusJakartaSans(
-      fontSize: size,
-      height: height / size,
-      fontWeight: w,
-      color: color,
-      letterSpacing: letterSpacing,
-    );
+import '../../widgets/ui_kit.dart';
 
 List<BoxShadow> _softShadowOf(AppPalette p) => [
       BoxShadow(color: p.shadow, blurRadius: 3, offset: const Offset(0, 1)),
@@ -86,7 +77,9 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
       if (!mounted) return;
       setState(() => _loading = false);
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gagal mengirim tautan. Coba lagi.')),
+        SnackBar(
+            content: Text('Gagal mengirim tautan. Coba lagi.',
+                style: AppText.bodySm(context, color: Colors.white))),
       );
       return;
     }
@@ -115,7 +108,9 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
     } catch (_) {
       if (!mounted) return;
       ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Gagal mengirim ulang tautan.')),
+        SnackBar(
+            content: Text('Gagal mengirim ulang tautan.',
+                style: AppText.bodySm(context, color: Colors.white))),
       );
     }
   }
@@ -132,7 +127,8 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
         top: false,
         child: SingleChildScrollView(
           keyboardDismissBehavior: ScrollViewKeyboardDismissBehavior.onDrag,
-          padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+          padding: const EdgeInsets.fromLTRB(
+              AppSpace.page, AppSpace.page, AppSpace.page, 32),
           child: Center(
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 448),
@@ -203,8 +199,7 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
                         'Lupa Kata Sandi',
                         textAlign: TextAlign.center,
                         overflow: TextOverflow.ellipsis,
-                        style: _ts(18, 24, FontWeight.w600, p.title,
-                            letterSpacing: -0.2),
+                        style: AppText.headline(context),
                       ),
                     ),
                   ),
@@ -241,11 +236,13 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
                 icon: Icon(Icons.arrow_back,
                     size: 18, color: p.subtitle),
                 label: Text('Kembali ke Halaman Masuk',
-                    style: _ts(14, 20, FontWeight.w600, p.subtitle)),
+                    style: AppText.subtitle(context, color: p.subtitle)
+                        .copyWith(fontWeight: FontWeight.w600)),
                 style: TextButton.styleFrom(
                   minimumSize: const Size.fromHeight(48),
                   shape: RoundedRectangleBorder(
-                      borderRadius: BorderRadius.circular(12)),
+                      borderRadius:
+                          BorderRadius.circular(AppSpace.radiusTile)),
                 ),
               ),
             ],
@@ -274,7 +271,7 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
                   height: 80,
                   decoration: BoxDecoration(
                     color: p.surfaceAlt,
-                    borderRadius: BorderRadius.circular(12),
+                    borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                     boxShadow: _softShadowOf(p),
                   ),
                   child: Icon(Icons.lock_reset, size: 36, color: p.accent),
@@ -304,16 +301,14 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
         ),
         const SizedBox(height: 16),
         Text('Atur Ulang Kata Sandi',
-            textAlign: TextAlign.center,
-            style: _ts(22, 28, FontWeight.w700, p.title,
-                letterSpacing: -0.2)),
+            textAlign: TextAlign.center, style: AppText.display(context)),
         const SizedBox(height: 4),
         ConstrainedBox(
           constraints: const BoxConstraints(maxWidth: 320),
           child: Text(
             'Masukkan alamat email yang terdaftar pada akun Capsee Anda. Kami akan mengirimkan tautan verifikasi pemulihan.',
             textAlign: TextAlign.center,
-            style: _ts(14, 22, FontWeight.w400, p.subtitle),
+            style: AppText.body(context),
           ),
         ),
       ],
@@ -323,7 +318,7 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
   Widget _buildEmailField() {
     final p = context.palette;
     OutlineInputBorder border([Color? color]) => OutlineInputBorder(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSpace.radiusTile),
           borderSide: color == null
               ? BorderSide.none
               : BorderSide(color: color, width: 1.5),
@@ -334,16 +329,15 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
       children: [
         Row(
           children: [
-            Text('Email Terdaftar',
-                style: _ts(12, 16, FontWeight.w600, p.subtitle)),
+            Text('Email Terdaftar', style: AppText.caption(context)),
             const SizedBox(width: 4),
-            Text('*', style: _ts(14, 14, FontWeight.w400, p.error)),
+            Text('*', style: AppText.body(context, color: p.error)),
           ],
         ),
         const SizedBox(height: 4),
         DecoratedBox(
           decoration: BoxDecoration(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             boxShadow: _softShadowOf(p),
           ),
           child: TextFormField(
@@ -353,12 +347,12 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
             autofillHints: const [AutofillHints.email],
             textInputAction: TextInputAction.send,
             onFieldSubmitted: (_) => _submit(),
-            style: _ts(16, 24, FontWeight.w400, p.title),
+            style: AppText.body(context, color: p.title),
             cursorColor: p.primary,
             validator: validateEmail,
             decoration: InputDecoration(
               hintText: 'petani@capsee.id',
-              hintStyle: _ts(16, 24, FontWeight.w400, p.hint),
+              hintStyle: AppText.body(context, color: p.hint),
               filled: true,
               fillColor: p.surfaceAlt,
               contentPadding: const EdgeInsets.symmetric(vertical: 16),
@@ -383,7 +377,7 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
               focusedBorder: border(p.primary),
               errorBorder: border(p.error),
               focusedErrorBorder: border(p.error),
-              errorStyle: _ts(12, 16, FontWeight.w400, p.error),
+              errorStyle: AppText.bodySm(context, color: p.error),
             ),
           ),
         ),
@@ -402,10 +396,10 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
       opacity: _loading ? 0.8 : 1,
       child: Material(
         color: p.primary,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
         elevation: 2,
         child: InkWell(
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSpace.radiusTile),
           onTap: _loading ? null : _submit,
           child: SizedBox(
             height: 56,
@@ -421,11 +415,13 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
                       ),
                       const SizedBox(width: 8),
                       Text('Memproses...',
-                          style: _ts(18, 24, FontWeight.w600, p.onPrimary)),
+                          style:
+                              AppText.headline(context, color: p.onPrimary)),
                     ]
                   : [
                       Text('Kirim Link Reset',
-                          style: _ts(18, 24, FontWeight.w600, p.onPrimary)),
+                          style:
+                              AppText.headline(context, color: p.onPrimary)),
                       const SizedBox(width: 8),
                       Icon(Icons.send, size: 20, color: p.onPrimary),
                     ],
@@ -459,20 +455,19 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
         ),
         const SizedBox(height: 16),
         Text('Tautan Berhasil Dikirim!',
-            textAlign: TextAlign.center,
-            style: _ts(18, 24, FontWeight.w600, p.title)),
+            textAlign: TextAlign.center, style: AppText.headline(context)),
         const SizedBox(height: 4),
         Center(
           child: ConstrainedBox(
             constraints: const BoxConstraints(maxWidth: 320),
             child: Text.rich(
               TextSpan(
-                style: _ts(14, 22, FontWeight.w400, p.subtitle),
+                style: AppText.body(context),
                 children: [
                   const TextSpan(text: 'Tautan telah dikirim ke '),
                   TextSpan(
                     text: _sentEmail,
-                    style: _ts(14, 22, FontWeight.w600, p.title),
+                    style: AppText.subtitle(context),
                   ),
                   const TextSpan(
                       text: '. Buka email Anda untuk mengatur sandi baru.'),
@@ -488,9 +483,9 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
           opacity: waiting ? 0.7 : 1,
           child: Material(
             color: p.surfaceAlt,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             child: InkWell(
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
               onTap: waiting ? null : _resend,
               child: SizedBox(
                 height: 48,
@@ -503,7 +498,7 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
                       waiting
                           ? 'Kirim Ulang ($_countdown' 's)'
                           : 'Kirim Ulang Tautan',
-                      style: _ts(14, 20, FontWeight.w600, p.title),
+                      style: AppText.subtitle(context),
                     ),
                   ],
                 ),
@@ -514,10 +509,10 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
         const SizedBox(height: 8),
         Material(
           color: p.primary,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSpace.radiusTile),
           elevation: 2,
           child: InkWell(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             onTap: _back,
             child: SizedBox(
               height: 48,
@@ -525,7 +520,7 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
                   Text('Kembali Masuk',
-                      style: _ts(18, 24, FontWeight.w600, p.onPrimary)),
+                      style: AppText.headline(context, color: p.onPrimary)),
                   const SizedBox(width: 4),
                   Icon(Icons.login, size: 18, color: p.onPrimary),
                 ],
@@ -540,13 +535,7 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
   // ───────── Kartu bantuan ─────────
   Widget _buildSupportCard() {
     final p = context.palette;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: _softShadowOf(p),
-      ),
+    return CapseeCard(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -555,11 +544,11 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
             height: 36,
             decoration: BoxDecoration(
               color: p.surfaceAlt,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             ),
             child: Icon(Icons.support_agent, size: 20, color: p.accent),
           ),
-          const SizedBox(width: 16),
+          const SizedBox(width: AppSpace.gapMd),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
@@ -567,18 +556,19 @@ class _LupaSandiScreenState extends State<LupaSandiScreen> {
                 Text('Bantuan Akun Lapangan',
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: _ts(14, 20, FontWeight.w600, p.title)),
+                    style: AppText.subtitle(context)),
                 const SizedBox(height: 2),
                 Text.rich(
                   TextSpan(
-                    style: _ts(12, 19, FontWeight.w400, p.subtitle),
+                    style: AppText.bodySm(context),
                     children: [
                       const TextSpan(
                           text:
                               'Belum menerima pesan dalam 2 menit? Periksa folder spam atau hubungi penyuluh pertanian digital Capsee di '),
                       TextSpan(
                         text: '0800-1-CAPSEE',
-                        style: _ts(12, 19, FontWeight.w600, p.accent),
+                        style: AppText.bodySm(context, color: p.accent)
+                            .copyWith(fontWeight: FontWeight.w700),
                       ),
                       const TextSpan(text: '.'),
                     ],
@@ -610,7 +600,7 @@ class _HelperLine extends StatelessWidget {
         Expanded(
           child: Text(
             'Pastikan email aktif dan dapat menerima pesan inbox.',
-            style: _ts(12, 16, FontWeight.w400, p.subtitle),
+            style: AppText.bodySm(context),
           ),
         ),
       ],

@@ -14,7 +14,8 @@ Future<Map<String, dynamic>> tambahLahan({
   required int umurTanamanBulan,
   String? tanggalTerakhirSiram,  // format: 'YYYY-MM-DD'
   String? tanggalTerakhirPupuk,  // format: 'YYYY-MM-DD'
-  required int intervalPupukMinggu,
+  required int intervalPupukMinggu, // 1–12
+  int intervalSiramMinggu = 1, // 1–12
 }) async {
   final payload = {
     'nama': nama,
@@ -23,6 +24,7 @@ Future<Map<String, dynamic>> tambahLahan({
     'kecamatan': kecamatan,
     'umur_tanaman_bulan': umurTanamanBulan,
     'interval_pupuk_minggu': intervalPupukMinggu,
+    'interval_siram_minggu': intervalSiramMinggu,
     if (tanggalTerakhirSiram != null) 'tanggal_terakhir_siram': tanggalTerakhirSiram,
     if (tanggalTerakhirPupuk != null) 'tanggal_terakhir_pupuk': tanggalTerakhirPupuk,
   };
@@ -67,6 +69,7 @@ Future<Map<String, dynamic>> editLahan(
   String? tanggalTerakhirSiram,
   String? tanggalTerakhirPupuk,
   int? intervalPupukMinggu,
+  int? intervalSiramMinggu,
 }) async {
   final payload = <String, dynamic>{};
   if (nama != null) payload['nama'] = nama;
@@ -77,6 +80,7 @@ Future<Map<String, dynamic>> editLahan(
   if (tanggalTerakhirSiram != null) payload['tanggal_terakhir_siram'] = tanggalTerakhirSiram;
   if (tanggalTerakhirPupuk != null) payload['tanggal_terakhir_pupuk'] = tanggalTerakhirPupuk;
   if (intervalPupukMinggu != null) payload['interval_pupuk_minggu'] = intervalPupukMinggu;
+  if (intervalSiramMinggu != null) payload['interval_siram_minggu'] = intervalSiramMinggu;
 
   final res = await apiPut(
     '/api/lahan/$idLahan',
@@ -111,7 +115,8 @@ Future<List<Map<String, dynamic>>> getJadwalPenyiraman(String idLahan) async {
 }
 
 /// Tandai jadwal penyiraman sebagai selesai.
-/// Otomatis update tanggal_terakhir_siram di lahan + catat ke log.
+/// Otomatis update tanggal_terakhir_siram di lahan + generate jadwal
+/// berikutnya sesuai interval siram + catat ke log.
 Future<Map<String, dynamic>> selesaiPenyiraman(
   String idLahan,
   String idJadwal,

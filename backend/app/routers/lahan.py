@@ -16,11 +16,12 @@ class TambahLahanRequest(BaseModel):
     provinsi: str = Field(min_length=1)
     kota: str = Field(min_length=1)
     kecamatan: str = Field(min_length=1)
-    # Samakan dengan CHECK di DB: umur 1-5 bulan, interval pupuk 1-2 minggu.
+    # Samakan dengan CHECK di DB: umur 1-5 bulan, pupuk & siram 1-12 minggu.
     umur_tanaman_bulan: int = Field(ge=1, le=5)
     tanggal_terakhir_siram: date | None = None
     tanggal_terakhir_pupuk: date | None = None
-    interval_pupuk_minggu: int = Field(ge=1, le=2)
+    interval_pupuk_minggu: int = Field(ge=1, le=12)
+    interval_siram_minggu: int = Field(default=1, ge=1, le=12)
 
 
 class EditLahanRequest(BaseModel):
@@ -31,7 +32,8 @@ class EditLahanRequest(BaseModel):
     umur_tanaman_bulan: int | None = Field(default=None, ge=1, le=5)
     tanggal_terakhir_siram: date | None = None
     tanggal_terakhir_pupuk: date | None = None
-    interval_pupuk_minggu: int | None = Field(default=None, ge=1, le=2)
+    interval_pupuk_minggu: int | None = Field(default=None, ge=1, le=12)
+    interval_siram_minggu: int | None = Field(default=None, ge=1, le=12)
 
 
 # ─────────────────────────────────────────────────
@@ -48,13 +50,15 @@ def tambah_lahan(data: TambahLahanRequest, id_pengguna: str = Depends(verifikasi
             """
             INSERT INTO lahan
                 (id, id_pengguna, nama, provinsi, kota, kecamatan, umur_tanaman_bulan,
-                 tanggal_terakhir_siram, tanggal_terakhir_pupuk, interval_pupuk_minggu)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
+                 tanggal_terakhir_siram, tanggal_terakhir_pupuk, interval_pupuk_minggu,
+                 interval_siram_minggu)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING *
             """,
             (id_lahan, id_pengguna, data.nama, data.provinsi, data.kota, data.kecamatan,
              data.umur_tanaman_bulan, data.tanggal_terakhir_siram,
-             data.tanggal_terakhir_pupuk, data.interval_pupuk_minggu),
+             data.tanggal_terakhir_pupuk, data.interval_pupuk_minggu,
+             data.interval_siram_minggu),
         )
         lahan = row_to_dict(cur, cur.fetchone())
 
@@ -121,6 +125,7 @@ def edit_lahan(
         "tanggal_terakhir_siram": data.tanggal_terakhir_siram,
         "tanggal_terakhir_pupuk": data.tanggal_terakhir_pupuk,
         "interval_pupuk_minggu": data.interval_pupuk_minggu,
+        "interval_siram_minggu": data.interval_siram_minggu,
     }
     # Hanya kolom yang dikirim (bukan None)
     to_update = {k: v for k, v in fields.items() if v is not None}
@@ -216,6 +221,22 @@ def selesai_penyiraman(
         cur.execute(
             "UPDATE lahan SET tanggal_terakhir_siram = CURRENT_DATE, diperbarui_pada = now() WHERE id = %s",
             (id_lahan,),
+        )
+
+        # Ambil interval siram (mingguan) dari lahan
+        cur.execute(
+            "SELECT interval_siram_minggu FROM lahan WHERE id = %s",
+            (id_lahan,),
+        )
+        interval_siram = cur.fetchone()[0] or 1
+
+        # Auto-generate jadwal penyiraman berikutnya (seperti pemupukan)
+        cur.execute(
+            """
+            INSERT INTO jadwal_penyiraman (id, id_lahan, tanggal_jadwal)
+            VALUES (%s, %s, CURRENT_DATE + (%s * 7 || ' days')::interval)
+            """,
+            (str(uuid.uuid4()), id_lahan, interval_siram),
         )
 
         # Catat ke log_aktivitas

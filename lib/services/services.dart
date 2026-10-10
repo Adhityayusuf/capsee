@@ -10,3 +10,4 @@ export 'jadwal_kegiatan_service.dart';
 export 'pemindaian_service.dart';
 export 'notifikasi_service.dart';
 export 'cuaca_service.dart';
+export 'wilayah_service.dart';

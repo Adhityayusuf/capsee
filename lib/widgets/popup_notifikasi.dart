@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/app_colors.dart';
+import '../core/app_text.dart';
 
 /// Popup notifikasi terpusat — pengganti SnackBar agar tidak tertutup
 /// tombol scan / bottom-nav (lihat keluhan snackbar ketutup lingkaran hijau).
@@ -21,7 +22,8 @@ Future<void> showPopup({
     context: context,
     barrierDismissible: true,
     builder: (ctx) => AlertDialog(
-      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+      shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppSpace.radiusCard)),
       titlePadding: const EdgeInsets.fromLTRB(20, 20, 20, 0),
       contentPadding: const EdgeInsets.fromLTRB(20, 12, 20, 0),
       actionsPadding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
@@ -40,22 +42,14 @@ Future<void> showPopup({
           Expanded(
             child: Text(
               judul,
-              style: const TextStyle(
-                fontSize: 16,
-                fontWeight: FontWeight.w800,
-                color: AppColors.title,
-              ),
+              style: AppText.subtitle(ctx),
             ),
           ),
         ],
       ),
       content: Text(
         pesan,
-        style: const TextStyle(
-          fontSize: 13,
-          height: 1.45,
-          color: AppColors.subtitle,
-        ),
+        style: AppText.bodySm(ctx),
       ),
       actions: [
         SizedBox(
@@ -65,7 +59,7 @@ Future<void> showPopup({
               backgroundColor: warna,
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
+                borderRadius: BorderRadius.circular(AppSpace.radiusTile),
               ),
             ),
             onPressed: () => Navigator.of(ctx).pop(),

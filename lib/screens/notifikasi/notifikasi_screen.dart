@@ -4,21 +4,11 @@
 // Dependensi: google_fonts.
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import '../../services/services.dart';
-
-// ─────────────────────────── Tipografi ───────────────────────────
-TextStyle _t(double size, double height, FontWeight w, Color color,
-        {double? letterSpacing}) =>
-    GoogleFonts.plusJakartaSans(
-      fontSize: size,
-      height: height / size,
-      fontWeight: w,
-      color: color,
-      letterSpacing: letterSpacing,
-    );
+import '../../widgets/ui_kit.dart';
 
 // ─────────────────────────── Model ───────────────────────────
 enum NotifType { reminder, weather, disease }
@@ -160,22 +150,25 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       backgroundColor: p.background,
       appBar: _buildAppBar(),
       body: ListView(
-        padding: const EdgeInsets.only(bottom: 24),
+        padding: const EdgeInsets.only(bottom: AppSpace.gapXl),
         children: [
           _buildStatusBar(),
           _buildChips(),
           const SizedBox(height: 16),
           if (_items.isEmpty)
-            Padding(
-              padding: const EdgeInsets.all(32),
-              child: Center(
-                child: Text('Belum ada notifikasi.',
-                    style: TextStyle(color: p.icon)),
+            const Padding(
+              padding: EdgeInsets.all(AppSpace.page),
+              child: EmptyState(
+                icon: Icons.notifications_outlined,
+                title: 'Belum Ada Notifikasi',
+                message:
+                    'Sensor lapangan dan pengingat tani akan muncul di sini.',
               ),
             )
           else
             Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
+              padding:
+                  const EdgeInsets.symmetric(horizontal: AppSpace.page),
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
@@ -236,7 +229,8 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                     height: 36,
                     decoration: BoxDecoration(
                       color: p.accentSoft,
-                      borderRadius: BorderRadius.circular(8),
+                      borderRadius:
+                          BorderRadius.circular(AppSpace.radiusTile),
                     ),
                     child: Icon(Icons.notifications_outlined,
                         size: 22, color: p.accent),
@@ -248,10 +242,10 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text('CAPSEE',
-                            style: _t(10, 14, FontWeight.w700, p.accent,
-                                letterSpacing: 1.0)),
+                            style:
+                                AppText.overline(context, color: p.accent)),
                         Text('Notifikasi',
-                            style: _t(18, 24, FontWeight.w600, p.title)),
+                            style: AppText.headline(context)),
                       ],
                     ),
                   ),
@@ -286,39 +280,25 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
     final p = context.palette;
     final allRead = _unreadCount == 0;
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      padding: const EdgeInsets.fromLTRB(
+          AppSpace.page, 8, AppSpace.page, 4),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
           Flexible(
             child: Row(
               children: [
-                Container(
-                  padding:
-                      const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: allRead ? p.surfaceAlt : p.accentSoft,
-                    borderRadius: BorderRadius.circular(999),
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      if (!allRead) ...[
-                        _PulseDot(color: p.accent),
-                        const SizedBox(width: 6),
-                      ],
-                      Text(
-                        allRead ? 'Semua Sudah Dibaca' : '$_unreadCount Belum Dibaca',
-                        style: _t(12, 16, FontWeight.w700, p.onAccentSoft),
-                      ),
-                    ],
-                  ),
+                StatusBadge(
+                  label: allRead
+                      ? 'Semua Sudah Dibaca'
+                      : '$_unreadCount Belum Dibaca',
+                  kind: allRead ? BadgeKind.info : BadgeKind.success,
                 ),
                 const SizedBox(width: 8),
                 Flexible(
                   child: Text('Pembaruan Lapangan',
                       overflow: TextOverflow.ellipsis,
-                      style: _t(12, 16, FontWeight.w400, p.icon)),
+                      style: AppText.bodySm(context, color: p.icon)),
                 ),
               ],
             ),
@@ -332,7 +312,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
             ),
             child: Text(
               allRead ? 'Selesai' : 'Tandai Selesai',
-              style: _t(12, 16, FontWeight.w700, allRead ? p.icon : p.primary),
+              style: AppText.bodySm(
+                      context, color: allRead ? p.icon : p.primary)
+                  .copyWith(fontWeight: FontWeight.w700),
             ),
           ),
         ],
@@ -353,7 +335,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       height: 40,
       child: ListView.separated(
         scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
+        padding: const EdgeInsets.symmetric(horizontal: AppSpace.page),
         itemCount: chips.length,
         separatorBuilder: (_, _) => const SizedBox(width: 8),
         itemBuilder: (_, i) {
@@ -367,7 +349,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
               padding: const EdgeInsets.symmetric(horizontal: 14),
               decoration: BoxDecoration(
                 color: active ? p.primary : p.surfaceAlt,
-                borderRadius: BorderRadius.circular(999),
+                borderRadius: BorderRadius.circular(AppSpace.radiusPill),
                 boxShadow: active
                     ? [
                         BoxShadow(
@@ -379,8 +361,9 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
               ),
               child: Text(
                 label,
-                style: _t(12, 16, FontWeight.w600,
-                    active ? p.onPrimary : p.subtitle),
+                style: AppText.bodySm(
+                        context, color: active ? p.onPrimary : p.subtitle)
+                    .copyWith(fontWeight: FontWeight.w600),
               ),
             ),
           );
@@ -391,21 +374,14 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
 
   // ───────── Section ─────────
   Widget _buildSection(String title, String trailing, List<NotifItem> items) {
-    final p = context.palette;
+    final isToday = title.toLowerCase().contains('hari');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
-        Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 4),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Text(title.toUpperCase(),
-                  style: _t(10, 14, FontWeight.w700, p.icon,
-                      letterSpacing: 1.0)),
-              Text(trailing, style: _t(10, 14, FontWeight.w700, p.icon)),
-            ],
-          ),
+        SectionHeader(
+          icon: isToday ? Icons.today_outlined : Icons.history_outlined,
+          title: title,
+          subtitle: trailing,
         ),
         const SizedBox(height: 8),
         for (int i = 0; i < items.length; i++) ...[
@@ -418,20 +394,10 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
 
   // ───────── Kartu notifikasi ─────────
   Widget _buildCard(NotifItem n) {
-    final p = context.palette;
     return AnimatedOpacity(
       duration: const Duration(milliseconds: 200),
       opacity: n.unread ? 1.0 : 0.9,
-      child: Container(
-        padding: const EdgeInsets.all(16),
-        decoration: BoxDecoration(
-          color: n.unread ? p.surface : p.surfaceAlt,
-          borderRadius: BorderRadius.circular(12),
-          boxShadow: [
-            BoxShadow(
-                color: p.shadow, blurRadius: 3, offset: const Offset(0, 1)),
-          ],
-        ),
+      child: CapseeCard(
         child: Row(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
@@ -440,7 +406,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
               height: 44,
               decoration: BoxDecoration(
                 color: n.iconBg,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppSpace.radiusTile),
               ),
               child: Icon(n.icon, size: 24, color: n.iconColor),
             ),
@@ -453,25 +419,15 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                     mainAxisAlignment: MainAxisAlignment.spaceBetween,
                     children: [
                       Flexible(
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: n.badgeBg,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text(
-                            n.badge,
-                            overflow: TextOverflow.ellipsis,
-                            style: _t(10, 14, FontWeight.w600, n.badgeFg),
-                          ),
+                        child: StatusBadge(
+                          label: n.badge,
+                          kind: BadgeKind.info,
                         ),
                       ),
                       const SizedBox(width: 8),
                       Row(
                         children: [
-                          Text(n.time,
-                              style: _t(12, 16, FontWeight.w400, p.subtitle)),
+                          Text(n.time, style: AppText.bodySm(context)),
                           if (n.unread) ...[
                             const SizedBox(width: 6),
                             Container(
@@ -490,15 +446,17 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                     n.title,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: _t(18, 24, n.unread ? FontWeight.w700 : FontWeight.w600,
-                        p.title),
+                    style: n.unread
+                        ? AppText.headline(context)
+                        : AppText.headline(context)
+                            .copyWith(fontWeight: FontWeight.w600),
                   ),
                   const SizedBox(height: 4),
                   Text(
                     n.body,
                     maxLines: 1,
                     overflow: TextOverflow.ellipsis,
-                    style: _t(12, 16, FontWeight.w400, p.subtitle),
+                    style: AppText.bodySm(context),
                   ),
                   const SizedBox(height: 8),
                   Align(
@@ -520,30 +478,33 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
       final done = n.confirmed;
       return Material(
         color: done ? p.icon.withValues(alpha: 0.75) : p.primary,
-        borderRadius: BorderRadius.circular(4),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
         elevation: 1,
         child: InkWell(
-          borderRadius: BorderRadius.circular(4),
+          borderRadius: BorderRadius.circular(AppSpace.radiusTile),
           onTap: done ? null : () => setState(() => n.confirmed = true),
           child: Padding(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
             child: Text(
               done ? 'Terselesaikan ✓' : n.actionLabel,
-              style: _t(12, 16, FontWeight.w700, p.onPrimary),
+              style: AppText.bodySm(context, color: p.onPrimary)
+                  .copyWith(fontWeight: FontWeight.w700),
             ),
           ),
         ),
       );
     }
     return InkWell(
-      borderRadius: BorderRadius.circular(4),
+      borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       onTap: () {},
       child: Padding(
         padding: const EdgeInsets.symmetric(vertical: 4),
         child: Row(
           mainAxisSize: MainAxisSize.min,
           children: [
-            Text(n.actionLabel, style: _t(12, 16, FontWeight.w700, n.actionColor)),
+            Text(n.actionLabel,
+                style: AppText.bodySm(context, color: n.actionColor)
+                    .copyWith(fontWeight: FontWeight.w700)),
             if (n.actionIcon != null) ...[
               const SizedBox(width: 4),
               Icon(n.actionIcon, size: 16, color: n.actionColor),
@@ -557,12 +518,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
   // ───────── Kartu telemetri ─────────
   Widget _buildTelemetryCard() {
     final p = context.palette;
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: p.surfaceAlt,
-        borderRadius: BorderRadius.circular(12),
-      ),
+    return CapseeCard(
       child: Row(
         children: [
           Container(
@@ -572,27 +528,20 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                 color: p.surface, shape: BoxShape.circle),
             child: Icon(Icons.sensors, size: 20, color: p.accent),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: AppSpace.gapMd),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text('Sensor Lapangan Aktif',
-                    style: _t(12, 16, FontWeight.w700, p.title)),
+                    style: AppText.bodySm(context, color: p.title)
+                        .copyWith(fontWeight: FontWeight.w700)),
                 Text('3 stasiun IoT memantau petak 24/7',
-                    style: _t(12, 16, FontWeight.w400, p.subtitle)),
+                    style: AppText.bodySm(context)),
               ],
             ),
           ),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-            decoration: BoxDecoration(
-              color: p.accentSoft,
-              borderRadius: BorderRadius.circular(999),
-            ),
-            child: Text('Sinkron',
-                style: _t(10, 14, FontWeight.w700, p.onAccentSoft)),
-          ),
+          const StatusBadge(label: 'Sinkron', kind: BadgeKind.success),
         ],
       ),
     );
@@ -606,10 +555,12 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
           onPressed: () {},
           icon: Icon(Icons.tune, size: 18, color: p.icon),
           label: Text('Kelola Preferensi Notifikasi Lapangan',
-              style: _t(12, 16, FontWeight.w600, p.icon)),
+              style: AppText.bodySm(context, color: p.icon)
+                  .copyWith(fontWeight: FontWeight.w600)),
         ),
         Text('Capsee Intelligence Telemetry v2.4',
-            style: _t(10, 14, FontWeight.w700, p.icon.withValues(alpha: 0.7))),
+            style: AppText.micro(context,
+                color: p.icon.withValues(alpha: 0.7))),
         const SizedBox(height: 16),
       ],
     );

@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import '../../core/validators.dart';
 import '../../widgets/auth_widgets.dart';
@@ -101,7 +101,7 @@ class _LoginScreenState extends State<LoginScreen> {
               controller: _emailController,
               keyboardType: TextInputType.emailAddress,
               textInputAction: TextInputAction.next,
-              style: GoogleFonts.plusJakartaSans(fontSize: 15, color: p.title),
+              style: AppText.body(context, color: p.title),
               decoration: capseeInputDecoration(
                 context,
                 hint: 'nama@email.com',
@@ -132,11 +132,8 @@ class _LoginScreenState extends State<LoginScreen> {
                   },
                   child: Text(
                     'Lupa Kata Sandi?',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 13,
-                      fontWeight: FontWeight.w700,
-                      color: p.accent,
-                    ),
+                    style: AppText.bodySm(context, color: p.accent)
+                        .copyWith(fontWeight: FontWeight.w700),
                   ),
                 ),
               ],
@@ -147,7 +144,7 @@ class _LoginScreenState extends State<LoginScreen> {
               obscureText: _obscurePassword,
               textInputAction: TextInputAction.done,
               onFieldSubmitted: (_) => _submit(),
-              style: GoogleFonts.plusJakartaSans(fontSize: 15, color: p.title),
+              style: AppText.body(context, color: p.title),
               decoration: capseeInputDecoration(
                 context,
                 hint: 'Masukkan kata sandi',
@@ -187,10 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
                   onTap: () => setState(() => _rememberMe = !_rememberMe),
                   child: Text(
                     'Ingat akun di perangkat ini',
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 14,
-                      color: p.title,
-                    ),
+                    style: AppText.body(context, color: p.title),
                   ),
                 ),
               ],
@@ -218,10 +212,7 @@ class _LoginScreenState extends State<LoginScreen> {
       children: [
         Text(
           'Belum punya akun?',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 16,
-            color: p.title,
-          ),
+          style: AppText.body(context, color: p.title),
         ),
         const SizedBox(width: 8),
         GestureDetector(
@@ -232,11 +223,7 @@ class _LoginScreenState extends State<LoginScreen> {
           },
           child: Text(
             'Daftar',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: p.accent,
-            ),
+            style: AppText.subtitle(context, color: p.accent),
           ),
         ),
       ],
@@ -253,12 +240,8 @@ class _LoginScreenState extends State<LoginScreen> {
         Flexible(
           child: Text(
             'SISTEM PERTANIAN PRESISI • TERENKRIPSI',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 11,
-              fontWeight: FontWeight.w700,
-              letterSpacing: 0.3,
-              color: p.icon,
-            ),
+            style: AppText.overline(context, color: p.icon)
+                .copyWith(letterSpacing: 0.3),
           ),
         ),
       ],

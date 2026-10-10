@@ -1,8 +1,7 @@
 // panduan_screen.dart
 //
 // Layar "Panduan Cara Kerja" (onboarding 4 langkah) Capsee.
-// Memakai class warna `C` dari notifikasi_screen.dart (satu folder di lib/).
-// Dependensi: google_fonts.
+// Warna via `context.palette`, tipografi via `AppText`, kartu via `CapseeCard`.
 //
 // Pemakaian:
 //   Navigator.push(context, MaterialPageRoute(
@@ -13,21 +12,10 @@
 //   ));
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
-import '../../core/app_colors.dart';
+import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
-
-// ─────────────────────────── Token tambahan (alias ke AppColors) ───────────────────────────
-class _P {
-  static const inverseSurface = AppColors.inverseSurface;
-  static const inverseOnSurface = AppColors.inverseOnSurface;
-  static const onPrimaryContainer = AppColors.onPrimaryContainer;
-  static const secondaryContainer = AppColors.secondaryContainer;
-  static const onSecondaryContainer = AppColors.onSecondaryContainer;
-  static const secondary = AppColors.secondary;
-  static const onSecondaryFixedVariant = AppColors.onSecondaryFixedVariant;
-}
+import '../../widgets/ui_kit.dart';
 
 // ─────────────────────────── URL gambar ───────────────────────────
 const _kImgLahan =
@@ -38,18 +26,6 @@ const _kImgDaun =
 
 const _kImgPlot =
     'https://lh3.googleusercontent.com/aida-public/AB6AXuDKGKlk9WcxvRgbqzGt1MJtjmUII6U08D2PsdPgAcHVW2XCCEzDZpNxyhORvaRWH1cCrnd7pRctdZGwYsNWuP3mjA4UT1pr2vLeOQiGMgWj89xku8HPgjVO-BLZnoJzGhVaniH9vAX76DBGQqjrsMeQoCTEUo1KbH_q4n0HXcC2LKcdFOvAYZqSRDmURY_S61yW8IR-huhZ7Pz5pLzbQRiNv8iB9eUsITyCb8gBC1XKxLULp4WzX7AP7Q';
-
-// ─────────────────────────── Tipografi ───────────────────────────
-TextStyle _ts(double size, double height, FontWeight w, Color color,
-        {double? letterSpacing, FontStyle? fontStyle}) =>
-    GoogleFonts.plusJakartaSans(
-      fontSize: size,
-      height: height / size,
-      fontWeight: w,
-      color: color,
-      letterSpacing: letterSpacing,
-      fontStyle: fontStyle,
-    );
 
 // ─────────────────────────── Data langkah ───────────────────────────
 const _chipLabels = ['1. Lahan', '2. Pindai', '3. Jadwal', '4. Notifikasi'];
@@ -136,7 +112,7 @@ class _PanduanScreenState extends State<PanduanScreen> {
       appBar: _buildAppBar(context),
       body: SingleChildScrollView(
         controller: _scroll,
-        padding: const EdgeInsets.fromLTRB(16, 16, 16, 32),
+        padding: const EdgeInsets.all(AppSpace.page),
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.stretch,
           children: [
@@ -197,8 +173,7 @@ class _PanduanScreenState extends State<PanduanScreen> {
                   Expanded(
                     child: Text('Panduan Cara Kerja',
                         overflow: TextOverflow.ellipsis,
-                        style: _ts(18, 24, FontWeight.w600, context.palette.title,
-                            letterSpacing: -0.2)),
+                        style: AppText.headline(context)),
                   ),
                   TextButton(
                     onPressed: _skip,
@@ -207,7 +182,8 @@ class _PanduanScreenState extends State<PanduanScreen> {
                       padding: const EdgeInsets.symmetric(horizontal: 8),
                     ),
                     child: Text('Lewati',
-                        style: _ts(12, 16, FontWeight.w600, context.palette.accent)),
+                        style: AppText.caption(context,
+                            color: context.palette.accent)),
                   ),
                   const SizedBox(width: 4),
                   Container(
@@ -247,7 +223,7 @@ class _PanduanScreenState extends State<PanduanScreen> {
                     color: i == _step
                         ? context.palette.primary
                         : context.palette.surfaceAlt,
-                    borderRadius: BorderRadius.circular(999),
+                    borderRadius: BorderRadius.circular(AppSpace.radiusPill),
                   ),
                 ),
               ),
@@ -258,8 +234,10 @@ class _PanduanScreenState extends State<PanduanScreen> {
           isLast
               ? 'Langkah 4 dari 4 (Selesai)'
               : 'Langkah ${_step + 1} dari $_total',
-          style: _ts(10, 14, isLast ? FontWeight.w600 : FontWeight.w700,
-              isLast ? context.palette.accent : context.palette.subtitle),
+          style: AppText.micro(context,
+              color: isLast
+                  ? context.palette.accent
+                  : context.palette.subtitle),
         ),
       ],
     );
@@ -273,10 +251,10 @@ class _PanduanScreenState extends State<PanduanScreen> {
         // Tombol utama
         Material(
           color: context.palette.primary,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSpace.radiusTile),
           elevation: 2,
           child: InkWell(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             onTap: _next,
             child: SizedBox(
               height: 56,
@@ -286,7 +264,8 @@ class _PanduanScreenState extends State<PanduanScreen> {
                   Flexible(
                     child: Text(_primaryLabels[_step],
                         overflow: TextOverflow.ellipsis,
-                        style: _ts(14, 20, FontWeight.w700, context.palette.onPrimary)),
+                        style: AppText.subtitle(context,
+                            color: context.palette.onPrimary)),
                   ),
                   const SizedBox(width: 4),
                   Icon(_primaryIcons[_step], size: 20, color: context.palette.onPrimary),
@@ -303,7 +282,7 @@ class _PanduanScreenState extends State<PanduanScreen> {
               icon: Icon(Icons.arrow_back,
                   size: 18, color: context.palette.subtitle),
               label: Text('Kembali',
-                  style: _ts(12, 16, FontWeight.w600, context.palette.subtitle)),
+                  style: AppText.bodySm(context)),
             ),
           ),
       ],
@@ -323,13 +302,15 @@ class _PanduanScreenState extends State<PanduanScreen> {
         Flexible(
           child: Text.rich(
             TextSpan(
-              style: _ts(12, 16, FontWeight.w400, context.palette.hint),
+              style: AppText.bodySm(context, color: context.palette.hint),
               children: [
                 const TextSpan(
                     text: 'Panduan dapat diakses kembali kapan saja melalui menu '),
                 TextSpan(
                   text: 'Bantuan & Akun',
-                  style: _ts(12, 16, FontWeight.w600, context.palette.subtitle),
+                  style: AppText.bodySm(context).copyWith(
+                      fontWeight: FontWeight.w600,
+                      color: context.palette.subtitle),
                 ),
                 const TextSpan(text: '.'),
               ],
@@ -390,7 +371,7 @@ class _StepChips extends StatelessWidget {
           padding: EdgeInsets.symmetric(horizontal: active ? 14 : 12, vertical: 6),
           decoration: BoxDecoration(
             color: bg,
-            borderRadius: BorderRadius.circular(999),
+            borderRadius: BorderRadius.circular(AppSpace.radiusPill),
             boxShadow: active ? [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))] : null,
           ),
           child: Row(
@@ -400,10 +381,12 @@ class _StepChips extends StatelessWidget {
                 Icon(Icons.check_circle, size: 16, color: context.palette.accent),
                 const SizedBox(width: 6),
               ] else if (active) ...[
-                const _Blink(child: _Dot(color: Colors.white, size: 8)),
+                _Blink(child: _Dot(color: context.palette.onPrimary, size: 8)),
                 const SizedBox(width: 6),
               ],
-              Text(_chipLabels[i], style: _ts(12, 16, FontWeight.w600, fg)),
+              Text(_chipLabels[i],
+                  style: AppText.caption(context, color: fg)
+                      .copyWith(fontWeight: FontWeight.w700)),
             ],
           ),
         ),
@@ -419,7 +402,7 @@ class _ProgressBar extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(999),
+      borderRadius: BorderRadius.circular(AppSpace.radiusPill),
       child: Container(
         height: 6,
         color: context.palette.surfaceAlt,
@@ -431,7 +414,7 @@ class _ProgressBar extends StatelessWidget {
           child: Container(
             decoration: BoxDecoration(
               color: context.palette.accent,
-              borderRadius: BorderRadius.circular(999),
+              borderRadius: BorderRadius.circular(AppSpace.radiusPill),
             ),
           ),
         ),
@@ -447,12 +430,12 @@ class _Step1 extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return _WhiteCard(
-      padding: const EdgeInsets.all(24),
+      padding: const EdgeInsets.all(AppSpace.page),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           ClipRRect(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             child: SizedBox(
               height: 176,
               width: double.infinity,
@@ -476,30 +459,25 @@ class _Step1 extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          Row(
-            children: [
-              const _TagPill('Langkah 1'),
-              const SizedBox(width: 8),
-              Flexible(
-                child: Text('Pemetaan Bedengan',
-                    style: _ts(12, 16, FontWeight.w600, context.palette.subtitle)),
-              ),
-            ],
+          const SectionHeader(
+            icon: Icons.nature,
+            title: 'Langkah 1',
+            subtitle: 'Pemetaan Bedengan',
           ),
           const SizedBox(height: 4),
           Text('1. Daftarkan Data Lahan Cabai',
-              style: _ts(22, 28, FontWeight.w700, context.palette.title)),
+              style: AppText.display(context)),
           const SizedBox(height: 4),
           Text(
             'Masukkan informasi petak kebun, varietas cabai, dan tanggal tanam untuk kalibrasi kebutuhan nutrisi spesifik.',
-            style: _ts(14, 20, FontWeight.w400, context.palette.subtitle),
+            style: AppText.body(context),
           ),
           const SizedBox(height: 16),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: context.palette.surfaceAlt,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             ),
             child: Column(
               children: [
@@ -525,7 +503,7 @@ class _Step2 extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: context.palette.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSpace.radiusCard),
         boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
       ),
       child: Column(
@@ -543,8 +521,8 @@ class _Step2 extends StatelessWidget {
                       begin: Alignment.bottomCenter,
                       end: Alignment.topCenter,
                       colors: [
-                        Colors.black.withValues(alpha: 0.6),
-                        Colors.black.withValues(alpha: 0.15),
+                        context.palette.title.withValues(alpha: 0.6),
+                        context.palette.title.withValues(alpha: 0.15),
                         Colors.transparent,
                       ],
                     ),
@@ -556,10 +534,10 @@ class _Step2 extends StatelessWidget {
                     padding: const EdgeInsets.all(24),
                     child: Stack(
                       children: [
-                        _corner(top: true, left: true),
-                        _corner(top: true, left: false),
-                        _corner(top: false, left: true),
-                        _corner(top: false, left: false),
+                        _corner(context, top: true, left: true),
+                        _corner(context, top: true, left: false),
+                        _corner(context, top: false, left: true),
+                        _corner(context, top: false, left: false),
                         const Center(child: _Ping()),
                       ],
                     ),
@@ -577,19 +555,19 @@ class _Step2 extends StatelessWidget {
                         padding: const EdgeInsets.symmetric(
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
-                          color: _P.inverseSurface.withValues(alpha: 0.8),
-                          borderRadius: BorderRadius.circular(999),
+                          color: context.palette.title.withValues(alpha: 0.8),
+                          borderRadius: BorderRadius.circular(AppSpace.radiusPill),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
                           children: [
-                            const _Blink(
+                            _Blink(
                                 child: _Dot(
-                                    color: _P.secondaryContainer, size: 8)),
+                                    color: context.palette.surface, size: 8)),
                             const SizedBox(width: 6),
                             Text('AI SCANNER V2.4',
-                                style: _ts(10, 14, FontWeight.w700,
-                                    _P.inverseOnSurface)),
+                                style: AppText.micro(context,
+                                    color: context.palette.surface)),
                           ],
                         ),
                       ),
@@ -598,11 +576,12 @@ class _Step2 extends StatelessWidget {
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: context.palette.surface.withValues(alpha: 0.9),
-                          borderRadius: BorderRadius.circular(999),
+                          borderRadius: BorderRadius.circular(AppSpace.radiusPill),
                           boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
                         ),
                         child: Text('Akurasi 98.4%',
-                            style: _ts(10, 14, FontWeight.w700, context.palette.accent)),
+                            style: AppText.micro(context,
+                                color: context.palette.accent)),
                       ),
                     ],
                   ),
@@ -616,32 +595,24 @@ class _Step2 extends StatelessWidget {
                     padding:
                         const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                     decoration: BoxDecoration(
-                      color: _P.inverseSurface.withValues(alpha: 0.85),
-                      borderRadius: BorderRadius.circular(8),
+                      color: context.palette.title.withValues(alpha: 0.85),
+                      borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                     ),
                     child: Row(
                       children: [
-                        const Icon(Icons.center_focus_strong,
-                            size: 18, color: _P.secondaryContainer),
+                        Icon(Icons.center_focus_strong,
+                            size: 18, color: context.palette.surface),
                         const SizedBox(width: 8),
                         Expanded(
                           child: Text('Terdeteksi: Bercak Daun Cercospora',
                               overflow: TextOverflow.ellipsis,
-                              style: _ts(12, 16, FontWeight.w600,
-                                  _P.inverseOnSurface)),
+                              style: AppText.bodySm(context,
+                                      color: context.palette.surface)
+                                  .copyWith(fontWeight: FontWeight.w600)),
                         ),
                         const SizedBox(width: 8),
-                        Container(
-                          padding: const EdgeInsets.symmetric(
-                              horizontal: 8, vertical: 2),
-                          decoration: BoxDecoration(
-                            color: C.errorContainer,
-                            borderRadius: BorderRadius.circular(999),
-                          ),
-                          child: Text('Level 2',
-                              style: _ts(10, 14, FontWeight.w700,
-                                  C.onErrorContainer)),
-                        ),
+                        const StatusBadge(
+                            label: 'Level 2', kind: BadgeKind.error),
                       ],
                     ),
                   ),
@@ -650,7 +621,7 @@ class _Step2 extends StatelessWidget {
             ),
           ),
           Padding(
-            padding: const EdgeInsets.all(24),
+            padding: const EdgeInsets.all(AppSpace.page),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
@@ -660,12 +631,11 @@ class _Step2 extends StatelessWidget {
                     letterSpacing: 0.5),
                 const SizedBox(height: 16),
                 Text('2. Foto & Pindai Daun Sakit',
-                    style: _ts(22, 28, FontWeight.w700, context.palette.title,
-                        letterSpacing: -0.2)),
+                    style: AppText.display(context)),
                 const SizedBox(height: 4),
                 Text(
                   'Arahkan kamera ponsel pada helai daun dengan jarak 10–15 cm di pencahayaan alami. Model AI Capsee akan mengidentifikasi patogen dan bercak daun secara instan.',
-                  style: _ts(14, 22, FontWeight.w400, context.palette.subtitle),
+                  style: AppText.body(context),
                 ),
                 const SizedBox(height: 14),
                 _TipTile(
@@ -696,8 +666,9 @@ class _Step2 extends StatelessWidget {
     );
   }
 
-  Widget _corner({required bool top, required bool left}) {
-    const side = BorderSide(color: C.primaryFixed, width: 2);
+  Widget _corner(BuildContext context,
+      {required bool top, required bool left}) {
+    final side = BorderSide(color: context.palette.primary, width: 2);
     return Positioned(
       top: top ? 0 : null,
       bottom: top ? null : 0,
@@ -725,13 +696,10 @@ class _Step3 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final tertiaryBlue =
-        isDark ? const Color(0xFF7DD3FC) : C.tertiary;
-    final tertiaryBg =
-        isDark ? const Color(0xFF0F2A3A) : C.tertiaryFixed;
+    final tertiaryBlue = context.palette.accent;
+    final tertiaryBg = context.palette.accentSoft;
     return _WhiteCard(
-      padding: const EdgeInsets.all(16),
+      padding: const EdgeInsets.all(AppSpace.page),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -740,7 +708,7 @@ class _Step3 extends StatelessWidget {
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: context.palette.surfaceAlt,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             ),
             child: Column(
               children: [
@@ -752,7 +720,7 @@ class _Step3 extends StatelessWidget {
                             horizontal: 10, vertical: 4),
                         decoration: BoxDecoration(
                           color: context.palette.surface,
-                          borderRadius: BorderRadius.circular(999),
+                          borderRadius: BorderRadius.circular(AppSpace.radiusPill),
                         ),
                         child: Row(
                           mainAxisSize: MainAxisSize.min,
@@ -764,8 +732,7 @@ class _Step3 extends StatelessWidget {
                               child: Text(
                                 'Sinkron BMKG 28°C • Cerah Berawan',
                                 overflow: TextOverflow.ellipsis,
-                                style: _ts(10, 14, FontWeight.w700,
-                                    context.palette.subtitle),
+                                style: AppText.micro(context),
                               ),
                             ),
                           ],
@@ -776,7 +743,8 @@ class _Step3 extends StatelessWidget {
                     _Dot(color: context.palette.accent, size: 8),
                     const SizedBox(width: 4),
                     Text('Aktif',
-                        style: _ts(10, 14, FontWeight.w600, context.palette.accent)),
+                        style: AppText.micro(context,
+                            color: context.palette.accent)),
                   ],
                 ),
                 const SizedBox(height: 12),
@@ -815,7 +783,7 @@ class _Step3 extends StatelessWidget {
                 ),
                 const SizedBox(height: 8),
                 ClipRRect(
-                  borderRadius: BorderRadius.circular(8),
+                  borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                   child: SizedBox(
                     height: 96,
                     width: double.infinity,
@@ -829,7 +797,7 @@ class _Step3 extends StatelessWidget {
                               begin: Alignment.bottomCenter,
                               end: Alignment.topCenter,
                               colors: [
-                                _P.inverseSurface.withValues(alpha: 0.7),
+                                context.palette.title.withValues(alpha: 0.7),
                                 Colors.transparent,
                               ],
                             ),
@@ -841,16 +809,15 @@ class _Step3 extends StatelessWidget {
                           right: 10,
                           child: Row(
                             children: [
-                              const Icon(Icons.eco,
-                                  size: 16, color: _P.secondaryContainer),
+                              Icon(Icons.eco,
+                                  size: 16, color: context.palette.surface),
                               const SizedBox(width: 6),
                               Expanded(
                                 child: Text(
                                   'Plot Cabai Rawit Merah (Blok C-2)',
                                   overflow: TextOverflow.ellipsis,
-                                  style: _ts(10, 14, FontWeight.w600,
-                                      context.palette.onPrimary,
-                                      letterSpacing: 0.3),
+                                  style: AppText.micro(context,
+                                      color: context.palette.surface),
                                 ),
                               ),
                             ],
@@ -864,18 +831,17 @@ class _Step3 extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 16),
-          _TagPill('LANGKAH 3 • KALENDER & PERAWATAN PRESISI',
-              bg: context.palette.accentSoft,
-              fg: context.palette.onAccentSoft,
-              letterSpacing: 0.5),
+          const SectionHeader(
+            icon: Icons.event_repeat,
+            title: 'Langkah 3',
+            subtitle: 'Kalender & Perawatan Presisi',
+          ),
           const SizedBox(height: 8),
-          Text('Pantau Jadwal Perawatan',
-              style: _ts(22, 28, FontWeight.w700, context.palette.title,
-                  letterSpacing: -0.2)),
+          Text('Pantau Jadwal Perawatan', style: AppText.display(context)),
           const SizedBox(height: 4),
           Text(
             'Capsee menyusun kalender penyiraman dan pemupukan presisi otomatis sesuai fase pertumbuhan tanaman cabai Anda.',
-            style: _ts(14, 22, FontWeight.w400, context.palette.subtitle),
+            style: AppText.body(context),
           ),
           const SizedBox(height: 12),
           _FeatureRow(
@@ -925,7 +891,7 @@ class _Step3 extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: context.palette.surface,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
         boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
       ),
       child: Row(
@@ -946,7 +912,9 @@ class _Step3 extends StatelessWidget {
                     Flexible(
                       child: Text(title,
                           overflow: TextOverflow.ellipsis,
-                          style: _ts(12, 16, FontWeight.w600, context.palette.title)),
+                          style: AppText.bodySm(context,
+                                  color: context.palette.title)
+                              .copyWith(fontWeight: FontWeight.w600)),
                     ),
                     const SizedBox(width: 6),
                     Container(
@@ -954,16 +922,16 @@ class _Step3 extends StatelessWidget {
                           horizontal: 6, vertical: 1),
                       decoration: BoxDecoration(
                         color: chipBg,
-                        borderRadius: BorderRadius.circular(4),
+                        borderRadius: BorderRadius.circular(AppSpace.radiusPill),
                       ),
                       child: Text(chip,
-                          style: _ts(10, 14, FontWeight.w700, chipFg)),
+                          style: AppText.micro(context, color: chipFg)),
                     ),
                   ],
                 ),
                 Text(subtitle,
                     overflow: TextOverflow.ellipsis,
-                    style: _ts(12, 16, FontWeight.w400, context.palette.subtitle)),
+                    style: AppText.bodySm(context)),
               ],
             ),
           ),
@@ -981,20 +949,17 @@ class _Step4 extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final isDark = Theme.of(context).brightness == Brightness.dark;
-    final tertiaryBlue =
-        isDark ? const Color(0xFF7DD3FC) : C.tertiary;
-    final tertiaryBg =
-        isDark ? const Color(0xFF0F2A3A) : C.tertiaryFixed;
+    final tertiaryBlue = context.palette.accent;
+    final tertiaryBg = context.palette.accentSoft;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         // Pusat siaga
         Container(
-          padding: const EdgeInsets.all(16),
+          padding: const EdgeInsets.all(AppSpace.page),
           decoration: BoxDecoration(
             color: context.palette.surfaceAlt,
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSpace.radiusCard),
             boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
           ),
           child: Column(
@@ -1014,9 +979,7 @@ class _Step4 extends StatelessWidget {
                       ),
                       const SizedBox(width: 4),
                       Text('PUSAT SIAGA LAPANGAN',
-                          style: _ts(10, 14, FontWeight.w700,
-                              context.palette.subtitle,
-                              letterSpacing: 1.0)),
+                          style: AppText.overline(context)),
                     ],
                   ),
                   Container(
@@ -1024,7 +987,7 @@ class _Step4 extends StatelessWidget {
                         const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
                     decoration: BoxDecoration(
                       color: context.palette.surface,
-                      borderRadius: BorderRadius.circular(999),
+                      borderRadius: BorderRadius.circular(AppSpace.radiusPill),
                       boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
                     ),
                     child: Row(
@@ -1033,7 +996,8 @@ class _Step4 extends StatelessWidget {
                         _Blink(child: _Dot(color: context.palette.accent, size: 6)),
                         const SizedBox(width: 4),
                         Text('Real-time',
-                            style: _ts(10, 14, FontWeight.w700, context.palette.accent)),
+                            style: AppText.micro(context,
+                                color: context.palette.accent)),
                       ],
                     ),
                   ),
@@ -1050,16 +1014,16 @@ class _Step4 extends StatelessWidget {
                 badgeFg: context.palette.error,
                 body: Text.rich(
                   TextSpan(
-                    style: _ts(12, 16, FontWeight.w400, context.palette.subtitle),
+                    style: AppText.bodySm(context),
                     children: [
                       const TextSpan(
                           text:
                               'Angin kencang & kelembaban 94% di Blok C-2. Risiko penyakit '),
                       TextSpan(
                         text: 'Cercospora capsici',
-                        style: _ts(12, 16, FontWeight.w500,
-                            context.palette.subtitle,
-                            fontStyle: FontStyle.italic),
+                        style: AppText.bodySm(context).copyWith(
+                            fontStyle: FontStyle.italic,
+                            fontWeight: FontWeight.w500),
                       ),
                       const TextSpan(text: ' meningkat tajam.'),
                     ],
@@ -1070,7 +1034,7 @@ class _Step4 extends StatelessWidget {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Text('Tindakan Sanitasi',
-                        style: _ts(10, 14, FontWeight.w600, tertiaryBlue)),
+                        style: AppText.micro(context, color: tertiaryBlue)),
                     Icon(Icons.chevron_right,
                         size: 14, color: tertiaryBlue),
                   ],
@@ -1087,20 +1051,21 @@ class _Step4 extends StatelessWidget {
                 badgeFg: context.palette.onAccentSoft,
                 body: Text(
                   'Jadwal Siram 16.30 WIB: Dosis 350ml/tanaman bedeng varietas Cabai Rawit Merah.',
-                  style: _ts(12, 16, FontWeight.w400, context.palette.subtitle),
+                  style: AppText.bodySm(context),
                 ),
                 footerLeft: 'Pukul 16.00 WIB',
                 footerRight: Material(
                   color: context.palette.surfaceAlt,
-                  borderRadius: BorderRadius.circular(4),
+                  borderRadius: BorderRadius.circular(AppSpace.radiusPill),
                   child: InkWell(
-                    borderRadius: BorderRadius.circular(4),
+                    borderRadius: BorderRadius.circular(AppSpace.radiusPill),
                     onTap: () {},
                     child: Padding(
                       padding: const EdgeInsets.symmetric(
                           horizontal: 10, vertical: 4),
                       child: Text('Konfirmasi Selesai',
-                          style: _ts(10, 14, FontWeight.w600, context.palette.accent)),
+                          style: AppText.micro(context,
+                              color: context.palette.accent)),
                     ),
                   ),
                 ),
@@ -1116,7 +1081,7 @@ class _Step4 extends StatelessWidget {
                       height: 32,
                       decoration: BoxDecoration(
                         color: context.palette.surfaceAlt,
-                        borderRadius: BorderRadius.circular(8),
+                        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                       ),
                       child: Icon(Icons.document_scanner,
                           size: 18, color: tertiaryBlue),
@@ -1128,12 +1093,12 @@ class _Step4 extends StatelessWidget {
                         children: [
                           Text('Scan Ulang Daun Disarankan',
                               overflow: TextOverflow.ellipsis,
-                              style:
-                                  _ts(12, 16, FontWeight.w600, context.palette.title)),
+                              style: AppText.bodySm(context,
+                                      color: context.palette.title)
+                                  .copyWith(fontWeight: FontWeight.w600)),
                           Text('Evaluasi pasca aplikasi fungisida tembaga',
                               overflow: TextOverflow.ellipsis,
-                              style: _ts(12, 16, FontWeight.w400,
-                                  context.palette.subtitle)),
+                              style: AppText.bodySm(context)),
                         ],
                       ),
                     ),
@@ -1143,10 +1108,11 @@ class _Step4 extends StatelessWidget {
                           horizontal: 8, vertical: 4),
                       decoration: BoxDecoration(
                         color: context.palette.surfaceAlt,
-                        borderRadius: BorderRadius.circular(999),
+                        borderRadius: BorderRadius.circular(AppSpace.radiusPill),
                       ),
                       child: Text('2 Hari Lagi',
-                          style: _ts(10, 14, FontWeight.w700, tertiaryBlue)),
+                          style:
+                              AppText.micro(context, color: tertiaryBlue)),
                     ),
                   ],
                 ),
@@ -1155,19 +1121,18 @@ class _Step4 extends StatelessWidget {
           ),
         ),
         const SizedBox(height: 24),
-        _TagPill('LANGKAH 4 • NOTIFIKASI & PERINGATAN DINI',
-            bg: context.palette.accentSoft,
-            fg: context.palette.onAccentSoft,
-            icon: Icons.verified,
-            letterSpacing: 0.5),
+        const SectionHeader(
+          icon: Icons.verified,
+          title: 'Langkah 4',
+          subtitle: 'Notifikasi & Peringatan Dini',
+        ),
         const SizedBox(height: 8),
         Text('4. Siaga dengan Notifikasi Pintar',
-            style: _ts(22, 28, FontWeight.w700, context.palette.title,
-                letterSpacing: -0.2)),
+            style: AppText.display(context)),
         const SizedBox(height: 8),
         Text(
           'Dapatkan peringatan dini risiko hama penyakit, ramalan cuaca ekstrem dari BMKG, serta pengingat rutin pemupukan langsung di ponsel Anda.',
-          style: _ts(14, 22, FontWeight.w400, context.palette.subtitle),
+          style: AppText.body(context),
         ),
         const SizedBox(height: 24),
         _BigFeatureCard(
@@ -1209,13 +1174,8 @@ class _WhiteCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
+    return CapseeCard(
       padding: padding,
-      decoration: BoxDecoration(
-        color: context.palette.surface,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
-      ),
       child: child,
     );
   }
@@ -1252,8 +1212,8 @@ class _BottomGradient extends StatelessWidget {
           begin: Alignment.bottomCenter,
           end: Alignment.topCenter,
           colors: [
-            _P.inverseSurface.withValues(alpha: 0.8),
-            _P.inverseSurface.withValues(alpha: 0.2),
+            context.palette.title.withValues(alpha: 0.8),
+            context.palette.title.withValues(alpha: 0.2),
             Colors.transparent,
           ],
         ),
@@ -1280,7 +1240,7 @@ class _GlassPill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: context.palette.surface.withValues(alpha: 0.9),
-        borderRadius: BorderRadius.circular(999),
+        borderRadius: BorderRadius.circular(AppSpace.radiusPill),
         boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
       ),
       child: Row(
@@ -1288,7 +1248,7 @@ class _GlassPill extends StatelessWidget {
         children: [
           Icon(icon, size: 18, color: context.palette.accent),
           const SizedBox(width: 8),
-          Text(text, style: _ts(10, 14, weight, color)),
+          Text(text, style: AppText.micro(context, color: color)),
         ],
       ),
     );
@@ -1303,38 +1263,19 @@ class _TagPill extends StatelessWidget {
   final double? letterSpacing;
   const _TagPill(
     this.text, {
+    // ignore: unused_element_parameter
     this.bg,
+    // ignore: unused_element_parameter
     this.fg,
+    // ignore: unused_element_parameter
     this.icon,
+    // ignore: unused_element_parameter
     this.letterSpacing,
   });
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
-    final bg = this.bg ?? p.accentSoft;
-    final fg = this.fg ?? p.onAccentSoft;
-    return Container(
-      padding: EdgeInsets.symmetric(horizontal: icon != null ? 12 : 10, vertical: 4),
-      decoration: BoxDecoration(
-        color: bg,
-        borderRadius: BorderRadius.circular(999),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          if (icon != null) ...[
-            Icon(icon, size: 14, color: fg),
-            const SizedBox(width: 4),
-          ],
-          Flexible(
-            child: Text(text,
-                style: _ts(10, 14, FontWeight.w700, fg,
-                    letterSpacing: letterSpacing)),
-          ),
-        ],
-      ),
-    );
+    return StatusBadge(label: text, kind: BadgeKind.success);
   }
 }
 
@@ -1360,7 +1301,7 @@ class _CheckRow extends StatelessWidget {
           child: Padding(
             padding: const EdgeInsets.only(top: 4),
             child: Text(text,
-                style: _ts(12, 16, FontWeight.w400, context.palette.title)),
+                style: AppText.bodySm(context, color: context.palette.title)),
           ),
         ),
       ],
@@ -1380,7 +1321,7 @@ class _TipTile extends StatelessWidget {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: context.palette.surfaceAlt,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1398,9 +1339,11 @@ class _TipTile extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: _ts(12, 16, FontWeight.w600, context.palette.title)),
-                Text(body,
-                    style: _ts(12, 16, FontWeight.w400, context.palette.subtitle)),
+                Text(title,
+                    style: AppText.bodySm(context,
+                            color: context.palette.title)
+                        .copyWith(fontWeight: FontWeight.w600)),
+                Text(body, style: AppText.bodySm(context)),
               ],
             ),
           ),
@@ -1432,7 +1375,7 @@ class _FeatureRow extends StatelessWidget {
       padding: const EdgeInsets.all(8),
       decoration: BoxDecoration(
         color: context.palette.surfaceAlt,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -1443,7 +1386,7 @@ class _FeatureRow extends StatelessWidget {
             margin: const EdgeInsets.only(top: 2),
             decoration: BoxDecoration(
               color: iconBg,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
               boxShadow: shadow ? [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))] : null,
             ),
             child: Icon(icon, size: 20, color: iconColor),
@@ -1453,10 +1396,9 @@ class _FeatureRow extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: _ts(14, 20, FontWeight.w600, context.palette.title)),
+                Text(title, style: AppText.subtitle(context)),
                 const SizedBox(height: 2),
-                Text(body,
-                    style: _ts(12, 18, FontWeight.w400, context.palette.subtitle)),
+                Text(body, style: AppText.bodySm(context)),
               ],
             ),
           ),
@@ -1482,14 +1424,8 @@ class _BigFeatureCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(16),
-      margin: const EdgeInsets.only(bottom: 4),
-      decoration: BoxDecoration(
-        color: context.palette.surface,
-        borderRadius: BorderRadius.circular(12),
-        boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
-      ),
+    return CapseeCard(
+      padding: const EdgeInsets.all(AppSpace.page),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1498,7 +1434,7 @@ class _BigFeatureCard extends StatelessWidget {
             height: 40,
             decoration: BoxDecoration(
               color: iconBg,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             ),
             child: Icon(icon, size: 22, color: iconColor),
           ),
@@ -1507,10 +1443,9 @@ class _BigFeatureCard extends StatelessWidget {
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(title, style: _ts(18, 24, FontWeight.w600, context.palette.title)),
+                Text(title, style: AppText.headline(context)),
                 const SizedBox(height: 4),
-                Text(body,
-                    style: _ts(12, 18, FontWeight.w400, context.palette.subtitle)),
+                Text(body, style: AppText.bodySm(context)),
               ],
             ),
           ),
@@ -1532,7 +1467,7 @@ class _AccentBox extends StatelessWidget {
       clipBehavior: Clip.antiAlias,
       decoration: BoxDecoration(
         color: context.palette.surface,
-        borderRadius: BorderRadius.circular(8),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
         boxShadow: [BoxShadow(color: context.palette.shadow, blurRadius: 3, offset: const Offset(0, 1))],
       ),
       child: IntrinsicHeight(
@@ -1593,21 +1528,19 @@ class _AlertTile extends StatelessWidget {
                     Flexible(
                       child: Text(title,
                           overflow: TextOverflow.ellipsis,
-                          style: _ts(12, 16, FontWeight.w600, context.palette.title)),
+                          style: AppText.bodySm(context,
+                                  color: context.palette.title)
+                              .copyWith(fontWeight: FontWeight.w600)),
                     ),
                   ],
                 ),
               ),
               const SizedBox(width: 4),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: badgeBg,
-                  borderRadius: BorderRadius.circular(4),
-                ),
-                child: Text(badge,
-                    style: _ts(10, 14, FontWeight.w700, badgeFg)),
+              StatusBadge(
+                label: badge,
+                kind: badgeFg == context.palette.error
+                    ? BadgeKind.error
+                    : BadgeKind.success,
               ),
             ],
           ),
@@ -1617,7 +1550,7 @@ class _AlertTile extends StatelessWidget {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(footerLeft, style: _ts(10, 14, FontWeight.w700, context.palette.hint)),
+              Text(footerLeft, style: AppText.micro(context)),
               footerRight,
             ],
           ),
@@ -1710,7 +1643,8 @@ class _PingState extends State<_Ping> with SingleTickerProviderStateMixin {
                     height: 40,
                     decoration: BoxDecoration(
                       shape: BoxShape.circle,
-                      border: Border.all(color: C.primaryFixed, width: 1),
+                      border: Border.all(
+                          color: context.palette.primary, width: 1),
                     ),
                   ),
                 ),
@@ -1721,11 +1655,11 @@ class _PingState extends State<_Ping> with SingleTickerProviderStateMixin {
             width: 16,
             height: 16,
             decoration: BoxDecoration(
-              color: C.primaryFixed.withValues(alpha: 0.8),
+              color: context.palette.primary.withValues(alpha: 0.8),
               shape: BoxShape.circle,
-              boxShadow: const [
+              boxShadow: [
                 BoxShadow(
-                    color: AppColors.shadow,
+                    color: context.palette.shadow,
                     blurRadius: 4,
                     offset: Offset(0, 2)),
               ],

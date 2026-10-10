@@ -32,15 +32,55 @@ _TIMEOUT = 15  # detik
 
 
 def _cari_id(data: list[dict], nama: str, field: str = "name") -> str | None:
-    """Cari id dari list wilayah berdasarkan nama (case-insensitive, partial match)."""
-    nama_lower = nama.strip().lower()
-    # exact match dulu
+    """Cari id dari list wilayah berdasarkan nama.
+
+    Tahan terhadap data lama aplikasi yang tersimpan sebagai KODE
+    (jabar/kbb/lembang...) maupun varian penulisan (Kab./Kota/dll):
+    normalisasi + alias → exact → partial match.
+    """
+    import re
+
+    # Kode lama aplikasi → nama resmi.
+    _ALIAS = {
+        "jabar": "jawa barat", "jateng": "jawa tengah", "jatim": "jawa timur",
+        "sumut": "sumatera utara", "sumsel": "sumatera selatan",
+        "sumbar": "sumatera barat", "riau": "riau", "jambi": "jambi",
+        "bengkulu": "bengkulu", "lampung": "lampung", "babel": "kepulauan bangka belitung",
+        "kepri": "kepulauan riau", "dki": "dki jakarta", "jakarta": "dki jakarta",
+        "banten": "banten", "diy": "di yogyakarta", "yogya": "di yogyakarta",
+        "bali": "bali", "ntb": "nusa tenggara barat", "ntt": "nusa tenggara timur",
+        "kalbar": "kalimantan barat", "kalteng": "kalimantan tengah",
+        "kalsel": "kalimantan selatan", "kaltim": "kalimantan timur",
+        "kaltara": "kalimantan utara", "sulut": "sulawesi utara",
+        "sulteng": "sulawesi tengah", "sulsel": "sulawesi selatan",
+        "sultra": "sulawesi tenggara", "sulbar": "sulawesi barat",
+        "gorontalo": "gorontalo", "maluku": "maluku", "malut": "maluku utara",
+        "papua": "papua", "papuabarat": "papua barat",
+        "kbb": "bandung barat", "bdg": "bandung", "grt": "garut", "cjr": "cianjur",
+        "lembang": "lembang", "parongpong": "parongpong",
+        "cisarua": "cisarua", "ngamprah": "ngamprah",
+    }
+
+    def _norm(s: str) -> str:
+        s = s.strip().lower()
+        s = _ALIAS.get(s, s)
+        # buang awalan kab./kota/kec. dan tanda baca agar "Kab. Bandung Barat"
+        # cocok dengan "BANDUNG BARAT".
+        s = re.sub(r"^(kab\.?|kota|kec\.?|kecamatan)\s+", "", s)
+        s = re.sub(r"[^a-z0-9 ]", "", s)
+        return re.sub(r"\s+", " ", s).strip()
+
+    target = _norm(nama)
+    if not target:
+        return None
+    # 1. exact match ternormalisasi
     for item in data:
-        if item[field].strip().lower() == nama_lower:
+        if _norm(str(item.get(field, ""))) == target:
             return item["id"]
-    # fallback: partial match
+    # 2. partial match dua arah
     for item in data:
-        if nama_lower in item[field].strip().lower():
+        norm_item = _norm(str(item.get(field, "")))
+        if target in norm_item or norm_item in target:
             return item["id"]
     return None
 

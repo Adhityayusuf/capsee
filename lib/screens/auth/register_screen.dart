@@ -1,7 +1,7 @@
 import 'package:flutter/gestures.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import '../../core/validators.dart';
 import '../../widgets/auth_widgets.dart';
@@ -9,7 +9,9 @@ import '../../widgets/popup_notifikasi.dart';
 import '../../services/services.dart';
 import '../legal/privasi_screen.dart';
 import '../legal/syarat_screen.dart';
+import '../home/dashboard_screen.dart';
 import 'login_screen.dart';
+import 'onboarding_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -72,7 +74,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
     setState(() => _isLoading = true);
 
     try {
-      await register(
+      final hasil = await register(
         nama: _nameController.text.trim(),
         email: _emailController.text.trim(),
         password: _passwordController.text,
@@ -81,11 +83,16 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
 
-      if (mounted) showSuccessPopup(context, 'Akun berhasil dibuat, silakan masuk.');
-
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const LoginScreen()),
-      );
+      // Token sudah tersimpan oleh register() → langsung masuk aplikasi.
+      if (hasil.sudahPunyaLahan) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        );
+      } else {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+        );
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -157,10 +164,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       keyboardType: TextInputType.name,
       textCapitalization: TextCapitalization.words,
       textInputAction: TextInputAction.next,
-      style: GoogleFonts.plusJakartaSans(
-        fontSize: 15,
-        color: context.palette.title,
-      ),
+      style: AppText.body(context, color: context.palette.title),
       decoration: capseeInputDecoration(context, hint: 'Nama lengkap Anda'),
       validator: validateName,
     );
@@ -171,10 +175,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       controller: _emailController,
       keyboardType: TextInputType.emailAddress,
       textInputAction: TextInputAction.next,
-      style: GoogleFonts.plusJakartaSans(
-        fontSize: 15,
-        color: context.palette.title,
-      ),
+      style: AppText.body(context, color: context.palette.title),
       decoration: capseeInputDecoration(context, hint: 'nama@email.com'),
       validator: validateEmail,
     );
@@ -186,7 +187,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       controller: _passwordController,
       obscureText: _obscurePassword,
       textInputAction: TextInputAction.next,
-      style: GoogleFonts.plusJakartaSans(fontSize: 15, color: p.title),
+      style: AppText.body(context, color: p.title),
       decoration: capseeInputDecoration(
         context,
         hint: 'Minimal 8 karakter',
@@ -210,7 +211,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       controller: _confirmController,
       obscureText: _obscureConfirm,
       textInputAction: TextInputAction.done,
-      style: GoogleFonts.plusJakartaSans(fontSize: 15, color: p.title),
+      style: AppText.body(context, color: p.title),
       decoration: capseeInputDecoration(
         context,
         hint: 'Ulangi kata sandi',
@@ -231,12 +232,8 @@ class _RegisterScreenState extends State<RegisterScreen> {
 
   Widget _buildTermsRow() {
     final p = context.palette;
-    final baseStyle = GoogleFonts.plusJakartaSans(
-      fontSize: 13,
-      height: 1.4,
-      color: p.subtitle,
-    );
-    final linkStyle = baseStyle.copyWith(
+    final baseStyle = AppText.body(context);
+    final linkStyle = AppText.body(context).copyWith(
       fontWeight: FontWeight.w800,
       color: p.accent,
     );
@@ -301,10 +298,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
             padding: const EdgeInsets.only(top: 6, left: 32),
             child: Text(
               'Anda harus menyetujui syarat & ketentuan',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                color: p.error,
-              ),
+              style: AppText.bodySm(context, color: p.error),
             ),
           ),
       ],
@@ -318,10 +312,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       children: [
         Text(
           'Sudah punya akun?',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 14,
-            color: p.subtitle,
-          ),
+          style: AppText.body(context),
         ),
         const SizedBox(width: 6),
         GestureDetector(
@@ -330,11 +321,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
           ),
           child: Text(
             'Masuk',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
-              fontWeight: FontWeight.w800,
-              color: p.accent,
-            ),
+            style: AppText.subtitle(context, color: p.accent),
           ),
         ),
       ],

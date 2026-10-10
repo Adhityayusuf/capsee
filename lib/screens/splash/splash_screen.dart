@@ -1,8 +1,8 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import '../../core/app_info.dart';
 import '../../services/services.dart';
@@ -89,21 +89,17 @@ class _SplashScreenState extends State<SplashScreen>
                         const SizedBox(height: 26),
                         Text(
                           AppInfo.name,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 34,
-                            fontWeight: FontWeight.w800,
-                            color: p.onPrimary,
-                          ),
+                          style: AppText.display(context, color: p.onPrimary)
+                              .copyWith(fontSize: 34),
                         ),
                         const SizedBox(height: 6),
                         Text(
                           AppInfo.tagline,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w600,
-                            letterSpacing: 0.5,
-                            color: p.onPrimary.withValues(alpha: 0.7),
-                          ),
+                          style: AppText.body(context,
+                                  color: p.onPrimary.withValues(alpha: 0.7))
+                              .copyWith(
+                                  fontWeight: FontWeight.w600,
+                                  letterSpacing: 0.5),
                         ),
                       ],
                     ),
@@ -128,11 +124,9 @@ class _SplashScreenState extends State<SplashScreen>
                     opacity: _fade,
                     child: Text(
                       'Versi ${AppInfo.version}',
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w600,
-                        color: p.onPrimary.withValues(alpha: 0.7),
-                      ),
+                      style: AppText.bodySm(context,
+                              color: p.onPrimary.withValues(alpha: 0.7))
+                          .copyWith(fontWeight: FontWeight.w600),
                     ),
                   ),
                 ),

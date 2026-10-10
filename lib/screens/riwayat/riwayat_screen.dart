@@ -1,6 +1,7 @@
+import 'package:capsee/core/app_text.dart';
 import 'package:capsee/core/app_theme.dart';
+import 'package:capsee/widgets/ui_kit.dart';
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 // --- DATA DUMMY ---
 class DummyRiwayat {
@@ -88,11 +89,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
         elevation: 0,
         title: Text(
           'Riwayat Aktivitas',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 20,
-            color: p.title,
-            fontWeight: FontWeight.w700,
-          ),
+          style: AppText.headline(context),
         ),
         centerTitle: false,
       ),
@@ -111,7 +108,8 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   // --- WIDGET FILTER (Lahan & Waktu) ---
   Widget _buildFilterSection() {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+      padding: const EdgeInsets.symmetric(
+          horizontal: AppSpace.page, vertical: 12),
       child: Row(
         children: [
           Expanded(
@@ -147,7 +145,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
       decoration: BoxDecoration(
         color: p.surface,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
         border: Border.all(color: p.border),
       ),
       child: DropdownButtonHideUnderline(
@@ -166,11 +164,8 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                   Expanded(
                     child: Text(
                       item,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 12,
-                        fontWeight: FontWeight.w600,
-                        color: p.title,
-                      ),
+                      style: AppText.bodySm(context, color: p.title)
+                          .copyWith(fontWeight: FontWeight.w600),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -187,7 +182,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   // --- WIDGET DAFTAR RIWAYAT ---
   Widget _buildRiwayatList() {
     return ListView.separated(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
+      padding: const EdgeInsets.fromLTRB(AppSpace.page, 8, AppSpace.page, 24),
       itemCount: _dummyData.length,
       separatorBuilder: (_, __) => const SizedBox(height: 12),
       itemBuilder: (context, index) {
@@ -231,19 +226,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
         iconColor = p.icon;
     }
 
-    return Container(
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: p.shadow,
-            blurRadius: 10,
-            offset: const Offset(0, 4),
-          ),
-        ],
-      ),
+    return CapseeCard(
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -252,7 +235,8 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
             height: 48,
             decoration: BoxDecoration(
               color: iconBgColor,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius:
+                  BorderRadius.circular(AppSpace.radiusTile),
             ),
             child: Icon(itemIcon, color: iconColor, size: 24),
           ),
@@ -267,41 +251,25 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                     Expanded(
                       child: Text(
                         item.judul,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 14,
-                          fontWeight: FontWeight.w700,
-                          color: p.title,
-                        ),
+                        style: AppText.subtitle(context),
                       ),
                     ),
                     Text(
                       _formatDate(item.waktu),
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 11,
-                        fontWeight: FontWeight.w500,
-                        color: p.subtitle,
-                      ),
+                      style: AppText.caption(context),
                     ),
                   ],
                 ),
                 const SizedBox(height: 4),
                 Text(
                   item.namaLahan,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w600,
-                    color: p.accent,
-                  ),
+                  style: AppText.bodySm(context, color: p.accent)
+                      .copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
                 Text(
                   item.deskripsi,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    height: 1.4,
-                    fontWeight: FontWeight.w400,
-                    color: p.subtitle,
-                  ),
+                  style: AppText.bodySm(context),
                 ),
               ],
             ),
@@ -313,76 +281,15 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
   // --- WIDGET KETIKA RIWAYAT KOSONG ---
   Widget _buildEmptyState() {
-    final p = context.palette;
-    return Center(
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 32),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              width: 80,
-              height: 80,
-              decoration: BoxDecoration(
-                color: p.accentSoft,
-                borderRadius: BorderRadius.circular(20),
-              ),
-              child: Icon(
-                Icons.history_rounded,
-                color: p.accent,
-                size: 40,
-              ),
-            ),
-            const SizedBox(height: 24),
-            Text(
-              'Riwayat masih kosong',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: p.title,
-              ),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Hasil pindai daun akan tampil di sini setelah Anda mengambil foto dengan kamera.',
-              textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 13,
-                height: 1.5,
-                fontWeight: FontWeight.w400,
-                color: p.subtitle,
-              ),
-            ),
-            const SizedBox(height: 32),
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: () {
-                  // Aksi tombol scan dummy
-                },
-                icon: const Icon(Icons.camera_alt_rounded, size: 20),
-                label: Text(
-                  'Scan Sekarang',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: p.primary,
-                  foregroundColor: p.onPrimary,
-                  padding: const EdgeInsets.symmetric(vertical: 14),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(30),
-                  ),
-                  elevation: 0,
-                ),
-              ),
-            ),
-            const SizedBox(height: 60), // Mengangkat konten sedikit dari bottom nav
-          ],
-        ),
-      ),
+    return EmptyState(
+      icon: Icons.history_rounded,
+      title: 'Riwayat masih kosong',
+      message:
+          'Hasil pindai daun akan tampil di sini setelah Anda mengambil foto dengan kamera.',
+      actionLabel: 'Scan Sekarang',
+      onAction: () {
+        // Aksi tombol scan dummy
+      },
     );
   }
 

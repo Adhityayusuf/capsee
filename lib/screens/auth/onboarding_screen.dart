@@ -1,10 +1,11 @@
 import 'dart:math';
 
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
+import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import '../../widgets/auth_widgets.dart';
+import '../../widgets/ui_kit.dart';
 import '../bantuan/panduan_screen.dart';
 import '../home/dashboard_screen.dart';
 import '../lahan/tambah_lahan_page.dart';
@@ -54,7 +55,8 @@ class OnboardingScreen extends StatelessWidget {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+            padding: const EdgeInsets.fromLTRB(
+                AppSpace.page, AppSpace.page, AppSpace.page, AppSpace.gapXl),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: Column(
@@ -111,7 +113,7 @@ class OnboardingScreen extends StatelessWidget {
           padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
           decoration: BoxDecoration(
             color: p.accentSoft,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppSpace.radiusPill),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -127,12 +129,7 @@ class OnboardingScreen extends StatelessWidget {
               const SizedBox(width: 8),
               Text(
                 'MULAI CEPAT • 1/1',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 11,
-                  fontWeight: FontWeight.w800,
-                  letterSpacing: 0.4,
-                  color: p.onAccentSoft,
-                ),
+                style: AppText.overline(context, color: p.onAccentSoft),
               ),
             ],
           ),
@@ -145,11 +142,8 @@ class OnboardingScreen extends StatelessWidget {
           },
           child: Text(
             'Lewati untuk nanti',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: p.title,
-            ),
+            style: AppText.body(context, color: p.title)
+                .copyWith(fontWeight: FontWeight.w600),
           ),
         ),
       ],
@@ -166,22 +160,14 @@ class OnboardingScreen extends StatelessWidget {
         Text(
           'Siapkan Lahan Pertama 🌱',
           textAlign: TextAlign.center,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            color: p.title,
-          ),
+          style: AppText.display(context),
         ),
         const SizedBox(height: 10),
         Text(
           'Daftarkan minimal satu petak kebun cabai Anda agar kecerdasan '
           'buatan Capsee dapat memantau kesehatan tanaman secara presisi.',
           textAlign: TextAlign.center,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 14.5,
-            height: 1.5,
-            color: p.subtitle,
-          ),
+          style: AppText.body(context),
         ),
       ],
     );
@@ -205,11 +191,7 @@ class OnboardingScreen extends StatelessWidget {
       ),
       label: Text(
         'Pelajari cara kerja Capsee',
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 14,
-          fontWeight: FontWeight.w700,
-          color: p.accent,
-        ),
+        style: AppText.subtitle(context, color: p.accent),
       ),
     );
   }
@@ -228,7 +210,7 @@ class _HeroCard extends StatelessWidget {
       width: double.infinity,
       height: 250,
       decoration: BoxDecoration(
-        borderRadius: BorderRadius.circular(24),
+        borderRadius: BorderRadius.circular(AppSpace.radiusCard),
         gradient: LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
@@ -355,7 +337,7 @@ class _Pill extends StatelessWidget {
       padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 7),
       decoration: BoxDecoration(
         color: background ?? p.surface,
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppSpace.radiusPill),
         boxShadow: shadow
             ? [
                 BoxShadow(
@@ -373,11 +355,8 @@ class _Pill extends StatelessWidget {
           const SizedBox(width: 6),
           Text(
             text,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
-              color: textColor ?? p.title,
-            ),
+            style: AppText.bodySm(context, color: textColor ?? p.title)
+                .copyWith(fontWeight: FontWeight.w700),
           ),
         ],
       ),
@@ -455,20 +434,8 @@ class _FeatureCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: p.shadow,
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
+    return CapseeCard(
+      padding: const EdgeInsets.all(AppSpace.card),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -477,7 +444,7 @@ class _FeatureCard extends StatelessWidget {
             height: 44,
             decoration: BoxDecoration(
               color: p.accentSoft,
-              borderRadius: BorderRadius.circular(12),
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             ),
             child:
                 Icon(feature.icon, size: 22, color: p.onAccentSoft),
@@ -489,20 +456,12 @@ class _FeatureCard extends StatelessWidget {
               children: [
                 Text(
                   feature.title,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 15,
-                    fontWeight: FontWeight.w800,
-                    color: p.title,
-                  ),
+                  style: AppText.subtitle(context),
                 ),
                 const SizedBox(height: 4),
                 Text(
                   feature.description,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 13,
-                    height: 1.4,
-                    color: p.subtitle,
-                  ),
+                  style: AppText.body(context),
                 ),
               ],
             ),

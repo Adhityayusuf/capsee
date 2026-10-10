@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 
 import '../core/app_info.dart';
+import '../core/app_text.dart';
 import '../core/app_theme.dart';
+import 'ui_kit.dart';
 
 /// ---------------------------------------------------------------
 /// Kerangka halaman auth: background terang + scroll + center.
@@ -19,7 +20,7 @@ class AuthScaffold extends StatelessWidget {
       body: SafeArea(
         child: Center(
           child: SingleChildScrollView(
-            padding: const EdgeInsets.symmetric(horizontal: 22, vertical: 18),
+            padding: const EdgeInsets.all(AppSpace.page),
             child: ConstrainedBox(
               constraints: const BoxConstraints(maxWidth: 420),
               child: child,
@@ -69,11 +70,7 @@ class AuthTopBar extends StatelessWidget {
             ),
           Text(
             AppInfo.name,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 22,
-              fontWeight: FontWeight.w800,
-              color: p.accent,
-            ),
+            style: AppText.display(context, color: p.accent),
           ),
         ],
       ),
@@ -139,23 +136,7 @@ class AuthCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(22),
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(28),
-        boxShadow: [
-          BoxShadow(
-            color: p.shadow,
-            blurRadius: 24,
-            offset: const Offset(0, 10),
-          ),
-        ],
-      ),
-      child: child,
-    );
+    return CapseeCard(child: child);
   }
 }
 
@@ -167,28 +148,19 @@ class AuthHeader extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
     return Column(
       children: [
         Text(
           title,
           textAlign: TextAlign.center,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 24,
-            fontWeight: FontWeight.w800,
-            color: p.title,
-          ),
+          style: AppText.display(context),
         ),
         if (subtitle != null) ...[
           const SizedBox(height: 8),
           Text(
             subtitle!,
             textAlign: TextAlign.center,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 14,
-              height: 1.4,
-              color: p.subtitle,
-            ),
+            style: AppText.body(context),
           ),
         ],
       ],
@@ -206,11 +178,7 @@ class FieldLabel extends StatelessWidget {
     final p = context.palette;
     return Text(
       text,
-      style: GoogleFonts.plusJakartaSans(
-        fontSize: 13.5,
-        fontWeight: FontWeight.w700,
-        color: p.subtitle,
-      ),
+      style: AppText.subtitle(context).copyWith(color: p.subtitle),
     );
   }
 }
@@ -272,10 +240,8 @@ class PrimaryButton extends StatelessWidget {
                   Flexible(
                     child: Text(
                       label,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 16,
-                        fontWeight: FontWeight.w700,
-                      ),
+                      style: AppText.subtitle(context)
+                          .copyWith(color: p.onPrimary),
                       overflow: TextOverflow.ellipsis,
                       textAlign: TextAlign.center,
                     ),
@@ -329,14 +295,12 @@ class GoogleIcon extends StatelessWidget {
   const GoogleIcon({super.key, this.size = 22});
 
   final double size;
-
   @override
   Widget build(BuildContext context) {
     return Text(
       'G',
-      style: GoogleFonts.plusJakartaSans(
+      style: AppText.title(context).copyWith(
         fontSize: size,
-        fontWeight: FontWeight.w800,
         color: const Color(0xFF4285F4),
       ),
     );
@@ -354,10 +318,7 @@ class OrDivider extends StatelessWidget {
     return Text(
       text,
       textAlign: TextAlign.center,
-      style: GoogleFonts.plusJakartaSans(
-        fontSize: 13,
-        color: p.hint,
-      ),
+      style: AppText.body(context, color: p.hint),
     );
   }
 }
@@ -372,16 +333,13 @@ InputDecoration capseeInputDecoration(
   final p = context.palette;
   OutlineInputBorder border(Color color, {double width = 1}) =>
       OutlineInputBorder(
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
         borderSide: BorderSide(color: color, width: width),
       );
 
   return InputDecoration(
     hintText: hint,
-    hintStyle: GoogleFonts.plusJakartaSans(
-      fontSize: 15,
-      color: p.hint,
-    ),
+    hintStyle: AppText.body(context, color: p.hint),
     prefixIcon:
         prefixIcon != null ? Icon(prefixIcon, color: p.icon) : null,
     suffixIcon: suffix,

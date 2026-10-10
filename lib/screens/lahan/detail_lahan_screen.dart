@@ -1,8 +1,8 @@
 import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/app_colors.dart';
+import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import '../../models/activity_log.dart';
 import '../../models/land_data.dart';
@@ -13,6 +13,7 @@ import 'tab_jadwal.dart';
 import 'tambah_lahan_page.dart';
 import '../../services/services.dart';
 import '../../widgets/popup_notifikasi.dart';
+import '../../widgets/ui_kit.dart';
 
 class LandDetailScreen extends StatefulWidget {
   final LandData land;
@@ -40,6 +41,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   Map<String, dynamic>? _cuaca; // prakiraan[0]
   bool _cuacaLoading = true;
   bool _cuacaError = false;
+  String _cuacaErrorMsg = '';
 
   @override
   void initState() {
@@ -50,8 +52,19 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   Future<void> _loadCuaca() async {
     final idLahan = _land.id;
     if (idLahan == null || idLahan.isEmpty) {
-      setState(() { _cuacaLoading = false; _cuacaError = true; });
+      setState(() {
+        _cuacaLoading = false;
+        _cuacaError = true;
+        _cuacaErrorMsg = 'Lahan belum tersinkron.';
+      });
       return;
+    }
+    if (mounted) {
+      setState(() {
+        _cuacaLoading = true;
+        _cuacaError = false;
+        _cuacaErrorMsg = '';
+      });
     }
     try {
       final data = await getCuacaLahan(idLahan);
@@ -63,10 +76,17 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
               : null;
           _cuacaLoading = false;
           _cuacaError = _cuaca == null;
+          if (_cuacaError) _cuacaErrorMsg = 'Data BMKG kosong.';
         });
       }
-    } catch (_) {
-      if (mounted) setState(() { _cuacaLoading = false; _cuacaError = true; });
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _cuacaLoading = false;
+          _cuacaError = true;
+          _cuacaErrorMsg = pesanError(e);
+        });
+      }
     }
   }
 
@@ -83,10 +103,17 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       ),
     );
 
-    if (result is Map && mounted) {
-      setState(() {
-        _land = landDataFromMap(Map<String, dynamic>.from(result));
-      });
+    // TambahLahanPage mengembalikan true jika simpan sukses → muat ulang dari server.
+    if (result == true && mounted) {
+      try {
+        final fresh = await getDetailLahan(id);
+        if (!mounted) return;
+        setState(() {
+          _land = landDataFromMap(fresh);
+        });
+      } catch (_) {
+        // Biarkan data lama tampil; user bisa refresh manual.
+      }
       _loadCuaca();
     }
   }
@@ -101,10 +128,11 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
     final konfirmasi = await showDialog<bool>(
       context: context,
       builder: (dialogContext) => AlertDialog(
-        title: const Text('Hapus Lahan?'),
+        title: Text('Hapus Lahan?', style: AppText.title(dialogContext)),
         content: Text(
           'Lahan "${_land.name}" beserta seluruh jadwal dan riwayatnya akan '
           'dihapus permanen. Tindakan ini tidak bisa dibatalkan.',
+          style: AppText.body(dialogContext),
         ),
         actions: [
           TextButton(
@@ -283,27 +311,13 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   }
 
   Widget _buildScanSectionLabel(String title, String? subtitle) {
-    final p = context.palette;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        Text(
-          title,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 16,
-            fontWeight: FontWeight.w800,
-            color: p.title,
-          ),
-        ),
+        Text(title, style: AppText.title(context)),
         if (subtitle != null) ...[
           const SizedBox(height: 2),
-          Text(
-            subtitle,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              color: p.subtitle,
-            ),
-          ),
+          Text(subtitle, style: AppText.bodySm(context)),
         ],
       ],
     );
@@ -343,13 +357,13 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
     final p = context.palette;
     return InkWell(
       onTap: () => setState(() => _selectedOrgan = type),
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 180),
         padding: const EdgeInsets.all(14),
         decoration: BoxDecoration(
           color: selected ? p.surface : p.surfaceAlt,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSpace.radiusTile),
           border: Border.all(
             color: selected ? p.primary : p.border,
             width: selected ? 2 : 1,
@@ -375,7 +389,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                   height: 32,
                   decoration: BoxDecoration(
                     color: selected ? p.accentSoft : p.surface,
-                    borderRadius: BorderRadius.circular(8),
+                    borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                   ),
                   child: Icon(
                     icon,
@@ -397,23 +411,13 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
               ],
             ),
             const SizedBox(height: 8),
-            Text(
-              title,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 14,
-                fontWeight: FontWeight.w800,
-                color: p.title,
-              ),
-            ),
+            Text(title, style: AppText.subtitle(context)),
             const SizedBox(height: 2),
             Text(
               subtitle,
               maxLines: 1,
               overflow: TextOverflow.ellipsis,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 11,
-                color: p.subtitle,
-              ),
+              style: AppText.caption(context),
             ),
           ],
         ),
@@ -452,12 +456,12 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
     final p = context.palette;
     return InkWell(
       onTap: () => setState(() => _imageSource = index),
-      borderRadius: BorderRadius.circular(10),
+      borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 12),
         decoration: BoxDecoration(
           color: selected ? p.surface : p.surfaceAlt,
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(AppSpace.radiusTile),
           border: Border.all(
             color: selected ? p.primary : p.border,
           ),
@@ -473,11 +477,10 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
             const SizedBox(width: 8),
             Text(
               label,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 13,
-                fontWeight: FontWeight.w700,
+              style: AppText.body(
+                context,
                 color: selected ? p.primary : p.subtitle,
-              ),
+              ).copyWith(fontWeight: FontWeight.w700),
             ),
           ],
         ),
@@ -487,7 +490,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
 
   Widget _buildViewfinder() {
     return ClipRRect(
-      borderRadius: BorderRadius.circular(16),
+      borderRadius: BorderRadius.circular(AppSpace.radiusCard),
       child: AspectRatio(
         aspectRatio: 4 / 3,
         child: Stack(
@@ -525,33 +528,31 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                                 ),
                               ),
                               const SizedBox(width: 6),
-                              const Text(
+                              Text(
                                 'AI SCANNER AKTIF',
-                                style: TextStyle(
+                                style: AppText.micro(
+                                  context,
                                   color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                                ).copyWith(fontWeight: FontWeight.w700),
                               ),
                             ],
                           ),
                         ),
                         _glassBadge(
-                          child: const Row(
+                          child: Row(
                             children: [
-                              Icon(
+                              const Icon(
                                 Icons.center_focus_strong_rounded,
                                 color: Colors.white,
                                 size: 12,
                               ),
-                              SizedBox(width: 4),
+                              const SizedBox(width: 4),
                               Text(
                                 'AF Cepat',
-                                style: TextStyle(
+                                style: AppText.micro(
+                                  context,
                                   color: Colors.white,
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w700,
-                                ),
+                                ).copyWith(fontWeight: FontWeight.w700),
                               ),
                             ],
                           ),
@@ -592,28 +593,30 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                             _selectedOrgan == 'leaf'
                                 ? 'Fokus: Daun Utama (94%)'
                                 : 'Fokus: Buah Cabai (91%)',
-                            style: const TextStyle(
+                            style: AppText.micro(
+                              context,
                               color: Colors.white,
-                              fontSize: 10,
-                              fontWeight: FontWeight.w600,
                             ),
                           ),
                         ),
                       ],
                     ),
                     _glassBadge(
-                      child: const Row(
+                      child: Row(
                         mainAxisSize: MainAxisSize.min,
                         children: [
-                          Icon(
+                          const Icon(
                             Icons.wb_sunny_rounded,
                             color: AppColors.secondaryContainer,
                             size: 14,
                           ),
-                          SizedBox(width: 6),
+                          const SizedBox(width: 6),
                           Text(
                             'Arahkan ke pusat gejala bercak',
-                            style: TextStyle(color: Colors.white, fontSize: 11),
+                            style: AppText.caption(
+                              context,
+                              color: Colors.white,
+                            ),
                           ),
                         ],
                       ),
@@ -644,7 +647,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
       decoration: BoxDecoration(
         color: AppColors.inverseSurface.withValues(alpha: 0.8),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(AppSpace.radiusPill),
       ),
       child: child,
     );
@@ -668,7 +671,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       padding: const EdgeInsets.all(12),
       decoration: BoxDecoration(
         color: p.surfaceAlt,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       ),
       child: Row(
         children: [
@@ -677,7 +680,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
             height: 32,
             decoration: BoxDecoration(
               color: p.accentSoft,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             ),
             child: Icon(
               Icons.verified_rounded,
@@ -692,18 +695,14 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
               children: [
                 Text(
                   'Ketepatan AI Capsee 95.2%',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12,
-                    fontWeight: FontWeight.w800,
+                  style: AppText.bodySm(
+                    context,
                     color: p.title,
-                  ),
+                  ).copyWith(fontWeight: FontWeight.w800),
                 ),
                 Text(
                   'Jaga jarak kamera sekitar 10-15 cm dari permukaan helai daun.',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    color: p.subtitle,
-                  ),
+                  style: AppText.caption(context),
                 ),
               ],
             ),
@@ -725,7 +724,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
           foregroundColor: p.onPrimary,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
           ),
         ),
         child: _isAnalyzing
@@ -767,178 +766,162 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
 
   Widget _buildScanPlotCard() {
     final p = context.palette;
-    return Card(
-      elevation: 0,
-      color: p.surface,
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Row(
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                color: p.accentSoft,
-                borderRadius: BorderRadius.circular(12),
-              ),
-              child: Icon(
-                Icons.local_florist_rounded,
-                color: p.primary,
-                size: 28,
-              ),
+    return CapseeCard(
+      padding: const EdgeInsets.all(14),
+      child: Row(
+        children: [
+          Container(
+            width: 52,
+            height: 52,
+            decoration: BoxDecoration(
+              color: p.accentSoft,
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             ),
-            const SizedBox(width: 12),
-            Expanded(
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Petak Cabai Rawit Blok A',
-                    style: TextStyle(
-                      fontWeight: FontWeight.w800,
-                      color: p.title,
-                    ),
-                  ),
-                  const SizedBox(height: 3),
-                  Text(
-                    'Umur 3 Bulan • Fase Berbuah Aktif',
-                    style: TextStyle(color: p.subtitle, fontSize: 12),
-                  ),
-                ],
-              ),
+            child: Icon(
+              Icons.local_florist_rounded,
+              color: p.primary,
+              size: 28,
             ),
-            _statusPill(context, 'Optimal'),
-          ],
-        ),
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Petak Cabai Rawit Blok A',
+                  style: AppText.subtitle(context),
+                ),
+                const SizedBox(height: 3),
+                Text(
+                  'Umur 3 Bulan • Fase Berbuah Aktif',
+                  style: AppText.bodySm(context),
+                ),
+              ],
+            ),
+          ),
+          const StatusBadge(label: 'Optimal', kind: BadgeKind.success),
+        ],
       ),
     );
   }
 
   Widget _buildScanResultCard() {
     final p = context.palette;
-    return Card(
-      elevation: 0,
-      color: p.surface,
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return CapseeCard(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(
+                Icons.verified_rounded,
+                color: p.primary,
+                size: 22,
+              ),
+              const SizedBox(width: 8),
+              Text(
+                'Hasil Scan Terakhir',
+                style: AppText.subtitle(context),
+              ),
+              const Spacer(),
+              Text('09:41 WIB', style: AppText.caption(context)),
+            ],
+          ),
+          const SizedBox(height: 14),
+          Container(
+            width: double.infinity,
+            padding: const EdgeInsets.all(12),
+            decoration: BoxDecoration(
+              color: p.accentSoft,
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+            ),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(
-                  Icons.verified_rounded,
-                  color: p.primary,
-                  size: 22,
-                ),
-                const SizedBox(width: 8),
                 Text(
-                  'Hasil Scan Terakhir',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontWeight: FontWeight.w800,
-                    color: p.title,
-                  ),
+                  'Tanaman Sehat & Bebas Hama',
+                  style: AppText.subtitle(
+                    context,
+                    color: p.onAccentSoft,
+                  ).copyWith(fontWeight: FontWeight.w800),
                 ),
-                const Spacer(),
+                const SizedBox(height: 4),
                 Text(
-                  '09:41 WIB',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    color: p.subtitle,
-                  ),
+                  'Akurasi AI 98,6% • SPAD klorofil 94%',
+                  style: AppText.bodySm(context),
                 ),
               ],
             ),
-            const SizedBox(height: 14),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.all(12),
-              decoration: BoxDecoration(
-                color: p.accentSoft,
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'Tanaman Sehat & Bebas Hama',
-                    style: TextStyle(
-                      color: p.onAccentSoft,
-                      fontWeight: FontWeight.w800,
-                    ),
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    'Akurasi AI 98,6% • SPAD klorofil 94%',
-                    style: TextStyle(fontSize: 12, color: p.subtitle),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 12),
-            Text(
-              '4 parameter normal terdeteksi',
-              style: TextStyle(fontSize: 12, color: p.subtitle),
-            ),
-            const SizedBox(height: 8),
-            const Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                Chip(label: Text('Bebas penyakit')),
-                Chip(label: Text('Bebas kutu')),
-                Chip(label: Text('Daun optimal')),
-              ],
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 12),
+          Text(
+            '4 parameter normal terdeteksi',
+            style: AppText.bodySm(context),
+          ),
+          const SizedBox(height: 8),
+          const Wrap(
+            spacing: 8,
+            runSpacing: 8,
+            children: [
+              Chip(label: Text('Bebas penyakit')),
+              Chip(label: Text('Bebas kutu')),
+              Chip(label: Text('Daun optimal')),
+            ],
+          ),
+        ],
       ),
     );
   }
 
   Widget _buildScanTelemetryCard() {
     final p = context.palette;
-    return Card(
-      elevation: 0,
-      color: p.surface,
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
+    return CapseeCard(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Text('Cuaca Lapangan', style: AppText.subtitle(context)),
+              const Spacer(),
+              // Atribusi wajib BMKG
+              Text(
+                'Sumber: BMKG',
+                style: AppText.micro(context, color: p.subtitle),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          if (_cuacaLoading)
+            const Center(
+              child: Padding(
+                padding: EdgeInsets.symmetric(vertical: 8),
+                child: SizedBox(
+                  width: 20, height: 20,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ),
+            )
+          else if (_cuacaError || _cuaca == null)
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Cuaca Lapangan',
-                  style: TextStyle(
-                    fontWeight: FontWeight.w800,
-                    color: p.title,
-                  ),
+                  _cuacaErrorMsg.isEmpty
+                      ? 'Data cuaca tidak tersedia'
+                      : _cuacaErrorMsg,
+                  style: AppText.bodySm(context),
                 ),
-                const Spacer(),
-                // Atribusi wajib BMKG
-                Text(
-                  'Sumber: BMKG',
-                  style: TextStyle(fontSize: 10, color: p.subtitle),
+                const SizedBox(height: 8),
+                OutlinedButton.icon(
+                  onPressed: _loadCuaca,
+                  icon: const Icon(Icons.refresh, size: 16),
+                  label: const Text('Coba lagi'),
                 ),
               ],
-            ),
-            const SizedBox(height: 12),
-            if (_cuacaLoading)
-              const Center(
-                child: Padding(
-                  padding: EdgeInsets.symmetric(vertical: 8),
-                  child: SizedBox(
-                    width: 20, height: 20,
-                    child: CircularProgressIndicator(strokeWidth: 2),
-                  ),
-                ),
-              )
-            else if (_cuacaError || _cuaca == null)
-              Text(
-                'Data cuaca tidak tersedia',
-                style: TextStyle(fontSize: 12, color: p.subtitle),
-              )
+            )
             else
               Row(
                 mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -974,7 +957,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                     child: Text(
                       '${_cuaca!['cuaca'] ?? ''}'
                       '${(_cuaca!['kemungkinan_hujan'] == true) ? " • ⚠ Kemungkinan Hujan" : ""}',
-                      style: TextStyle(fontSize: 11, color: p.subtitle),
+                      style: AppText.caption(context),
                     ),
                   ),
                 ],
@@ -982,26 +965,6 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
             ],
           ],
         ),
-      ),
-    );
-  }
-
-  Widget _statusPill(BuildContext context, String label) {
-    final p = context.palette;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-      decoration: BoxDecoration(
-        color: p.accentSoft,
-        borderRadius: BorderRadius.circular(20),
-      ),
-      child: Text(
-        label,
-        style: TextStyle(
-          color: p.onAccentSoft,
-          fontSize: 11,
-          fontWeight: FontWeight.w700,
-        ),
-      ),
     );
   }
 
@@ -1025,11 +988,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         'Detail Lahan ${_land.name}',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
-        style: GoogleFonts.plusJakartaSans(
-          fontSize: 15,
-          fontWeight: FontWeight.w700,
-          color: p.title,
-        ),
+        style: AppText.subtitle(context),
       ),
       actions: [
         IconButton(
@@ -1085,7 +1044,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         padding: const EdgeInsets.all(4),
         decoration: BoxDecoration(
           color: p.surfaceAlt,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSpace.radiusTile),
         ),
         child: Row(
           children: [
@@ -1100,7 +1059,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                       color: _tabIndex == i
                           ? p.primary
                           : Colors.transparent,
-                      borderRadius: BorderRadius.circular(9),
+                      borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                     ),
                     child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
@@ -1113,13 +1072,12 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                         const SizedBox(width: 6),
                         Text(
                           tabs[i].$2,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
+                          style: AppText.body(
+                            context,
                             color: _tabIndex == i
                                 ? p.onPrimary
                                 : p.subtitle,
-                          ),
+                          ).copyWith(fontWeight: FontWeight.w700),
                         ),
                       ],
                     ),
@@ -1172,20 +1130,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   Widget _buildLandHeaderCard() {
     final land = _land;
     final p = context.palette;
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: p.shadow,
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
+    return CapseeCard(
       child: Row(
         children: [
           Container(
@@ -1213,31 +1158,13 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                         land.name,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 15.5,
-                          fontWeight: FontWeight.w800,
-                          color: p.title,
-                        ),
+                        style: AppText.title(context),
                       ),
                     ),
                     const SizedBox(width: 8),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 10,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: p.accentSoft,
-                        borderRadius: BorderRadius.circular(20),
-                      ),
-                      child: Text(
-                        'Optimal',
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11,
-                          fontWeight: FontWeight.w800,
-                          color: p.onAccentSoft,
-                        ),
-                      ),
+                    const StatusBadge(
+                      label: 'Optimal',
+                      kind: BadgeKind.success,
                     ),
                   ],
                 ),
@@ -1245,10 +1172,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                 Text(
                   'Umur ${land.plantAgeMonths} Bln • '
                   '${plantPhaseLabels[land.plantAgeMonths] ?? '-'}',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12.5,
-                    color: p.subtitle,
-                  ),
+                  style: AppText.bodySm(context),
                 ),
               ],
             ),
@@ -1278,18 +1202,17 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
               alignment: Alignment.center,
               decoration: BoxDecoration(
                 color: selected ? p.primary : p.surface,
-                borderRadius: BorderRadius.circular(20),
+                borderRadius: BorderRadius.circular(AppSpace.radiusPill),
                 border: Border.all(
                   color: selected ? p.primary : p.border,
                 ),
               ),
               child: Text(
                 label,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13,
-                  fontWeight: FontWeight.w700,
+                style: AppText.body(
+                  context,
                   color: selected ? p.onPrimary : p.subtitle,
-                ),
+                ).copyWith(fontWeight: FontWeight.w700),
               ),
             ),
           );
@@ -1306,20 +1229,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         cat: sampleActivityLogs.where((l) => l.category == cat).length,
     };
 
-    return Container(
-      width: double.infinity,
-      padding: const EdgeInsets.all(16),
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: p.shadow,
-            blurRadius: 14,
-            offset: const Offset(0, 6),
-          ),
-        ],
-      ),
+    return CapseeCard(
       child: Column(
         children: [
           Row(
@@ -1333,11 +1243,9 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
               Expanded(
                 child: Text(
                   '${sampleActivityLogs.length + 24} Catatan Terverifikasi',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: p.title,
-                  ),
+                  style: AppText.subtitle(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w800),
                 ),
               ),
               Container(
@@ -1347,15 +1255,14 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                 ),
                 decoration: BoxDecoration(
                   color: p.surfaceAlt,
-                  borderRadius: BorderRadius.circular(20),
+                  borderRadius: BorderRadius.circular(AppSpace.radiusPill),
                 ),
                 child: Text(
                   '30 Hari Terakhir',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w700,
+                  style: AppText.micro(
+                    context,
                     color: p.subtitle,
-                  ),
+                  ).copyWith(fontWeight: FontWeight.w700),
                 ),
               ),
             ],
@@ -1386,26 +1293,17 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   }
 
   Widget _buildStatColumn(String value, String label) {
-    final p = context.palette;
     return Expanded(
       child: Column(
         children: [
           Text(
             value,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 18,
-              fontWeight: FontWeight.w800,
-              color: p.title,
-            ),
+            style: AppText.headline(
+              context,
+            ).copyWith(fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 2),
-          Text(
-            label,
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 11,
-              color: p.subtitle,
-            ),
-          ),
+          Text(label, style: AppText.caption(context)),
         ],
       ),
     );
@@ -1426,18 +1324,16 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         Expanded(
           child: Text(
             'Kronologi Aktivitas',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 16,
-              fontWeight: FontWeight.w800,
-              color: p.title,
-            ),
+            style: AppText.title(
+              context,
+            ).copyWith(fontWeight: FontWeight.w800),
           ),
         ),
         Container(
           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
           decoration: BoxDecoration(
             color: p.surfaceAlt,
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(AppSpace.radiusPill),
           ),
           child: Row(
             mainAxisSize: MainAxisSize.min,
@@ -1453,11 +1349,10 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
               const SizedBox(width: 6),
               Text(
                 'Sensor Realtime',
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 10.5,
-                  fontWeight: FontWeight.w700,
+                style: AppText.micro(
+                  context,
                   color: p.subtitle,
-                ),
+                ).copyWith(fontWeight: FontWeight.w700),
               ),
             ],
           ),
@@ -1478,18 +1373,12 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
           _showTodo('Ekspor Log belum dibuat');
         },
         icon: const Icon(Icons.ios_share_rounded, size: 18),
-        label: Text(
-          'Ekspor Log',
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 14.5,
-            fontWeight: FontWeight.w700,
-          ),
-        ),
+        label: Text('Ekspor Log', style: AppText.subtitle(context)),
         style: OutlinedButton.styleFrom(
           foregroundColor: p.title,
           side: BorderSide(color: p.border),
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
+            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
           ),
         ),
       ),
@@ -1510,11 +1399,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
           child: Text(
             'Seluruh riwayat tercatat dan terenkripsi otomatis dengan '
             'sensor IoT kebun.',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 11.5,
-              height: 1.4,
-              color: p.subtitle,
-            ),
+            style: AppText.caption(context).copyWith(height: 1.4),
           ),
         ),
       ],
@@ -1535,20 +1420,8 @@ class _ActivityCard extends StatelessWidget {
     final color = log.category.color;
     final softColor = log.category.softColor;
 
-    return Container(
-      width: double.infinity,
+    return CapseeCard(
       padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(16),
-        boxShadow: [
-          BoxShadow(
-            color: p.shadow,
-            blurRadius: 12,
-            offset: const Offset(0, 5),
-          ),
-        ],
-      ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -1569,19 +1442,17 @@ class _ActivityCard extends StatelessWidget {
                     Expanded(
                       child: Text(
                         log.badge,
-                        style: GoogleFonts.plusJakartaSans(
-                          fontSize: 11.5,
-                          fontWeight: FontWeight.w800,
+                        style: AppText.caption(
+                          context,
                           color: color,
-                        ),
+                        ).copyWith(fontWeight: FontWeight.w800),
                       ),
                     ),
                     const SizedBox(width: 6),
                     Text(
                       log.time,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w600,
+                      style: AppText.micro(
+                        context,
                         color: p.subtitle,
                       ),
                     ),
@@ -1590,21 +1461,12 @@ class _ActivityCard extends StatelessWidget {
                 const SizedBox(height: 5),
                 Text(
                   log.title,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 14.5,
-                    fontWeight: FontWeight.w800,
-                    color: p.title,
-                  ),
+                  style: AppText.subtitle(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 5),
-                Text(
-                  log.description,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12.5,
-                    height: 1.45,
-                    color: p.subtitle,
-                  ),
-                ),
+                Text(log.description, style: AppText.body(context)),
                 if (log.stats != null) ...[
                   const SizedBox(height: 10),
                   _StatsRow(items: log.stats!),
@@ -1619,11 +1481,11 @@ class _ActivityCard extends StatelessWidget {
                     action: log.action!,
                     onTap: log.category == ActivityCategory.alert
                         ? () => Navigator.of(context).push(
-                            MaterialPageRoute(
-                              builder: (_) =>
-                                  const TreatmentRecommendationScreen(),
-                            ),
-                          )
+                              MaterialPageRoute(
+                                builder: (_) =>
+                                    const TreatmentRecommendationScreen(),
+                              ),
+                            )
                         : null,
                   ),
                 ],
@@ -1653,7 +1515,7 @@ class _StatsRow extends StatelessWidget {
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
               decoration: BoxDecoration(
                 color: p.surfaceAlt,
-                borderRadius: BorderRadius.circular(8),
+                borderRadius: BorderRadius.circular(AppSpace.radiusTile),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -1662,11 +1524,10 @@ class _StatsRow extends StatelessWidget {
                   const SizedBox(width: 5),
                   Text(
                     item.label,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w600,
+                    style: AppText.caption(
+                      context,
                       color: p.title,
-                    ),
+                    ).copyWith(fontWeight: FontWeight.w600),
                   ),
                 ],
               ),
@@ -1695,18 +1556,14 @@ class _ScanMetric extends StatelessWidget {
       children: [
         Icon(icon, color: p.primary, size: 20),
         const SizedBox(height: 4),
-        Text(
-          label,
-          style: TextStyle(fontSize: 10, color: p.subtitle),
-        ),
+        Text(label, style: AppText.micro(context, color: p.subtitle)),
         const SizedBox(height: 2),
         Text(
           value,
-          style: TextStyle(
-            fontWeight: FontWeight.w700,
-            fontSize: 11,
+          style: AppText.caption(
+            context,
             color: p.title,
-          ),
+          ).copyWith(fontWeight: FontWeight.w700),
         ),
       ],
     );
@@ -1725,7 +1582,7 @@ class _PhotoRow extends StatelessWidget {
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: p.surfaceAlt,
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       ),
       child: Row(
         children: [
@@ -1734,7 +1591,7 @@ class _PhotoRow extends StatelessWidget {
             height: 42,
             decoration: BoxDecoration(
               color: p.surface,
-              borderRadius: BorderRadius.circular(8),
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             ),
             child: Icon(
               Icons.image_outlined,
@@ -1749,29 +1606,21 @@ class _PhotoRow extends StatelessWidget {
               children: [
                 Text(
                   photo.caption,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 12.5,
-                    fontWeight: FontWeight.w700,
+                  style: AppText.bodySm(
+                    context,
                     color: p.title,
-                  ),
+                  ).copyWith(fontWeight: FontWeight.w700),
                 ),
-                Text(
-                  photo.subtitle,
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 11,
-                    color: p.subtitle,
-                  ),
-                ),
+                Text(photo.subtitle, style: AppText.caption(context)),
               ],
             ),
           ),
           Text(
             '${photo.linkLabel} →',
-            style: GoogleFonts.plusJakartaSans(
-              fontSize: 12,
-              fontWeight: FontWeight.w700,
+            style: AppText.bodySm(
+              context,
               color: p.primary,
-            ),
+            ).copyWith(fontWeight: FontWeight.w700),
           ),
         ],
       ),
@@ -1789,13 +1638,13 @@ class _ActionRow extends StatelessWidget {
   Widget build(BuildContext context) {
     final p = context.palette;
     return InkWell(
-      borderRadius: BorderRadius.circular(12),
+      borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       onTap: onTap,
       child: Container(
         padding: const EdgeInsets.all(10),
         decoration: BoxDecoration(
           color: p.accentSoft,
-          borderRadius: BorderRadius.circular(12),
+          borderRadius: BorderRadius.circular(AppSpace.radiusTile),
         ),
         child: Row(
           children: [
@@ -1811,29 +1660,24 @@ class _ActionRow extends StatelessWidget {
                 children: [
                   Text(
                     action.title,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 12.5,
-                      fontWeight: FontWeight.w700,
+                    style: AppText.bodySm(
+                      context,
                       color: p.title,
-                    ),
+                    ).copyWith(fontWeight: FontWeight.w700),
                   ),
                   Text(
                     action.subtitle,
-                    style: GoogleFonts.plusJakartaSans(
-                      fontSize: 11,
-                      color: p.subtitle,
-                    ),
+                    style: AppText.caption(context),
                   ),
                 ],
               ),
             ),
             Text(
               '${action.linkLabel} →',
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 12,
-                fontWeight: FontWeight.w700,
+              style: AppText.bodySm(
+                context,
                 color: p.primary,
-              ),
+              ).copyWith(fontWeight: FontWeight.w700),
             ),
           ],
         ),
