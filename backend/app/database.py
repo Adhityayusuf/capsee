@@ -2,7 +2,7 @@ import os
 from contextlib import contextmanager
 
 from dotenv import load_dotenv
-from psycopg2 import pool, OperationalError
+from psycopg2 import pool, InterfaceError, OperationalError
 from psycopg2.extensions import cursor as PgCursor
 
 load_dotenv()
@@ -15,11 +15,23 @@ if not DATABASE_URL:
         "backend/.env lalu isi kredensial Neon."
     )
 
-# Connection pool supaya tidak buka-tutup koneksi tiap request (lebih efisien)
+# Connection pool supaya tidak buka-tutup koneksi tiap request (lebih efisien).
+#
+# keepalives + tcp_user_timeout penting untuk Neon: koneksi yang menganggur
+# lama bisa putus diam-diam dari sisi server, tapi socket di klien masih
+# dianggap hidup. Tanpa ini, query ping berikutnya menggantung menunggu TCP
+# menyerah (bisa >15 detik) sehingga request tampak timeout di aplikasi.
+# Dengan keepalive pendek, socket mati terdeteksi dalam hitungan detik.
 _connection_pool = pool.SimpleConnectionPool(
     minconn=1,
     maxconn=10,
     dsn=DATABASE_URL,
+    connect_timeout=10,
+    keepalives=1,
+    keepalives_idle=10,
+    keepalives_interval=5,
+    keepalives_count=2,
+    tcp_user_timeout=5000,
 )
 
 
@@ -36,8 +48,9 @@ def get_db_connection():
         try:
             if conn.closed:
                 raise OperationalError("Koneksi sudah tertutup")
-            conn.cursor().execute("SELECT 1")
-        except OperationalError:
+            with conn.cursor() as cur:
+                cur.execute("SELECT 1")
+        except (OperationalError, InterfaceError):
             _connection_pool.putconn(conn, close=True)
             conn = _connection_pool.getconn()
 

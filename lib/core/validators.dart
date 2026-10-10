@@ -26,6 +26,12 @@ String? validatePassword(String? value) {
   return null;
 }
 
+String? validateConfirmPassword(String? value, String original) {
+  if (value == null || value.isEmpty) return 'Konfirmasi kata sandi wajib diisi';
+  if (value != original) return 'Kata sandi tidak cocok';
+  return null;
+}
+
 String? validatePhone(String? value) {
   final phone = value?.trim() ?? '';
   if (phone.isEmpty) return 'Nomor WhatsApp / HP wajib diisi';

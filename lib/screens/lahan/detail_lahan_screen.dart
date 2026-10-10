@@ -4,9 +4,11 @@ import 'package:google_fonts/google_fonts.dart';
 import '../../core/app_colors.dart';
 import '../../models/activity_log.dart';
 import '../../models/land_data.dart';
+import '../../widgets/land_card.dart';
 import '../scan/hasil_scan_tidak_sehat.dart';
 import '../scan/treatment_recommendation_screen.dart';
 import 'tab_jadwal.dart';
+import 'tambah_lahan_page.dart';
 import 'dart:io';
 import 'package:image_picker/image_picker.dart';
 import '../../services/services.dart';
@@ -22,6 +24,9 @@ class LandDetailScreen extends StatefulWidget {
 class _LandDetailScreenState extends State<LandDetailScreen> {
   int _tabIndex = 2; // 0=Scan, 1=Jadwal, 2=Riwayat (sesuai desain)
   String _filter = 'Semua Aktivitas';
+
+  // Data lahan yang bisa berubah setelah diedit.
+  late LandData _land = widget.land;
 
   // State alur scan.
   String _selectedOrgan = 'leaf';
@@ -42,7 +47,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   }
 
   Future<void> _loadCuaca() async {
-    final idLahan = widget.land.id;
+    final idLahan = _land.id;
     if (idLahan == null || idLahan.isEmpty) {
       setState(() { _cuacaLoading = false; _cuacaError = true; });
       return;
@@ -61,6 +66,78 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       }
     } catch (_) {
       if (mounted) setState(() { _cuacaLoading = false; _cuacaError = true; });
+    }
+  }
+
+  Future<void> _openEditLahan() async {
+    final id = _land.id;
+    if (id == null || id.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Data lahan belum tersinkron, tidak bisa diedit.'),
+        ),
+      );
+      return;
+    }
+
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => TambahLahanPage(initial: _land, idLahan: id),
+      ),
+    );
+
+    if (result is Map && mounted) {
+      setState(() {
+        _land = landDataFromMap(Map<String, dynamic>.from(result));
+      });
+      _loadCuaca();
+    }
+  }
+
+  Future<void> _openHapusLahan() async {
+    final id = _land.id;
+    if (id == null || id.isEmpty) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('Data lahan belum tersinkron, tidak bisa dihapus.'),
+        ),
+      );
+      return;
+    }
+
+    final konfirmasi = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Hapus Lahan?'),
+        content: Text(
+          'Lahan "${_land.name}" beserta seluruh jadwal dan riwayatnya akan '
+          'dihapus permanen. Tindakan ini tidak bisa dibatalkan.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (konfirmasi != true || !mounted) return;
+
+    try {
+      await hapusLahan(id);
+      if (!mounted) return;
+      Navigator.of(context).pop();
+    } catch (e) {
+      if (!mounted) return;
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Gagal menghapus lahan: $e')),
+      );
     }
   }
 
@@ -114,8 +191,13 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
 
     try {
       final res = await uploadScan(
+<<<<<<< HEAD
         file: pickedFile,
         idLahan: widget.land.id ?? '', 
+=======
+        file: File(pickedFile.path),
+        idLahan: _land.id ?? '', 
+>>>>>>> 36cd82eef4001c67b35f49e0ae33d50dd2a6c051
         bagianTanaman: _selectedOrgan == 'leaf' ? 'daun' : 'buah',
       );
 
@@ -920,7 +1002,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         onPressed: () => Navigator.of(context).pop(),
       ),
       title: Text(
-        'Detail Lahan ${widget.land.name}',
+        'Detail Lahan ${_land.name}',
         maxLines: 1,
         overflow: TextOverflow.ellipsis,
         style: GoogleFonts.plusJakartaSans(
@@ -930,6 +1012,16 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         ),
       ),
       actions: [
+        IconButton(
+          tooltip: 'Edit informasi lahan',
+          onPressed: _openEditLahan,
+          icon: const Icon(Icons.edit_outlined, color: AppColors.title),
+        ),
+        IconButton(
+          tooltip: 'Hapus lahan',
+          onPressed: _openHapusLahan,
+          icon: const Icon(Icons.delete_outline, color: AppColors.error),
+        ),
         Padding(
           padding: const EdgeInsets.only(right: 16, left: 4),
           child: GestureDetector(
@@ -1057,7 +1149,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
 
   // Kartu identitas lahan: ikon, nama, status, umur/fase
   Widget _buildLandHeaderCard() {
-    final land = widget.land;
+    final land = _land;
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(16),

@@ -1,5 +1,4 @@
 import 'dart:convert';
-import 'package:http/http.dart' as http;
 import 'api_client.dart';
 
 // ─────────────────────────────────────────────────────────
@@ -28,8 +27,8 @@ Future<Map<String, dynamic>> tambahLahan({
     if (tanggalTerakhirPupuk != null) 'tanggal_terakhir_pupuk': tanggalTerakhirPupuk,
   };
 
-  final res = await http.post(
-    Uri.parse('$baseUrl/api/lahan'),
+  final res = await apiPost(
+    '/api/lahan',
     headers: await headerAuth(),
     body: jsonEncode(payload),
   );
@@ -39,8 +38,8 @@ Future<Map<String, dynamic>> tambahLahan({
 
 /// Ambil semua lahan milik pengguna yang login.
 Future<List<Map<String, dynamic>>> getDaftarLahan() async {
-  final res = await http.get(
-    Uri.parse('$baseUrl/api/lahan'),
+  final res = await apiGet(
+    '/api/lahan',
     headers: await headerAuth(),
   );
   final body = parseResponse(res);
@@ -49,8 +48,8 @@ Future<List<Map<String, dynamic>>> getDaftarLahan() async {
 
 /// Ambil detail satu lahan.
 Future<Map<String, dynamic>> getDetailLahan(String idLahan) async {
-  final res = await http.get(
-    Uri.parse('$baseUrl/api/lahan/$idLahan'),
+  final res = await apiGet(
+    '/api/lahan/$idLahan',
     headers: await headerAuth(),
   );
   final body = parseResponse(res);
@@ -79,8 +78,8 @@ Future<Map<String, dynamic>> editLahan(
   if (tanggalTerakhirPupuk != null) payload['tanggal_terakhir_pupuk'] = tanggalTerakhirPupuk;
   if (intervalPupukMinggu != null) payload['interval_pupuk_minggu'] = intervalPupukMinggu;
 
-  final res = await http.put(
-    Uri.parse('$baseUrl/api/lahan/$idLahan'),
+  final res = await apiPut(
+    '/api/lahan/$idLahan',
     headers: await headerAuth(),
     body: jsonEncode(payload),
   );
@@ -90,8 +89,8 @@ Future<Map<String, dynamic>> editLahan(
 
 /// Hapus lahan (CASCADE — semua data turunan ikut terhapus).
 Future<void> hapusLahan(String idLahan) async {
-  final res = await http.delete(
-    Uri.parse('$baseUrl/api/lahan/$idLahan'),
+  final res = await apiDelete(
+    '/api/lahan/$idLahan',
     headers: await headerAuth(),
   );
   parseResponse(res);
@@ -103,8 +102,8 @@ Future<void> hapusLahan(String idLahan) async {
 
 /// Ambil semua jadwal penyiraman untuk satu lahan.
 Future<List<Map<String, dynamic>>> getJadwalPenyiraman(String idLahan) async {
-  final res = await http.get(
-    Uri.parse('$baseUrl/api/lahan/$idLahan/jadwal-penyiraman'),
+  final res = await apiGet(
+    '/api/lahan/$idLahan/jadwal-penyiraman',
     headers: await headerAuth(),
   );
   final body = parseResponse(res);
@@ -117,8 +116,8 @@ Future<Map<String, dynamic>> selesaiPenyiraman(
   String idLahan,
   String idJadwal,
 ) async {
-  final res = await http.patch(
-    Uri.parse('$baseUrl/api/lahan/$idLahan/jadwal-penyiraman/$idJadwal/selesai'),
+  final res = await apiPatch(
+    '/api/lahan/$idLahan/jadwal-penyiraman/$idJadwal/selesai',
     headers: await headerAuth(),
   );
   final body = parseResponse(res);
@@ -131,8 +130,8 @@ Future<Map<String, dynamic>> selesaiPenyiraman(
 
 /// Ambil semua jadwal pemupukan untuk satu lahan.
 Future<List<Map<String, dynamic>>> getJadwalPemupukan(String idLahan) async {
-  final res = await http.get(
-    Uri.parse('$baseUrl/api/lahan/$idLahan/jadwal-pemupukan'),
+  final res = await apiGet(
+    '/api/lahan/$idLahan/jadwal-pemupukan',
     headers: await headerAuth(),
   );
   final body = parseResponse(res);
@@ -145,8 +144,8 @@ Future<Map<String, dynamic>> selesaiPemupukan(
   String idLahan,
   String idJadwal,
 ) async {
-  final res = await http.patch(
-    Uri.parse('$baseUrl/api/lahan/$idLahan/jadwal-pemupukan/$idJadwal/selesai'),
+  final res = await apiPatch(
+    '/api/lahan/$idLahan/jadwal-pemupukan/$idJadwal/selesai',
     headers: await headerAuth(),
   );
   final body = parseResponse(res);
@@ -159,8 +158,8 @@ Future<Map<String, dynamic>> selesaiPemupukan(
 
 /// Ambil log aktivitas lahan (scan, siram, pupuk, peringatan).
 Future<List<Map<String, dynamic>>> getRiwayat(String idLahan) async {
-  final res = await http.get(
-    Uri.parse('$baseUrl/api/lahan/$idLahan/riwayat'),
+  final res = await apiGet(
+    '/api/lahan/$idLahan/riwayat',
     headers: await headerAuth(),
   );
   final body = parseResponse(res);

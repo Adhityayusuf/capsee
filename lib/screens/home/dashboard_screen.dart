@@ -4,8 +4,10 @@ import 'package:google_fonts/google_fonts.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/app_colors.dart';
-import '../../models/land_data.dart';
+import '../../widgets/home_top_bar.dart';
+import '../../widgets/land_card.dart';
 import '../akun/akun_screen.dart';
+import '../lahan/daftar_lahan_screen.dart';
 import '../lahan/detail_lahan_screen.dart';
 import '../lahan/tambah_lahan_page.dart';
 import '../notifikasi/notifikasi_screen.dart';
@@ -25,8 +27,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
   final ImagePicker _picker = ImagePicker();
   final List<ScanHistoryItem> _scanHistory = [];
 
+  final PageController _lahanPageController = PageController();
+  int _lahanPage = 0;
+
   Map<String, dynamic>? _profil;
   List<Map<String, dynamic>>? _lahanList;
+  int _unreadCount = 0;
   bool _isLoading = true;
 
   @override
@@ -35,15 +41,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
     _loadData();
   }
 
+  @override
+  void dispose() {
+    _lahanPageController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadData() async {
     setState(() => _isLoading = true);
     try {
       final profil = await getProfil();
       final lahanList = await getDaftarLahan();
+      var unread = 0;
+      try {
+        unread = await getJumlahNotifikasiBelumDibaca();
+      } catch (_) {
+        unread = 0;
+      }
       if (mounted) {
         setState(() {
           _profil = profil;
           _lahanList = lahanList;
+          _unreadCount = unread;
           _isLoading = false;
         });
       }
@@ -59,9 +78,19 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget build(BuildContext context) {
     final pages = [
       _buildDashboard(),
-      RiwayatScanScreen(items: _scanHistory, onScan: _openScan),
-      const NotifikasiScreen(),
-      const AkunScreen(),
+      DaftarLahanScreen(
+        lahanList: _lahanList,
+        isLoading: _isLoading,
+        onRefresh: _loadData,
+        onAdd: _addLand,
+        onOpenDetail: _openLandDetail,
+        onEditLand: _openEditLahan,
+        onDeleteLand: _openDeleteLahan,
+        onScan: _openScan,
+        unreadCount: _unreadCount,
+        onNotifikasi: _openNotifikasi,
+        onAkun: _openAkun,
+      ),
     ];
 
     return Scaffold(
@@ -100,36 +129,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         style: _style(18, AppColors.title, FontWeight.w700),
                       ),
                       const SizedBox(width: 8),
-                      _badge('${_lahanList?.length ?? 0} Petak', AppColors.chipBg, AppColors.title),
-                      const Spacer(),
-                      TextButton.icon(
-                        onPressed: _addLand,
-                        icon: const Icon(Icons.add, size: 17),
-                        label: const Text('Tambah'),
+                      _badge(
+                        '${_lahanList?.length ?? 0} Petak',
+                        AppColors.chipBg,
+                        AppColors.title,
                       ),
                     ],
                   ),
                   const SizedBox(height: 10),
-                  if (_lahanList == null || _lahanList!.isEmpty)
-                    const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 20),
-                      child: Center(
-                        child: Text('Belum ada data lahan.'),
-                      ),
-                    )
-                  else
-                    for (final landMap in _lahanList!) ...[
-                      _landCard(landMap),
-                      const SizedBox(height: 14),
-                    ],
-                  OutlinedButton.icon(
-                    onPressed: _addLand,
-                    icon: const Icon(Icons.add_circle_outline_rounded),
-                    label: const Padding(
-                      padding: EdgeInsets.symmetric(vertical: 15),
-                      child: Text('Tambah Lahan Baru'),
-                    ),
-                  ),
+                  _lahanPreview(),
                 ]),
               ),
             ),
@@ -138,56 +146,119 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _header() => Container(
-    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-    decoration: const BoxDecoration(
-      color: AppColors.background,
-      boxShadow: [
-        BoxShadow(
-          color: AppColors.shadow,
-          blurRadius: 8,
-          offset: Offset(0, 1),
+  /// Cuplikan lahan di Beranda: maksimal 2 kartu per halaman.
+  /// Jika lebih dari 2, halaman bisa digeser (swipe) dengan indikator titik.
+  Widget _lahanPreview() {
+    final list = _lahanList ?? const <Map<String, dynamic>>[];
+
+    if (list.isEmpty) {
+      return Container(
+        padding: const EdgeInsets.all(20),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(16),
+          border: Border.all(color: AppColors.border),
         ),
-      ],
-    ),
-    child: Row(
-      children: [
-        Container(
-          width: 32,
-          height: 32,
-          decoration: BoxDecoration(
-            color: AppColors.primary,
-            borderRadius: BorderRadius.circular(8),
-          ),
-          child: const Icon(Icons.eco_rounded, color: Colors.white, size: 20),
-        ),
-        const SizedBox(width: 8),
-        Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
+        child: Column(
           children: [
+            Icon(
+              Icons.eco_outlined,
+              size: 44,
+              color: AppColors.primary.withAlpha(120),
+            ),
+            const SizedBox(height: 12),
             Text(
-              'CAPSEE',
+              'Belum ada data lahan.',
+              style: _style(14, AppColors.title, FontWeight.w700),
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Tambahkan petak lahan pertama Anda untuk mulai memantau.',
+              textAlign: TextAlign.center,
               style: _style(
-                10,
-                AppColors.primary,
-                FontWeight.w800,
-                letterSpacing: 1,
+                12,
+                AppColors.subtitle,
+                FontWeight.w400,
+                height: 1.4,
               ),
             ),
-            Text(
-              'Dashboard',
-              style: _style(18, AppColors.title, FontWeight.w700, height: 1),
+            const SizedBox(height: 16),
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _addLand,
+                icon: const Icon(Icons.add_circle_outline_rounded),
+                label: const Text('Tambah Lahan'),
+              ),
             ),
           ],
         ),
-        const Spacer(),
-        const CircleAvatar(
-          radius: 16,
-          backgroundColor: AppColors.primary,
-          child: Icon(Icons.person_rounded, color: Colors.white, size: 18),
+      );
+    }
+
+    final pages = <List<Map<String, dynamic>>>[];
+    for (var i = 0; i < list.length; i += 2) {
+      pages.add(list.sublist(i, (i + 2).clamp(0, list.length)));
+    }
+
+    if (pages.length == 1) {
+      return _lahanPageContent(pages.first);
+    }
+
+    return Column(
+      children: [
+        SizedBox(
+          height: 540,
+          child: PageView.builder(
+            controller: _lahanPageController,
+            itemCount: pages.length,
+            onPageChanged: (i) => setState(() => _lahanPage = i),
+            itemBuilder: (_, i) => _lahanPageContent(pages[i]),
+          ),
+        ),
+        const SizedBox(height: 10),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            for (var i = 0; i < pages.length; i++)
+              AnimatedContainer(
+                duration: const Duration(milliseconds: 200),
+                margin: const EdgeInsets.symmetric(horizontal: 3),
+                width: _lahanPage == i ? 18 : 7,
+                height: 7,
+                decoration: BoxDecoration(
+                  color: _lahanPage == i
+                      ? AppColors.primary
+                      : AppColors.outlineVariant,
+                  borderRadius: BorderRadius.circular(4),
+                ),
+              ),
+          ],
         ),
       ],
-    ),
+    );
+  }
+
+  Widget _lahanPageContent(List<Map<String, dynamic>> page) {
+    return Column(
+      children: [
+        for (final land in page) ...[
+          LandCard(
+            land: land,
+            onDetail: () => _openLandDetail(land),
+            onScan: _openScan,
+          ),
+          const SizedBox(height: 14),
+        ],
+      ],
+    );
+  }
+
+  Widget _header() => HomeTopBar(
+    title: 'Dashboard',
+    unreadCount: _unreadCount,
+    onNotifikasi: _openNotifikasi,
+    onAkun: _openAkun,
   );
 
   Widget _greeting() => Column(
@@ -219,9 +290,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
           IconButton.filledTonal(
-            onPressed: () => _message('Membuka riwayat pindaian...'),
+            onPressed: _openRiwayatScan,
             icon: const Icon(Icons.document_scanner_rounded),
             color: AppColors.primary,
+            tooltip: 'Riwayat pindaian',
           ),
         ],
       ),
@@ -358,160 +430,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
     ),
   );
 
-  Widget _landCard(Map<String, dynamic> land) {
-    final title = land['nama'] ?? 'Petak Lahan';
-    final location = '${land['kecamatan'] ?? ''}, ${land['kota'] ?? ''}'.trim();
-    final phase = '${land['umur_tanaman_bulan'] ?? 0} Bulan';
-    final category = 'BLOK HORTIKULTURA'; // Bisa dari API jika ada
-    
-    // Status dummy karena detail status dan jadwal didapat dari endpoint lain
-    final status = 'Sedang Dipantau';
-    final statusDetail = 'Data Tersinkronisasi';
-    final notice = 'Interval pupuk tiap ${land['interval_pupuk_minggu']} minggu.';
-    final warning = false; 
-
-    final color = warning ? AppColors.error : AppColors.primary;
-    return Card(
-      elevation: 1,
-      color: Colors.white,
-      child: Padding(
-        padding: const EdgeInsets.all(14),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Container(
-                  width: 64,
-                  height: 64,
-                  decoration: BoxDecoration(
-                    color: warning
-                        ? AppColors.error.withAlpha(25)
-                        : AppColors.primarySoft,
-                    borderRadius: BorderRadius.circular(8),
-                  ),
-                  child: Icon(Icons.eco_rounded, color: color, size: 30),
-                ),
-                const SizedBox(width: 10),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        category,
-                        style: _style(
-                          10,
-                          color,
-                          FontWeight.w700,
-                          letterSpacing: .4,
-                        ),
-                      ),
-                      const SizedBox(height: 3),
-                      Text(
-                        title,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: _style(13, AppColors.title, FontWeight.w700),
-                      ),
-                      Text(
-                        location,
-                        style: _style(11, AppColors.subtitle, FontWeight.w400),
-                      ),
-                      Text(
-                        phase,
-                        style: _style(11, AppColors.title, FontWeight.w600),
-                      ),
-                    ],
-                  ),
-                ),
-              ],
-            ),
-            const SizedBox(height: 11),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-              decoration: BoxDecoration(
-                color:
-                    (warning
-                            ? AppColors.errorContainer
-                            : AppColors.primarySoft)
-                        .withAlpha(130),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.verified_rounded, color: color, size: 19),
-                  const SizedBox(width: 7),
-                  Expanded(
-                    child: Text(
-                      status,
-                      style: _style(12, color, FontWeight.w700),
-                    ),
-                  ),
-                  Text(
-                    statusDetail,
-                    style: _style(10, color, FontWeight.w600),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 9),
-            Container(
-              padding: const EdgeInsets.all(9),
-              decoration: BoxDecoration(
-                color: AppColors.chipBg,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    warning
-                        ? Icons.notification_important_rounded
-                        : Icons.event_available_rounded,
-                    color: color,
-                    size: 17,
-                  ),
-                  const SizedBox(width: 7),
-                  Expanded(
-                    child: Text(
-                      notice,
-                      style: _style(
-                        11,
-                        AppColors.title,
-                        FontWeight.w400,
-                        height: 1.3,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 11),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton(
-                    onPressed: () => _openLandDetail(land),
-                    child: const Text('Lihat Detail'),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: _openScan,
-                    icon: const Icon(Icons.photo_camera_rounded, size: 17),
-                    label: Text(warning ? 'Pindai Ulang' : 'Pindai Daun'),
-                  ),
-                ),
-              ],
-            ),
-          ],
-        ),
-      ),
-    );
-  }
-
   Widget _badge(String label, Color background, Color foreground) => Container(
     padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
     decoration: BoxDecoration(
@@ -542,8 +460,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
       );
 
       // Panggil backend: ini akan otomatis kompres, upload ke Cloudinary, dan simpan ke DB!
+<<<<<<< HEAD
       final res = await uploadScan(
         file: picked,
+=======
+      await uploadScan(
+        file: File(picked.path),
+>>>>>>> 36cd82eef4001c67b35f49e0ae33d50dd2a6c051
         idLahan: idLahanTarget,
         bagianTanaman: 'daun', // Default dari dashboard
       );
@@ -571,33 +494,99 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final result = await Navigator.of(context).push(
       MaterialPageRoute(builder: (_) => const TambahLahanPage()),
     );
-    if (result == true) {
+    if (result != null) {
       _loadData();
+    }
+  }
+
+  Future<void> _openEditLahan(Map<String, dynamic> land) async {
+    final id = land['id'] as String?;
+    if (id == null || id.isEmpty) {
+      _message('Data lahan belum tersinkron, tidak bisa diedit.');
+      return;
+    }
+    final result = await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) =>
+            TambahLahanPage(initial: landDataFromMap(land), idLahan: id),
+      ),
+    );
+    if (result != null) {
+      _loadData();
+    }
+  }
+
+  Future<void> _openDeleteLahan(Map<String, dynamic> land) async {
+    final id = land['id'] as String?;
+    if (id == null || id.isEmpty) {
+      _message('Data lahan belum tersinkron, tidak bisa dihapus.');
+      return;
+    }
+
+    final konfirmasi = await showDialog<bool>(
+      context: context,
+      builder: (dialogContext) => AlertDialog(
+        title: const Text('Hapus Lahan?'),
+        content: Text(
+          'Lahan "${land['nama'] ?? 'ini'}" beserta seluruh jadwal dan '
+          'riwayatnya akan dihapus permanen. Tindakan ini tidak bisa dibatalkan.',
+        ),
+        actions: [
+          TextButton(
+            onPressed: () => Navigator.of(dialogContext).pop(false),
+            child: const Text('Batal'),
+          ),
+          FilledButton(
+            onPressed: () => Navigator.of(dialogContext).pop(true),
+            style: FilledButton.styleFrom(backgroundColor: AppColors.error),
+            child: const Text('Hapus'),
+          ),
+        ],
+      ),
+    );
+
+    if (konfirmasi != true) return;
+
+    try {
+      await hapusLahan(id);
+      if (!mounted) return;
+      _message('Lahan berhasil dihapus.');
+      _loadData();
+    } catch (e) {
+      if (!mounted) return;
+      _message('Gagal menghapus lahan: $e');
     }
   }
 
   void _openLandDetail(Map<String, dynamic> land) {
     Navigator.of(context).push(
       MaterialPageRoute(
-        builder: (_) => LandDetailScreen(
-          land: LandData(
-            id: land['id'] as String?,
-            name: land['nama'] ?? 'Lahan',
-            province: land['provinsi'] ?? '',
-            city: land['kota'] ?? '',
-            district: land['kecamatan'] ?? '',
-            plantAgeMonths: land['umur_tanaman_bulan'] ?? 1,
-            lastWatered: land['tanggal_terakhir_siram'] != null 
-                ? (DateTime.tryParse(land['tanggal_terakhir_siram']) ?? DateTime.now()) 
-                : DateTime.now(),
-            lastFertilized: land['tanggal_terakhir_pupuk'] != null 
-                ? (DateTime.tryParse(land['tanggal_terakhir_pupuk']) ?? DateTime.now()) 
-                : DateTime.now(),
-            fertilizeIntervalWeeks: land['interval_pupuk_minggu'] ?? 1,
-          ),
-        ),
+        builder: (_) => LandDetailScreen(land: landDataFromMap(land)),
       ),
     ).then((_) => _loadData()); // Muat ulang setelah kembali dari detail
+  }
+
+  Future<void> _openNotifikasi() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const NotifikasiScreen()),
+    );
+    // Sinkronkan badge setelah pengguna mungkin menandai notifikasi dibaca.
+    _loadData();
+  }
+
+  Future<void> _openAkun() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(builder: (_) => const AkunScreen()),
+    );
+    _loadData();
+  }
+
+  Future<void> _openRiwayatScan() async {
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => RiwayatScanScreen(items: _scanHistory, onScan: _openScan),
+      ),
+    );
   }
 
   void _message(String message) => ScaffoldMessenger.of(
@@ -689,11 +678,9 @@ class _BottomNav extends StatelessWidget {
             children: [
               Row(
                 children: [
-                  _tab(0, Icons.local_florist_outlined, Icons.local_florist, 'Dashboard'),
-                  _tab(1, Icons.history_outlined, Icons.history_rounded, 'Riwayat'),
+                  _tab(0, Icons.home_outlined, Icons.home_rounded, 'Beranda'),
                   const SizedBox(width: 76),
-                  _tab(2, Icons.notifications_none_rounded, Icons.notifications_rounded, 'Notifikasi'),
-                  _tab(3, Icons.manage_accounts_outlined, Icons.manage_accounts_rounded, 'Akun'),
+                  _tab(1, Icons.grass_outlined, Icons.grass_rounded, 'Lahan'),
                 ],
               ),
               Positioned(

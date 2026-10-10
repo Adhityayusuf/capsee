@@ -4,18 +4,20 @@ import 'package:flutter_test/flutter_test.dart';
 import 'package:capsee/screens/home/dashboard_screen.dart';
 
 void main() {
-  testWidgets('bottom nav punya 5 slot dan tab berfungsi', (tester) async {
+  testWidgets('bottom nav punya tab Beranda & Lahan plus tombol Scan', (
+    tester,
+  ) async {
     await tester.pumpWidget(const MaterialApp(home: DashboardScreen()));
     await tester.pump();
 
-    expect(find.text('Riwayat'), findsOneWidget);
+    expect(find.text('Beranda'), findsOneWidget);
+    expect(find.text('Lahan'), findsOneWidget);
     expect(find.text('Scan'), findsOneWidget);
-    expect(find.text('Notifikasi'), findsOneWidget);
-    expect(find.text('Akun'), findsOneWidget);
 
-    await tester.tap(find.text('Riwayat'));
+    await tester.tap(find.text('Lahan'));
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('Riwayat Scan'), findsOneWidget);
-    expect(find.text('Riwayat masih kosong'), findsOneWidget);
+
+    // Tab Lahan menampilkan tombol Tambah di header-nya.
+    expect(find.text('Tambah'), findsOneWidget);
   });
 }

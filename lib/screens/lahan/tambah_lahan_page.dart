@@ -1,35 +1,77 @@
 import 'package:flutter/material.dart';
 
 import '../../core/app_colors.dart';
+import '../../models/land_data.dart';
 import '../../services/services.dart';
 
 class TambahLahanPage extends StatefulWidget {
-  const TambahLahanPage({super.key});
+  /// Jika [initial] atau [idLahan] diisi, halaman ini menjadi form edit lahan.
+  final LandData? initial;
+  final String? idLahan;
+
+  const TambahLahanPage({super.key, this.initial, this.idLahan});
 
   @override
   State<TambahLahanPage> createState() => _TambahLahanPageState();
 }
 
 class _TambahLahanPageState extends State<TambahLahanPage> {
+  bool get _isEdit => widget.initial != null || widget.idLahan != null;
+
   // Controller input
-  final TextEditingController _namaLahanController = TextEditingController(
-    text: 'Petak Cabai Rawit Blok A',
-  );
-  final TextEditingController _siramController = TextEditingController(
-    text: '24 Okt 2024',
-  );
-  final TextEditingController _pupukController = TextEditingController(
-    text: '18 Okt 2024',
-  );
+  late final TextEditingController _namaLahanController;
+  late final TextEditingController _siramController;
+  late final TextEditingController _pupukController;
 
   // State Dropdown
-  String _selectedProvince = 'jabar';
-  String _selectedCity = 'kbb';
-  String _selectedDistrict = 'lembang';
+  late String _selectedProvince;
+  late String _selectedCity;
+  late String _selectedDistrict;
 
   // State Umur Tanaman & Interval
-  int _selectedAgeMonth = 3;
-  int _selectedIntervalWeek = 1;
+  late int _selectedAgeMonth;
+  late int _selectedIntervalWeek;
+
+  @override
+  void initState() {
+    super.initState();
+    final initial = widget.initial;
+    _namaLahanController = TextEditingController(
+      text: initial?.name ?? 'Petak Cabai Rawit Blok A',
+    );
+    _siramController = TextEditingController(text: '24 Okt 2024');
+    _pupukController = TextEditingController(text: '18 Okt 2024');
+    _selectedProvince = _matchProvince(initial?.province);
+    _selectedCity = _matchCity(initial?.city);
+    _selectedDistrict = _matchDistrict(initial?.district);
+    _selectedAgeMonth = (initial?.plantAgeMonths ?? 3).clamp(1, 5).toInt();
+    _selectedIntervalWeek = initial?.fertilizeIntervalWeeks ?? 1;
+  }
+
+  // Nilai dropdown memakai kode; petakan juga nama lengkap dari backend.
+  static String _matchProvince(String? value) => switch ((value ?? '').toLowerCase()) {
+        'jabar' || 'jawa barat' => 'jabar',
+        'jateng' || 'jawa tengah' => 'jateng',
+        'jatim' || 'jawa timur' => 'jatim',
+        'sumut' || 'sumatera utara' => 'sumut',
+        _ => 'jabar',
+      };
+
+  static String _matchCity(String? value) => switch ((value ?? '').toLowerCase()) {
+        'kbb' || 'kab. bandung barat' || 'bandung barat' => 'kbb',
+        'bdg' || 'kab. bandung' || 'bandung' => 'bdg',
+        'grt' || 'kab. garut' || 'garut' => 'grt',
+        'cjr' || 'kab. cianjur' || 'cianjur' => 'cjr',
+        _ => 'kbb',
+      };
+
+  static String _matchDistrict(String? value) => switch ((value ?? '').toLowerCase()) {
+        'lembang' => 'lembang',
+        'parongpong' => 'parongpong',
+        'cisarua' => 'cisarua',
+        'ngamprah' => 'ngamprah',
+        _ => 'lembang',
+      };
 
   final Map<int, String> _agePhases = {
     1: 'Fase Vegetatif Awal',
@@ -68,14 +110,33 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
     setState(() => _isLoading = true);
 
     try {
-      await tambahLahan(
-        nama: _namaLahanController.text.trim(),
-        provinsi: _selectedProvince,
-        kota: _selectedCity,
-        kecamatan: _selectedDistrict,
-        umurTanamanBulan: _selectedAgeMonth,
-        intervalPupukMinggu: _selectedIntervalWeek,
-      );
+      final nama = _namaLahanController.text.trim();
+      final Map<String, dynamic> lahan;
+
+      if (_isEdit) {
+        final id = widget.idLahan ?? widget.initial?.id;
+        if (id == null || id.isEmpty) {
+          throw ApiException('ID lahan tidak ditemukan.', 0);
+        }
+        lahan = await editLahan(
+          id,
+          nama: nama,
+          provinsi: _selectedProvince,
+          kota: _selectedCity,
+          kecamatan: _selectedDistrict,
+          umurTanamanBulan: _selectedAgeMonth,
+          intervalPupukMinggu: _selectedIntervalWeek,
+        );
+      } else {
+        lahan = await tambahLahan(
+          nama: nama,
+          provinsi: _selectedProvince,
+          kota: _selectedCity,
+          kecamatan: _selectedDistrict,
+          umurTanamanBulan: _selectedAgeMonth,
+          intervalPupukMinggu: _selectedIntervalWeek,
+        );
+      }
 
       if (!mounted) return;
       setState(() => _isLoading = false);
@@ -87,12 +148,18 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
           content: Row(
             mainAxisSize: MainAxisSize.min,
-            children: const [
-              Icon(Icons.verified, color: AppColors.secondaryContainer, size: 20),
-              SizedBox(width: 8),
+            children: [
+              const Icon(
+                Icons.verified,
+                color: AppColors.secondaryContainer,
+                size: 20,
+              ),
+              const SizedBox(width: 8),
               Text(
-                'Data kebun berhasil ditambahkan!',
-                style: TextStyle(
+                _isEdit
+                    ? 'Data kebun berhasil diperbarui!'
+                    : 'Data kebun berhasil ditambahkan!',
+                style: const TextStyle(
                   color: Colors.white,
                   fontWeight: FontWeight.w600,
                 ),
@@ -102,9 +169,9 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
         ),
       );
 
-      // Pop dan kirimkan hasil true agar dashboard merefresh data
+      // Pop dan kirimkan data lahan terbaru agar pemanggil bisa merefresh.
       Future.delayed(const Duration(milliseconds: 500), () {
-        if (mounted) Navigator.maybePop(context, true);
+        if (mounted) Navigator.maybePop(context, lahan);
       });
     } catch (e) {
       if (!mounted) return;
@@ -128,13 +195,13 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
           onPressed: () => Navigator.maybePop(context),
         ),
         title: Row(
-          children: const [
-            Icon(Icons.eco, color: primaryGreen, size: 28),
-            SizedBox(width: 8),
+          children: [
+            const Icon(Icons.eco, color: primaryGreen, size: 28),
+            const SizedBox(width: 8),
             Expanded(
               child: Text(
-                'Tambah Data Lahan',
-                style: TextStyle(
+                _isEdit ? 'Edit Data Lahan' : 'Tambah Data Lahan',
+                style: const TextStyle(
                   color: textDark,
                   fontWeight: FontWeight.bold,
                   fontSize: 18,
@@ -484,7 +551,9 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                       )
                     : const Icon(Icons.task_alt, color: Colors.white),
                 label: Text(
-                  _isLoading ? 'Menyimpan...' : 'Simpan Data Lahan',
+                  _isLoading
+                      ? 'Menyimpan...'
+                      : (_isEdit ? 'Simpan Perubahan' : 'Simpan Data Lahan'),
                   style: const TextStyle(
                     fontSize: 16,
                     fontWeight: FontWeight.bold,
