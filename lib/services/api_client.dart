@@ -4,14 +4,54 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-/// Satu-satunya tempat yang tahu alamat backend.
-/// Ganti ke URL Railway/Render/VPS saat production.
-/// Bisa di-override saat build/run tanpa ubah kode:
-///   flutter run --dart-define=BASE_URL=http://192.168.1.10:8000
-const String baseUrl = String.fromEnvironment(
-  'BASE_URL',
-  defaultValue: 'http://127.0.0.1:8000',
-);
+import 'package:flutter/foundation.dart';
+
+/// Alamat default backend yang otomatis menyesuaikan platform:
+/// - Android Emulator: 'http://10.0.2.2:8000' (karena 127.0.0.1 di emulator merujuk ke hp itu sendiri)
+/// - Web / Desktop (Windows/macOS/Linux) / iOS Simulator: 'http://127.0.0.1:8000'
+/// - Bisa dioverride saat build: --dart-define=BASE_URL=http://...
+/// - Bisa juga disimpan dinamis di SharedPreferences jika ingin ubah di runtime.
+String get defaultBaseUrl {
+  const envUrl = String.fromEnvironment('BASE_URL');
+  if (envUrl.isNotEmpty) return envUrl;
+
+  if (kIsWeb) {
+    return 'http://127.0.0.1:8000';
+  }
+  if (Platform.isAndroid) {
+    return 'http://10.0.2.2:8000';
+  }
+  return 'http://127.0.0.1:8000';
+}
+
+/// Alamat backend saat ini.
+String _cachedBaseUrl = defaultBaseUrl;
+String get baseUrl => _cachedBaseUrl;
+
+/// Inisialisasi baseUrl (opsional dari SharedPreferences jika pengguna pernah mengubah IP di app).
+Future<String> initBaseUrl() async {
+  final prefs = await SharedPreferences.getInstance();
+  final saved = prefs.getString('custom_base_url');
+  if (saved != null && saved.isNotEmpty) {
+    _cachedBaseUrl = saved;
+  } else {
+    _cachedBaseUrl = defaultBaseUrl;
+  }
+  return _cachedBaseUrl;
+}
+
+/// Ubah alamat baseUrl secara dinamis saat runtime (misal saat connect ke HP fisik/WiFi).
+Future<void> setCustomBaseUrl(String? url) async {
+  final prefs = await SharedPreferences.getInstance();
+  if (url == null || url.trim().isEmpty) {
+    await prefs.remove('custom_base_url');
+    _cachedBaseUrl = defaultBaseUrl;
+  } else {
+    final cleanUrl = url.trim().replaceAll(RegExp(r'/+$'), '');
+    await prefs.setString('custom_base_url', cleanUrl);
+    _cachedBaseUrl = cleanUrl;
+  }
+}
 
 /// Timeout standar untuk semua request HTTP.
 const Duration _requestTimeout = Duration(seconds: 20);
@@ -86,7 +126,7 @@ Future<http.Response> apiPost(
 }
 
 /// PUT JSON ke `$baseUrl$path`.
-\Future<http.Response> apiPut(
+Future<http.Response> apiPut(
   String path, {
   Map<String, String>? headers,
   Object? body,
