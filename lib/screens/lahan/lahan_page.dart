@@ -122,7 +122,12 @@ const plots = <Plot>[
 // ───────────────────────── Halaman Utama ─────────────────────────
 class LahanPage extends StatefulWidget {
   final bool isActive;
-  const LahanPage({super.key, this.isActive = false});
+
+  /// Dipanggil setelah data berubah (tambah/edit/hapus) agar induk
+  /// (dashboard) bisa memuat ulang daftarnya juga.
+  final VoidCallback? onChanged;
+
+  const LahanPage({super.key, this.isActive = false, this.onChanged});
 
   @override
   State<LahanPage> createState() => _LahanPageState();
@@ -174,7 +179,10 @@ class _LahanPageState extends State<LahanPage> {
       context,
     ).push(MaterialPageRoute(builder: (_) => const TambahLahanPage()));
     // TambahLahanPage mengembalikan true jika simpan sukses.
-    if (result == true && mounted) _load();
+    if (result == true && mounted) {
+      _load();
+      widget.onChanged?.call();
+    }
   }
 
   void _openDetail(Map<String, dynamic> land) {
@@ -208,7 +216,10 @@ class _LahanPageState extends State<LahanPage> {
             ),
           ),
         )
-        .then((_) => _load());
+        .then((_) {
+          _load();
+          widget.onChanged?.call();
+        });
   }
 
   Future<void> _openEdit(Map<String, dynamic> land) async {
@@ -243,7 +254,10 @@ class _LahanPageState extends State<LahanPage> {
         ),
       ),
     );
-    if (result == true && mounted) _load();
+    if (result == true && mounted) {
+      _load();
+      widget.onChanged?.call();
+    }
   }
 
   Future<void> _hapus(Map<String, dynamic> land) async {
@@ -277,6 +291,7 @@ class _LahanPageState extends State<LahanPage> {
       if (!mounted) return;
       showSuccessPopup(context, 'Lahan dihapus.');
       _load();
+      widget.onChanged?.call();
     } catch (e) {
       if (!mounted) return;
       showErrorPopup(context, 'Gagal menghapus: ${pesanError(e)}');

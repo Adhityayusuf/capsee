@@ -21,3 +21,16 @@ Future<Map<String, dynamic>> getCuacaLahan(String idLahan) async {
   );
   return parseResponse(res);
 }
+
+/// Ambil prakiraan cuaca BMKG umum mengikuti identitas diri pengguna
+/// (provinsi + kota + kecamatan di profil). Dipakai kartu cuaca dashboard.
+///
+/// Backend mengembalikan 400 kalau identitas belum lengkap.
+Future<Map<String, dynamic>> getCuacaProfil() async {
+  final res = await apiGet(
+    '/api/cuaca/profil',
+    headers: await headerAuth(),
+    timeout: cuacaTimeout,
+  );
+  return parseResponse(res);
+}

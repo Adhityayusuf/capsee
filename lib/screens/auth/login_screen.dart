@@ -7,7 +7,7 @@ import '../../widgets/auth_widgets.dart';
 import '../../widgets/popup_notifikasi.dart';
 import '../../services/services.dart';
 import '../home/dashboard_screen.dart';
-import 'onboarding_screen.dart';
+import 'lengkapi_identitas_screen.dart';
 import 'register_screen.dart';
 import 'lupa_sandi_screen.dart';
 
@@ -48,13 +48,13 @@ class _LoginScreenState extends State<LoginScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
 
-      if (hasil.sudahPunyaLahan) {
+      if (hasil.profilLengkap) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const DashboardScreen()),
         );
       } else {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+          MaterialPageRoute(builder: (_) => const LengkapiIdentitasScreen()),
         );
       }
     } catch (e) {

@@ -9,18 +9,38 @@ class HasilLogin {
   final String token;
   final Map<String, dynamic> pengguna;
   final bool sudahPunyaLahan;
+  final bool profilLengkap;
 
   HasilLogin({
     required this.token,
     required this.pengguna,
     required this.sudahPunyaLahan,
+    required this.profilLengkap,
   });
 
-  factory HasilLogin.fromJson(Map<String, dynamic> json) => HasilLogin(
-        token: json['token'] as String,
-        pengguna: json['pengguna'] as Map<String, dynamic>,
-        sudahPunyaLahan: json['sudah_punya_lahan'] as bool? ?? false,
-      );
+  factory HasilLogin.fromJson(Map<String, dynamic> json) {
+    final pengguna = Map<String, dynamic>.from(
+      (json['pengguna'] as Map?) ?? {},
+    );
+    final flag = json['profil_lengkap'] as bool?;
+    // Fallback untuk backend lama: hitung dari field profil.
+    bool lengkap = flag ?? true;
+    if (flag == null) {
+      lengkap = true;
+      for (final key in ['nama', 'nomor_hp', 'provinsi', 'kota', 'kecamatan']) {
+        if ((pengguna[key] ?? '').toString().trim().isEmpty) {
+          lengkap = false;
+          break;
+        }
+      }
+    }
+    return HasilLogin(
+      token: json['token'] as String,
+      pengguna: pengguna,
+      sudahPunyaLahan: json['sudah_punya_lahan'] as bool? ?? false,
+      profilLengkap: lengkap,
+    );
+  }
 }
 
 // ─────────────────────────────────────────────────────────
