@@ -11,6 +11,16 @@ router = APIRouter(prefix="/api/auth", tags=["Auth"])
 
 _EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
+_PROFIL_COLUMNS = "id, nama, email, nomor_hp, provinsi, kota, kecamatan"
+
+
+def _profil_lengkap(pengguna: dict) -> bool:
+    for key in ("nama", "nomor_hp", "provinsi", "kota", "kecamatan"):
+        value = pengguna.get(key)
+        if not value or not str(value).strip():
+            return False
+    return True
+
 
 class RegisterRequest(BaseModel):
     nama: str
@@ -62,20 +72,21 @@ def register(data: RegisterRequest):
             raise HTTPException(status_code=409, detail="Email sudah terdaftar")
 
         cur.execute(
-            """
+            f"""
             INSERT INTO pengguna (id, nama, email, nomor_hp, kata_sandi_hash)
             VALUES (%s, %s, %s, %s, %s)
-            RETURNING id, nama, email, nomor_hp
+            RETURNING {_PROFIL_COLUMNS}
             """,
             (str(uuid.uuid4()), data.nama, data.email, data.nomor_hp,
              hash_password(data.password)),
         )
         pengguna = row_to_dict(cur, cur.fetchone())
-        # Langsung beri token agar aplikasi bisa masuk tanpa login ulang.
+        # Pendaftar baru pasti belum punya lokasi → wajib isi identitas dulu.
         return {
             "token": buat_token(pengguna["id"]),
             "pengguna": pengguna,
             "sudah_punya_lahan": False,
+            "profil_lengkap": False,
         }
 
 
@@ -85,7 +96,7 @@ def login(data: LoginRequest):
         cur = conn.cursor()
 
         cur.execute(
-            "SELECT id, nama, email, nomor_hp, kata_sandi_hash, google_id FROM pengguna WHERE email = %s",
+            f"SELECT {_PROFIL_COLUMNS}, kata_sandi_hash, google_id FROM pengguna WHERE email = %s",
             (data.email,),
         )
         row = cur.fetchone()
@@ -93,22 +104,36 @@ def login(data: LoginRequest):
         if not row:
             raise HTTPException(status_code=401, detail="Email atau password salah")
 
+        # Kolom: id, nama, email, nomor_hp, provinsi, kota, kecamatan, hash, google_id
+        kata_sandi_hash = row[7]
+        google_id = row[8]
+
         # Akun Google (kata_sandi_hash NULL) tidak bisa login pakai password.
-        if not row[4]:
+        if not kata_sandi_hash:
             raise HTTPException(
                 status_code=401,
                 detail="Akun ini terdaftar via Google. Silakan masuk dengan Google.",
             )
 
-        if not verify_password(data.password, row[4]):
+        if not verify_password(data.password, kata_sandi_hash):
             raise HTTPException(status_code=401, detail="Email atau password salah")
 
         id_pengguna = row[0]
+        pengguna = {
+            "id": row[0],
+            "nama": row[1],
+            "email": row[2],
+            "nomor_hp": row[3],
+            "provinsi": row[4],
+            "kota": row[5],
+            "kecamatan": row[6],
+        }
         cur.execute("SELECT id FROM lahan WHERE id_pengguna = %s LIMIT 1", (id_pengguna,))
         sudah_punya_lahan = cur.fetchone() is not None
 
         return {
             "token": buat_token(id_pengguna),
-            "pengguna": {"id": row[0], "nama": row[1], "email": row[2], "nomor_hp": row[3]},
+            "pengguna": pengguna,
             "sudah_punya_lahan": sudah_punya_lahan,
+            "profil_lengkap": _profil_lengkap(pengguna),
         }

@@ -4,7 +4,11 @@ import 'core/app_theme.dart';
 import 'core/theme_mode_scope.dart';
 import 'screens/splash/splash_screen.dart';
 
-void main() {
+import 'services/api_client.dart';
+
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await initBaseUrl();
   runApp(const CapseeApp());
 }
 

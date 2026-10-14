@@ -74,6 +74,16 @@ class _AkunScreenState extends State<AkunScreen> {
     }
   }
 
+  /// Lokasi singkat dari identitas diri (sinkron dengan cuaca dashboard).
+  String _lokasiSingkat() {
+    final kec = (_profil?['kecamatan'] ?? '').toString().trim();
+    final kota = (_profil?['kota'] ?? '').toString().trim();
+    final prov = (_profil?['provinsi'] ?? '').toString().trim();
+    final bagian = [kec, kota].where((s) => s.isNotEmpty).join(', ');
+    if (bagian.isEmpty) return prov.isEmpty ? 'Lokasi belum diisi' : prov;
+    return prov.isEmpty ? bagian : '$bagian • $prov';
+  }
+
   List<_MenuItem> _getAccountItems(BuildContext context) {
     final p = context.palette;
     return [
@@ -344,7 +354,7 @@ class _AkunScreenState extends State<AkunScreen> {
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
-                                    'Mitra Tani Cabai Rawit • Jawa Timur',
+                                    _lokasiSingkat(),
                                     overflow: TextOverflow.ellipsis,
                                     style: AppText.bodySm(context).copyWith(
                                         fontWeight: FontWeight.w600),
@@ -464,7 +474,9 @@ class _AkunScreenState extends State<AkunScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                          _profil?['email'] ?? 'budi.santoso@agrimail.id',
+                          (_profil?['email'] ?? '').toString().isEmpty
+                              ? '-'
+                              : (_profil?['email'] ?? '').toString(),
                           overflow: TextOverflow.ellipsis,
                           style: AppText.bodySm(context)),
                     ),
@@ -484,7 +496,10 @@ class _AkunScreenState extends State<AkunScreen> {
                     Icon(Icons.phone_outlined, size: 18, color: p.icon),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(_profil?['nomor_hp'] ?? '+62 812-3456-7890',
+                      child: Text(
+                          (_profil?['nomor_hp'] ?? '').toString().isEmpty
+                              ? 'Belum diisi'
+                              : (_profil?['nomor_hp'] ?? '').toString(),
                           overflow: TextOverflow.ellipsis,
                           style: AppText.bodySm(context)),
                     ),

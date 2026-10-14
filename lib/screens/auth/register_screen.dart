@@ -11,7 +11,7 @@ import '../legal/privasi_screen.dart';
 import '../legal/syarat_screen.dart';
 import '../home/dashboard_screen.dart';
 import 'login_screen.dart';
-import 'onboarding_screen.dart';
+import 'lengkapi_identitas_screen.dart';
 
 class RegisterScreen extends StatefulWidget {
   const RegisterScreen({super.key});
@@ -83,14 +83,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
       if (!mounted) return;
       setState(() => _isLoading = false);
 
-      // Token sudah tersimpan oleh register() → langsung masuk aplikasi.
-      if (hasil.sudahPunyaLahan) {
+      // Pendaftar baru belum punya lokasi → wajib isi identitas dulu.
+      if (hasil.profilLengkap) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const DashboardScreen()),
         );
       } else {
         Navigator.of(context).pushReplacement(
-          MaterialPageRoute(builder: (_) => const OnboardingScreen()),
+          MaterialPageRoute(builder: (_) => const LengkapiIdentitasScreen()),
         );
       }
     } catch (e) {
