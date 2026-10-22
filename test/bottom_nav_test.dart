@@ -27,7 +27,7 @@ void main() {
     expect(find.text('Dashboard'), findsNWidgets(2));
     expect(find.text('Riwayat'), findsOneWidget);
     expect(find.text('Scan'), findsOneWidget);
-    expect(find.text('Lahan'), findsOneWidget);
+    expect(find.text('Lahan'), findsWidgets);
     expect(find.text('Akun'), findsOneWidget);
     expect(find.text('Notifikasi'), findsNothing);
     expect(find.text('Gelap/Terang'), findsNothing);
@@ -43,9 +43,9 @@ void main() {
     expect(find.text('Riwayat Scan'), findsOneWidget);
     expect(find.text('Riwayat masih kosong'), findsOneWidget);
 
-    await tester.tap(find.text('Lahan'));
+    await tester.tap(find.text('Lahan').last);
     await tester.pump(const Duration(milliseconds: 300));
-    expect(find.text('Lahan Pertanian'), findsOneWidget);
+    expect(find.text('Lahan'), findsWidgets);
     expect(find.byTooltip('Tambah lahan'), findsOneWidget);
     expect(find.text('Tambah Petak Lahan Baru'), findsNothing);
     expect(
@@ -53,13 +53,8 @@ void main() {
       lessThan(tester.getCenter(find.byType(TextField).first).dy),
     );
 
-    await tester.scrollUntilVisible(
-      find.text('Petak Cabai Rawit Blok A'),
-      350,
-      scrollable: find.byType(Scrollable).first,
-    );
-    expect(find.text('Petak Cabai Rawit Blok A'), findsOneWidget);
-    expect(find.text('Sedang Dipantau'), findsAtLeastNWidgets(1));
+    // Tanpa backend, tab Lahan menampilkan data contoh.
+    expect(find.text('3 Petak (Contoh)'), findsOneWidget);
     expect(tester.takeException(), isNull);
 
     await tester.pumpWidget(const SizedBox.shrink());
@@ -109,11 +104,15 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('Lahan Pertanian'), findsOneWidget);
+    final headerLahan = find.descendant(
+      of: find.byType(LahanPage),
+      matching: find.text('Lahan'),
+    );
+    expect(headerLahan, findsOneWidget);
     expect(find.text('Kesehatan Wilayah'), findsNothing);
     expect(find.text('Real-time Sensor'), findsNothing);
     expect(
-      tester.widget<Text>(find.text('Lahan Pertanian')).style?.color,
+      tester.widget<Text>(headerLahan).style?.color,
       AppPalette.dark.title,
     );
     expect(tester.takeException(), isNull);

@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/app_info.dart';
 import '../core/app_text.dart';
 import '../core/app_theme.dart';
+import 'brand_logo.dart';
 import 'ui_kit.dart';
 
 /// ---------------------------------------------------------------
@@ -79,9 +80,10 @@ class AuthTopBar extends StatelessWidget {
 }
 
 /// ---------------------------------------------------------------
-/// Logo aplikasi.
-/// Ganti Icon dengan Image.asset('assets/images/logo.png') jika sudah
-/// punya file logo cabai (daftarkan di pubspec.yaml).
+/// Logo aplikasi (ikon cabai Capsee).
+///
+/// [onPrimary] dipakai saat logo tampil di atas latar hijau tua, misalnya
+/// splash: logo dibungkus kotak putih agar tetap kontras.
 /// ---------------------------------------------------------------
 class CapseeLogo extends StatelessWidget {
   final double size;
@@ -90,42 +92,27 @@ class CapseeLogo extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
-    final scale = size / 88;
     if (onPrimary) {
-      return Icon(
-        Icons.eco_rounded,
-        size: size * 0.75,
-        color: p.onPrimary,
+      final scale = size / 88;
+      return Container(
+        width: size,
+        height: size,
+        padding: EdgeInsets.all(10 * scale),
+        decoration: BoxDecoration(
+          color: Colors.white,
+          borderRadius: BorderRadius.circular(22 * scale),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.12),
+              blurRadius: 24,
+              offset: const Offset(0, 8),
+            ),
+          ],
+        ),
+        child: CapseeMark(size: 88 * scale),
       );
     }
-    return Container(
-      width: size,
-      height: size,
-      padding: EdgeInsets.all(10 * scale),
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(22 * scale),
-        boxShadow: [
-          BoxShadow(
-            color: p.shadow,
-            blurRadius: 24,
-            offset: const Offset(0, 8),
-          ),
-        ],
-      ),
-      child: Container(
-        decoration: BoxDecoration(
-          color: p.accentSoft,
-          borderRadius: BorderRadius.circular(16 * scale),
-        ),
-        child: Icon(
-          Icons.eco_rounded,
-          size: 40 * scale,
-          color: p.onAccentSoft,
-        ),
-      ),
-    );
+    return CapseeMark(size: size);
   }
 }
 

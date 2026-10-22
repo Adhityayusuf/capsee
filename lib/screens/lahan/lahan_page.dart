@@ -8,6 +8,7 @@ import '../../widgets/popup_notifikasi.dart';
 import '../../widgets/ui_kit.dart';
 import 'detail_lahan_screen.dart';
 import 'tambah_lahan_page.dart';
+import '../../widgets/brand_logo.dart';
 
 // ───────────────────────── Warna & Tema ─────────────────────────
 class LahanColors {
@@ -617,15 +618,7 @@ class _LahanHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: p.primary,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(Icons.eco_rounded, color: p.onPrimary, size: 20),
-          ),
+          const CapseeMark(size: 36),
           const SizedBox(width: 8),
           Expanded(
             child: Column(

@@ -518,13 +518,15 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                   ),
                 const SizedBox(height: 16),
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildFieldLabel(
-                      icon: Icons.pin_drop_outlined,
-                      label: 'Kecamatan',
+                    Expanded(
+                      child: _buildFieldLabel(
+                        icon: Icons.pin_drop_outlined,
+                        label: 'Kecamatan',
+                      ),
                     ),
-                    _buildSubTag('(menyesuaikan kota)'),
+                    const SizedBox(width: 8),
+                    Flexible(child: _buildSubTag('(menyesuaikan kota)')),
                   ],
                 ),
                 const SizedBox(height: 8),
@@ -585,29 +587,34 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
               tagTextColor: p.onAccentSoft,
               children: [
                 Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    _buildFieldLabel(
-                      icon: Icons.hourglass_top,
-                      label: 'Umur Tanaman',
+                    Expanded(
+                      child: _buildFieldLabel(
+                        icon: Icons.hourglass_top,
+                        label: 'Umur Tanaman',
+                      ),
                     ),
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 8,
-                        vertical: 4,
-                      ),
-                      decoration: BoxDecoration(
-                        color: p.accentSoft,
-                        borderRadius: BorderRadius.circular(
-                          AppSpace.radiusPill,
+                    const SizedBox(width: 8),
+                    Flexible(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(
+                          horizontal: 8,
+                          vertical: 4,
                         ),
-                      ),
-                      child: Text(
-                        _agePhases[_selectedAgeMonth] ?? '',
-                        style: AppText.micro(
-                          context,
-                          color: p.onAccentSoft,
-                        ).copyWith(fontWeight: FontWeight.w700),
+                        decoration: BoxDecoration(
+                          color: p.accentSoft,
+                          borderRadius: BorderRadius.circular(
+                            AppSpace.radiusPill,
+                          ),
+                        ),
+                        child: Text(
+                          _agePhases[_selectedAgeMonth] ?? '',
+                          textAlign: TextAlign.end,
+                          style: AppText.micro(
+                            context,
+                            color: p.onAccentSoft,
+                          ).copyWith(fontWeight: FontWeight.w700),
+                        ),
                       ),
                     ),
                   ],
@@ -840,23 +847,25 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
       children: [
         Icon(icon, size: 16, color: p.accent),
         const SizedBox(width: 6),
-        RichText(
-          text: TextSpan(
-            text: label,
-            style: AppText.body(
-              context,
-              color: p.title,
-            ).copyWith(fontWeight: FontWeight.w600),
-            children: [
-              if (isRequired)
-                TextSpan(
-                  text: ' *',
-                  style: AppText.body(
-                    context,
-                    color: p.error,
-                  ).copyWith(fontWeight: FontWeight.w700),
-                ),
-            ],
+        Flexible(
+          child: RichText(
+            text: TextSpan(
+              text: label,
+              style: AppText.body(
+                context,
+                color: p.title,
+              ).copyWith(fontWeight: FontWeight.w600),
+              children: [
+                if (isRequired)
+                  TextSpan(
+                    text: ' *',
+                    style: AppText.body(
+                      context,
+                      color: p.error,
+                    ).copyWith(fontWeight: FontWeight.w700),
+                  ),
+              ],
+            ),
           ),
         ),
       ],
@@ -871,7 +880,11 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
         color: p.surfaceAlt,
         borderRadius: BorderRadius.circular(AppSpace.radiusPill),
       ),
-      child: Text(text, style: AppText.caption(context)),
+      child: Text(
+        text,
+        textAlign: TextAlign.end,
+        style: AppText.caption(context),
+      ),
     );
   }
 
@@ -1026,87 +1039,20 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
     );
   }
 
-  /// Dialog daftar wilayah + kolom cari. Tinggi dikunci agar rapi.
+  /// Dialog daftar wilayah + kolom cari. Controller pencarian dipegang
+  /// oleh dialog itu sendiri supaya tidak di-dispose saat animasi tutup
+  /// masih berjalan (penyebab "controller used after being disposed").
   Future<void> _showWilayahDialog({
     required String label,
     required List<Wilayah> items,
     required ValueChanged<Wilayah> onSelect,
   }) async {
-    final query = TextEditingController();
-    List<Wilayah> filtered = items;
     final picked = await showDialog<Wilayah>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setD) => AlertDialog(
-          title: Text('Pilih $label', style: AppText.title(ctx)),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 420,
-            child: Column(
-              children: [
-                TextField(
-                  controller: query,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    hintText: 'Cari $label...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: const OutlineInputBorder(),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                  ),
-                  onChanged: (q) => setD(() {
-                    final s = q.trim().toLowerCase();
-                    filtered = s.isEmpty
-                        ? items
-                        : items
-                            .where((w) =>
-                                w.name.toLowerCase().contains(s))
-                            .toList();
-                  }),
-                ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: filtered.isEmpty
-                      ? Center(
-                          child: Text(
-                            'Tidak ditemukan.',
-                            style: AppText.bodySm(ctx),
-                          ),
-                        )
-                      : ListView.separated(
-                          shrinkWrap: true,
-                          itemCount: filtered.length,
-                          separatorBuilder: (_, _) =>
-                              const Divider(height: 1),
-                          itemBuilder: (_, i) {
-                            final w = filtered[i];
-                            return ListTile(
-                              dense: true,
-                              title: Text(
-                                w.name,
-                                style: AppText.body(ctx),
-                              ),
-                              onTap: () => Navigator.of(ctx).pop(w),
-                            );
-                          },
-                        ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Batal'),
-            ),
-          ],
-        ),
-      ),
+      builder: (_) => _WilayahPickerDialog(label: label, items: items),
     );
-    query.dispose();
-    if (picked != null) onSelect(picked);
+    if (!mounted || picked == null) return;
+    onSelect(picked);
   }
 
   Widget _buildNumberField({
@@ -1137,6 +1083,100 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
           borderSide: BorderSide(color: p.primary, width: 1.5),
         ),
       ),
+    );
+  }
+}
+
+/// Dialog pencarian wilayah. Controller dimiliki oleh widget ini agar
+/// siklus hidupnya sejalan dengan route dialog, bukan dengan pemanggil.
+class _WilayahPickerDialog extends StatefulWidget {
+  final String label;
+  final List<Wilayah> items;
+
+  const _WilayahPickerDialog({required this.label, required this.items});
+
+  @override
+  State<_WilayahPickerDialog> createState() => _WilayahPickerDialogState();
+}
+
+class _WilayahPickerDialogState extends State<_WilayahPickerDialog> {
+  final TextEditingController _query = TextEditingController();
+  late List<Wilayah> _filtered = widget.items;
+
+  @override
+  void dispose() {
+    _query.dispose();
+    super.dispose();
+  }
+
+  void _filter(String value) {
+    final s = value.trim().toLowerCase();
+    setState(() {
+      _filtered = s.isEmpty
+          ? widget.items
+          : widget.items
+              .where((w) => w.name.toLowerCase().contains(s))
+              .toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final available = MediaQuery.sizeOf(context).height * 0.55;
+    final height = available.clamp(240.0, 420.0);
+
+    return AlertDialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      title: Text('Pilih ${widget.label}', style: AppText.title(context)),
+      content: SizedBox(
+        width: double.maxFinite,
+        height: height,
+        child: Column(
+          children: [
+            TextField(
+              controller: _query,
+              decoration: InputDecoration(
+                hintText: 'Cari ${widget.label}...',
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
+                ),
+              ),
+              onChanged: _filter,
+            ),
+            const SizedBox(height: 8),
+            Expanded(
+              child: _filtered.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Tidak ditemukan.',
+                        style: AppText.bodySm(context),
+                      ),
+                    )
+                  : ListView.separated(
+                      itemCount: _filtered.length,
+                      separatorBuilder: (_, _) => const Divider(height: 1),
+                      itemBuilder: (_, i) {
+                        final w = _filtered[i];
+                        return ListTile(
+                          dense: true,
+                          title: Text(w.name, style: AppText.body(context)),
+                          onTap: () => Navigator.of(context).pop(w),
+                        );
+                      },
+                    ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Batal'),
+        ),
+      ],
     );
   }
 }

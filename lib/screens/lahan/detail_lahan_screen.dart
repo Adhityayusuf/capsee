@@ -31,7 +31,6 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   late LandData _land = widget.land;
 
   // State alur scan.
-  String _selectedOrgan = 'leaf';
   int _imageSource = 0;
   bool _isAnalyzing = false;
   bool _isDone = false;
@@ -224,7 +223,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       await uploadScan(
         file: pickedFile,
         idLahan: idLahan,
-        bagianTanaman: _selectedOrgan == 'leaf' ? 'daun' : 'buah',
+        bagianTanaman: 'daun',
       );
 
       if (!mounted) return;
@@ -282,13 +281,6 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         const SizedBox(height: 14),
         _buildScanTelemetryCard(),
         const SizedBox(height: 20),
-        _buildScanSectionLabel(
-          'Pindai Ulang',
-          'Tentukan organ dan sumber citra sebelum menganalisis',
-        ),
-        const SizedBox(height: 10),
-        _buildOrganSelector(),
-        const SizedBox(height: 16),
         _buildScanSectionLabel('Sumber Citra', null),
         const SizedBox(height: 10),
         _buildSourceSelector(),
@@ -320,108 +312,6 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
           Text(subtitle, style: AppText.bodySm(context)),
         ],
       ],
-    );
-  }
-
-  Widget _buildOrganSelector() {
-    return Row(
-      children: [
-        Expanded(
-          child: _organCard(
-            type: 'leaf',
-            title: 'Daun Tanaman',
-            subtitle: 'Bercak, kutu & tungau',
-            icon: Icons.eco_rounded,
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _organCard(
-            type: 'fruit',
-            title: 'Buah Cabai',
-            subtitle: 'Antraknosa & busuk buah',
-            icon: Icons.restaurant_rounded,
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _organCard({
-    required String type,
-    required String title,
-    required String subtitle,
-    required IconData icon,
-  }) {
-    final selected = _selectedOrgan == type;
-    final p = context.palette;
-    return InkWell(
-      onTap: () => setState(() => _selectedOrgan = type),
-      borderRadius: BorderRadius.circular(AppSpace.radiusTile),
-      child: AnimatedContainer(
-        duration: const Duration(milliseconds: 180),
-        padding: const EdgeInsets.all(14),
-        decoration: BoxDecoration(
-          color: selected ? p.surface : p.surfaceAlt,
-          borderRadius: BorderRadius.circular(AppSpace.radiusTile),
-          border: Border.all(
-            color: selected ? p.primary : p.border,
-            width: selected ? 2 : 1,
-          ),
-          boxShadow: selected
-              ? [
-                  BoxShadow(
-                    color: p.shadow,
-                    blurRadius: 6,
-                    offset: const Offset(0, 2),
-                  ),
-                ]
-              : null,
-        ),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: [
-                Container(
-                  width: 32,
-                  height: 32,
-                  decoration: BoxDecoration(
-                    color: selected ? p.accentSoft : p.surface,
-                    borderRadius: BorderRadius.circular(AppSpace.radiusTile),
-                  ),
-                  child: Icon(
-                    icon,
-                    size: 19,
-                    color: selected ? p.primary : p.icon,
-                  ),
-                ),
-                Container(
-                  width: 20,
-                  height: 20,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: selected ? p.primary : p.surfaceAlt,
-                  ),
-                  child: selected
-                      ? Icon(Icons.check, size: 14, color: p.onPrimary)
-                      : null,
-                ),
-              ],
-            ),
-            const SizedBox(height: 8),
-            Text(title, style: AppText.subtitle(context)),
-            const SizedBox(height: 2),
-            Text(
-              subtitle,
-              maxLines: 1,
-              overflow: TextOverflow.ellipsis,
-              style: AppText.caption(context),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -590,9 +480,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                             borderRadius: BorderRadius.circular(4),
                           ),
                           child: Text(
-                            _selectedOrgan == 'leaf'
-                                ? 'Fokus: Daun Utama (94%)'
-                                : 'Fokus: Buah Cabai (91%)',
+                            'Fokus: Daun Utama (94%)',
                             style: AppText.micro(
                               context,
                               color: Colors.white,

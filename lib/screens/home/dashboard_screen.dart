@@ -17,6 +17,7 @@ import '../notifikasi/notifikasi_screen.dart';
 import '../scan/hasil_scan_tidak_sehat.dart';
 import '../scan/riwayat_scan_screen.dart';
 import '../../services/services.dart';
+import '../../widgets/brand_logo.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -325,15 +326,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       child: Row(
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: p.primary,
-              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
-            ),
-            child: const Icon(Icons.eco_rounded, color: Colors.white, size: 20),
-          ),
+          const CapseeMark(size: 32),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:capsee/main.dart';
 import 'package:capsee/models/land_data.dart';
@@ -8,6 +9,7 @@ import 'package:capsee/screens/lahan/tambah_lahan_page.dart';
 
 void main() {
   testWidgets('Capsee membuka splash lalu halaman register', (tester) async {
+    SharedPreferences.setMockInitialValues({});
     await tester.pumpWidget(const CapseeApp());
 
     expect(find.text('Capsee'), findsOneWidget);
@@ -40,22 +42,18 @@ void main() {
         ),
       ),
     );
+    // Tab awal detail lahan adalah Riwayat.
     expect(find.text('Kronologi Aktivitas'), findsOneWidget);
-    expect(
-      find.text('Penyakit Terdeteksi: Bercak Daun Cercospora'),
-      findsOneWidget,
-    );
-    expect(find.text('Lihat Rekomendasi Penanganan'), findsOneWidget);
+    expect(find.text('Sensor Realtime'), findsOneWidget);
 
     await tester.tap(find.text('Jadwal'));
     await tester.pump();
-    expect(find.text('Jadwal Penyiraman Mingguan'), findsOneWidget);
-    expect(find.text('Jadwal Nutrisi & Pemupukan'), findsOneWidget);
+    expect(find.text('Jadwal Mingguan'), findsOneWidget);
+    expect(find.text('Jadwal Lahan (Server)'), findsOneWidget);
 
     await tester.tap(find.text('Scan'));
     await tester.pump();
     expect(find.text('Hasil Scan Terakhir'), findsOneWidget);
     expect(find.text('Tanaman Sehat & Bebas Hama'), findsOneWidget);
-    expect(find.text('Sensor Realtime'), findsOneWidget);
   });
 }

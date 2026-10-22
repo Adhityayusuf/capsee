@@ -9,6 +9,27 @@ import '../../services/services.dart';
 import '../../widgets/popup_notifikasi.dart';
 import '../../widgets/ui_kit.dart';
 
+const _namaBulan = [
+  'Januari',
+  'Februari',
+  'Maret',
+  'April',
+  'Mei',
+  'Juni',
+  'Juli',
+  'Agustus',
+  'September',
+  'Oktober',
+  'November',
+  'Desember',
+];
+
+String _formatTanggalPanjang(DateTime date) =>
+    '${date.day} ${_namaBulan[date.month - 1]} ${date.year}';
+
+DateTime _tanggalSaja(DateTime date) =>
+    DateTime(date.year, date.month, date.day);
+
 class _AdditionalSchedule {
   const _AdditionalSchedule({
     this.id,
@@ -483,112 +504,10 @@ class _TabJadwalState extends State<TabJadwal> {
   }
 
   Future<void> _showAddScheduleDialog() async {
-    final nameController = TextEditingController();
-    final descriptionController = TextEditingController();
-    var selectedDate = _dateOnly(DateTime.now());
-    var saving = false;
-
     final confirmed = await showDialog<bool>(
       context: context,
-      builder: (dialogContext) => StatefulBuilder(
-        builder: (context, setDialogState) => AlertDialog(
-          title: const Text('Jadwal Tambahan'),
-          content: SingleChildScrollView(
-            child: Column(
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                TextField(
-                  controller: nameController,
-                  textCapitalization: TextCapitalization.sentences,
-                  decoration: const InputDecoration(
-                    labelText: 'Nama kegiatan',
-                    border: OutlineInputBorder(),
-                  ),
-                  onChanged: (_) => setDialogState(() {}),
-                ),
-                const SizedBox(height: 12),
-                SizedBox(
-                  width: double.infinity,
-                  child: OutlinedButton.icon(
-                    onPressed: saving
-                        ? null
-                        : () async {
-                            final pickedDate = await showDatePicker(
-                              context: dialogContext,
-                              initialDate: selectedDate,
-                              firstDate: _dateOnly(DateTime.now()),
-                              lastDate: DateTime(2100),
-                            );
-                            if (pickedDate != null) {
-                              setDialogState(() {
-                                selectedDate = _dateOnly(pickedDate);
-                              });
-                            }
-                          },
-                    icon: const Icon(Icons.calendar_month),
-                    label: Text(_formatDate(selectedDate)),
-                  ),
-                ),
-                const SizedBox(height: 12),
-                TextField(
-                  controller: descriptionController,
-                  textCapitalization: TextCapitalization.sentences,
-                  minLines: 2,
-                  maxLines: 4,
-                  decoration: const InputDecoration(
-                    labelText: 'Deskripsi',
-                    alignLabelWithHint: true,
-                    border: OutlineInputBorder(),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          actions: [
-            TextButton(
-              onPressed:
-                  saving ? null : () => Navigator.pop(dialogContext, false),
-              child: const Text('Batal'),
-            ),
-            FilledButton(
-              onPressed:
-                  nameController.text.trim().isEmpty || saving
-                  ? null
-                  : () async {
-                      setDialogState(() => saving = true);
-                      try {
-                        final iso =
-                            '${selectedDate.year.toString().padLeft(4, '0')}-'
-                            '${selectedDate.month.toString().padLeft(2, '0')}-'
-                            '${selectedDate.day.toString().padLeft(2, '0')}';
-                        await tambahJadwalKegiatan(
-                          idLahan: widget.idLahan,
-                          namaKegiatan: nameController.text.trim(),
-                          tanggalJadwal: iso,
-                          deskripsi: descriptionController.text.trim(),
-                        );
-                        if (dialogContext.mounted) {
-                          Navigator.pop(dialogContext, true);
-                        }
-                      } catch (e) {
-                        setDialogState(() => saving = false);
-                        if (dialogContext.mounted) {
-                          showErrorPopup(
-                            dialogContext,
-                            'Gagal menambah jadwal: ${pesanError(e)}',
-                          );
-                        }
-                      }
-                    },
-              child: Text(saving ? 'Menyimpan…' : 'Tambah'),
-            ),
-          ],
-        ),
-      ),
+      builder: (_) => _AddScheduleDialog(idLahan: widget.idLahan),
     );
-
-    nameController.dispose();
-    descriptionController.dispose();
     if (confirmed != true || !mounted) return;
     showSuccessPopup(context, 'Jadwal kegiatan tersimpan.');
     await _loadBackend();
@@ -713,23 +632,7 @@ class _TabJadwalState extends State<TabJadwal> {
     }
   }
 
-  String _formatDate(DateTime date) {
-    const monthNames = [
-      'Januari',
-      'Februari',
-      'Maret',
-      'April',
-      'Mei',
-      'Juni',
-      'Juli',
-      'Agustus',
-      'September',
-      'Oktober',
-      'November',
-      'Desember',
-    ];
-    return '${date.day} ${monthNames[date.month - 1]} ${date.year}';
-  }
+  String _formatDate(DateTime date) => _formatTanggalPanjang(date);
 
   Widget _scheduleRow({
     required DateTime scheduledDate,
@@ -997,6 +900,121 @@ class _TabJadwalState extends State<TabJadwal> {
         borderRadius: BorderRadius.circular(AppSpace.radiusTile),
       ),
       child: Icon(icon, color: iconColor ?? context.palette.primary, size: 21),
+    );
+  }
+}
+
+/// Dialog tambah jadwal kegiatan. Controller dimiliki widget ini supaya
+/// tidak di-dispose saat animasi tutup dialog masih berjalan.
+class _AddScheduleDialog extends StatefulWidget {
+  final String idLahan;
+
+  const _AddScheduleDialog({required this.idLahan});
+
+  @override
+  State<_AddScheduleDialog> createState() => _AddScheduleDialogState();
+}
+
+class _AddScheduleDialogState extends State<_AddScheduleDialog> {
+  final TextEditingController _nama = TextEditingController();
+  final TextEditingController _deskripsi = TextEditingController();
+  DateTime _tanggal = _tanggalSaja(DateTime.now());
+  bool _menyimpan = false;
+
+  @override
+  void dispose() {
+    _nama.dispose();
+    _deskripsi.dispose();
+    super.dispose();
+  }
+
+  String get _tanggalIso =>
+      '${_tanggal.year.toString().padLeft(4, '0')}-'
+      '${_tanggal.month.toString().padLeft(2, '0')}-'
+      '${_tanggal.day.toString().padLeft(2, '0')}';
+
+  Future<void> _pilihTanggal() async {
+    final picked = await showDatePicker(
+      context: context,
+      initialDate: _tanggal,
+      firstDate: _tanggalSaja(DateTime.now()),
+      lastDate: DateTime(2100),
+    );
+    if (picked == null || !mounted) return;
+    setState(() => _tanggal = _tanggalSaja(picked));
+  }
+
+  Future<void> _simpan() async {
+    setState(() => _menyimpan = true);
+    try {
+      await tambahJadwalKegiatan(
+        idLahan: widget.idLahan,
+        namaKegiatan: _nama.text.trim(),
+        tanggalJadwal: _tanggalIso,
+        deskripsi: _deskripsi.text.trim(),
+      );
+      if (!mounted) return;
+      Navigator.of(context).pop(true);
+    } catch (e) {
+      if (!mounted) return;
+      setState(() => _menyimpan = false);
+      showErrorPopup(context, 'Gagal menambah jadwal: ${pesanError(e)}');
+    }
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final bisaSimpan = _nama.text.trim().isNotEmpty && !_menyimpan;
+
+    return AlertDialog(
+      title: const Text('Jadwal Tambahan'),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            TextField(
+              controller: _nama,
+              textCapitalization: TextCapitalization.sentences,
+              decoration: const InputDecoration(
+                labelText: 'Nama kegiatan',
+                border: OutlineInputBorder(),
+              ),
+              onChanged: (_) => setState(() {}),
+            ),
+            const SizedBox(height: 12),
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _menyimpan ? null : _pilihTanggal,
+                icon: const Icon(Icons.calendar_month),
+                label: Text(_formatTanggalPanjang(_tanggal)),
+              ),
+            ),
+            const SizedBox(height: 12),
+            TextField(
+              controller: _deskripsi,
+              textCapitalization: TextCapitalization.sentences,
+              minLines: 2,
+              maxLines: 4,
+              decoration: const InputDecoration(
+                labelText: 'Deskripsi',
+                alignLabelWithHint: true,
+                border: OutlineInputBorder(),
+              ),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: _menyimpan ? null : () => Navigator.of(context).pop(false),
+          child: const Text('Batal'),
+        ),
+        FilledButton(
+          onPressed: bisaSimpan ? _simpan : null,
+          child: Text(_menyimpan ? 'Menyimpan…' : 'Tambah'),
+        ),
+      ],
     );
   }
 }
