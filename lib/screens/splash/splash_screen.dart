@@ -8,6 +8,7 @@ import '../../core/app_info.dart';
 import '../../services/services.dart';
 import '../../widgets/auth_widgets.dart';
 import '../auth/register_screen.dart';
+import '../auth/lengkapi_identitas_screen.dart';
 import '../home/dashboard_screen.dart';
 
 /// Layar pembuka: logo, nama aplikasi, indikator loading, dan versi
@@ -45,14 +46,29 @@ class _SplashScreenState extends State<SplashScreen>
 
   void _lanjut() async {
     if (!mounted) return;
-    // Kalau sudah ada token, langsung ke dashboard agar tidak login ulang
-    // di tiap buka aplikasi (khusus HP).
+    // Kalau sudah ada token, cek kelengkapan identitas dulu.
+    // User lama yang belum isi lokasi dipaksa ke form identitas.
     final login = await sudahLogin();
     if (!mounted) return;
     if (login) {
-      Navigator.of(context).pushReplacement(
-        MaterialPageRoute(builder: (_) => const DashboardScreen()),
-      );
+      try {
+        final hasil = await getProfilLengkap();
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(
+            builder: (_) => hasil.lengkap
+                ? const DashboardScreen()
+                : const LengkapiIdentitasScreen(),
+          ),
+        );
+      } catch (_) {
+        // Gagal muat profil (offline/backend lama) → dashboard saja,
+        // dashboard punya guard yang mengarahkan ke identitas saat online.
+        if (!mounted) return;
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const DashboardScreen()),
+        );
+      }
       return;
     }
     Navigator.of(context).pushReplacement(

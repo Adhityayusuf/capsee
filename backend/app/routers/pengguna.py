@@ -9,10 +9,24 @@ router = APIRouter(prefix="/api/pengguna", tags=["Pengguna"])
 
 _EMAIL_REGEX = re.compile(r"^[^@\s]+@[^@\s]+\.[^@\s]+$")
 
+_PROFIL_COLUMNS = "id, nama, email, nomor_hp, provinsi, kota, kecamatan, dibuat_pada"
+
+
+def _profil_lengkap(pengguna: dict) -> bool:
+    """Identitas dianggap lengkap kalau nama + no HP + provinsi/kota/kecamatan terisi."""
+    for key in ("nama", "nomor_hp", "provinsi", "kota", "kecamatan"):
+        value = (pengguna.get(key) or "").strip() if isinstance(pengguna.get(key), str) else pengguna.get(key)
+        if not value:
+            return False
+    return True
+
 
 class EditProfilRequest(BaseModel):
     nama: str | None = Field(default=None, min_length=3)
     nomor_hp: str | None = None
+    provinsi: str | None = None
+    kota: str | None = None
+    kecamatan: str | None = None
 
     @field_validator("nama")
     @classmethod
@@ -22,6 +36,14 @@ class EditProfilRequest(BaseModel):
             if len(value) < 3:
                 raise ValueError("Nama minimal 3 karakter")
         return value
+
+    @field_validator("nomor_hp", "provinsi", "kota", "kecamatan")
+    @classmethod
+    def _strip_empty_to_none(cls, value: str | None) -> str | None:
+        if value is None:
+            return None
+        value = value.strip()
+        return value if value else None
 
 
 class GantiSandiRequest(BaseModel):
@@ -35,13 +57,14 @@ def profil_saya(id_pengguna: str = Depends(verifikasi_token)):
     with get_db_connection() as conn:
         cur = conn.cursor()
         cur.execute(
-            "SELECT id, nama, email, nomor_hp, dibuat_pada FROM pengguna WHERE id = %s",
+            f"SELECT {_PROFIL_COLUMNS} FROM pengguna WHERE id = %s",
             (id_pengguna,),
         )
         row = cur.fetchone()
         if not row:
             raise HTTPException(status_code=404, detail="Pengguna tidak ditemukan")
-        return {"pengguna": row_to_dict(cur, row)}
+        pengguna = row_to_dict(cur, row)
+        return {"pengguna": pengguna, "profil_lengkap": _profil_lengkap(pengguna)}
 
 
 @router.put("/me")
@@ -49,8 +72,14 @@ def edit_profil(
     data: EditProfilRequest,
     id_pengguna: str = Depends(verifikasi_token),
 ):
-    """Edit nama dan/atau nomor HP pengguna. Field yang tidak dikirim tidak berubah."""
-    fields = {"nama": data.nama, "nomor_hp": data.nomor_hp}
+    """Edit nama / nomor HP / lokasi domisili. Field yang tidak dikirim tidak berubah."""
+    fields = {
+        "nama": data.nama,
+        "nomor_hp": data.nomor_hp,
+        "provinsi": data.provinsi,
+        "kota": data.kota,
+        "kecamatan": data.kecamatan,
+    }
     to_update = {k: v for k, v in fields.items() if v is not None}
 
     if not to_update:
@@ -67,11 +96,12 @@ def edit_profil(
             UPDATE pengguna
             SET {set_clause}, diperbarui_pada = now()
             WHERE id = %s
-            RETURNING id, nama, email, nomor_hp, dibuat_pada
+            RETURNING {_PROFIL_COLUMNS}
             """,
             values,
         )
-        return {"pengguna": row_to_dict(cur, cur.fetchone())}
+        pengguna = row_to_dict(cur, cur.fetchone())
+        return {"pengguna": pengguna, "profil_lengkap": _profil_lengkap(pengguna)}
 
 
 @router.put("/me/ganti-sandi")

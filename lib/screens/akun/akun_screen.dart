@@ -10,6 +10,7 @@ import 'dart:ui' show ImageFilter;
 
 import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
+import '../../widgets/brand_logo.dart';
 import '../../widgets/ui_kit.dart';
 import '../auth/login_screen.dart';
 import '../bantuan/bantuan_faq_screen.dart';
@@ -18,9 +19,6 @@ import '../legal/syarat_screen.dart';
 import 'edit_profil_screen.dart';
 import 'ubah_sandi.dart';
 import '../../services/services.dart';
-
-const String _kLogoUrl =
-    'https://lh3.googleusercontent.com/aida/AEtjO1Xr_77lDlwa3ZADA-1HeBJZ-Tn0VWtE6n-7pOHm4d2azQUim5BjoLf575UzLtz0ODNUzEVcV30y0Qygv7t04JxHmpUwopBEQ96lDQ7I0bpin4-N1IS1l-FoVePayedbE5_okishN0kcXmjse5fCF-NG5aQpKrjWoygNzg2Vb2Qvga9t5r_iZu7cGKe9q8GulMspHO6C3lCzeGHgRcSPog9XdXtsBfBZsWTWU4MeoT564Ej-_JzkDExBIpo';
 
 const String _kAvatarUrl =
     'https://lh3.googleusercontent.com/aida-public/AB6AXuD9yzTTPbdLCm8UF7S10zskIXze-Iztg7iXPtN_yLtbjMgVJFf622RK8iDPg3zs34Zgmvzr-3eP0M69khUrRTVIl0PLCMmM1y1hVGB97EpVLHtlnm82aGyadJeOmtF02lZKnvK7D8cMX_Sn0t7eztxJ_iNnt56NrCCmKmtRo6I9dCrBdhvfcfKio97cfmdKq9alKshbFGQ7_2HuXJzF7laagR4yJ4pcrcc-tUfgWobAUXnQP6OqSeusdg';
@@ -72,6 +70,16 @@ class _AkunScreenState extends State<AkunScreen> {
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
     }
+  }
+
+  /// Lokasi singkat dari identitas diri (sinkron dengan cuaca dashboard).
+  String _lokasiSingkat() {
+    final kec = (_profil?['kecamatan'] ?? '').toString().trim();
+    final kota = (_profil?['kota'] ?? '').toString().trim();
+    final prov = (_profil?['provinsi'] ?? '').toString().trim();
+    final bagian = [kec, kota].where((s) => s.isNotEmpty).join(', ');
+    if (bagian.isEmpty) return prov.isEmpty ? 'Lokasi belum diisi' : prov;
+    return prov.isEmpty ? bagian : '$bagian • $prov';
   }
 
   List<_MenuItem> _getAccountItems(BuildContext context) {
@@ -244,21 +252,7 @@ class _AkunScreenState extends State<AkunScreen> {
                     ),
                     const SizedBox(width: 4),
                   ],
-                  Image.network(
-                    _kLogoUrl,
-                    height: 32,
-                    fit: BoxFit.contain,
-                    errorBuilder: (_, _, _) => Container(
-                      width: 32,
-                      height: 32,
-                      decoration: BoxDecoration(
-                        color: p.accentSoft,
-                        borderRadius:
-                            BorderRadius.circular(AppSpace.radiusTile),
-                      ),
-                      child: Icon(Icons.eco, size: 20, color: p.accent),
-                    ),
-                  ),
+                  const CapseeMark(size: 32),
                   const SizedBox(width: 8),
                   Expanded(
                     child: Column(
@@ -344,7 +338,7 @@ class _AkunScreenState extends State<AkunScreen> {
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
-                                    'Mitra Tani Cabai Rawit • Jawa Timur',
+                                    _lokasiSingkat(),
                                     overflow: TextOverflow.ellipsis,
                                     style: AppText.bodySm(context).copyWith(
                                         fontWeight: FontWeight.w600),
@@ -464,7 +458,9 @@ class _AkunScreenState extends State<AkunScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                          _profil?['email'] ?? 'budi.santoso@agrimail.id',
+                          (_profil?['email'] ?? '').toString().isEmpty
+                              ? '-'
+                              : (_profil?['email'] ?? '').toString(),
                           overflow: TextOverflow.ellipsis,
                           style: AppText.bodySm(context)),
                     ),
@@ -484,7 +480,10 @@ class _AkunScreenState extends State<AkunScreen> {
                     Icon(Icons.phone_outlined, size: 18, color: p.icon),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(_profil?['nomor_hp'] ?? '+62 812-3456-7890',
+                      child: Text(
+                          (_profil?['nomor_hp'] ?? '').toString().isEmpty
+                              ? 'Belum diisi'
+                              : (_profil?['nomor_hp'] ?? '').toString(),
                           overflow: TextOverflow.ellipsis,
                           style: AppText.bodySm(context)),
                     ),

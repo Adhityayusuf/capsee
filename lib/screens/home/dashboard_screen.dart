@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../core/app_colors.dart';
 import '../../core/app_text.dart';
@@ -9,13 +8,14 @@ import '../../models/land_data.dart';
 import '../../widgets/popup_notifikasi.dart';
 import '../../widgets/ui_kit.dart';
 import '../akun/akun_screen.dart';
+import '../auth/lengkapi_identitas_screen.dart';
 import '../lahan/detail_lahan_screen.dart';
 import '../lahan/lahan_page.dart';
 import '../lahan/tambah_lahan_page.dart';
 import '../notifikasi/notifikasi_screen.dart';
-import '../scan/hasil_scan_tidak_sehat.dart';
 import '../scan/riwayat_scan_screen.dart';
 import '../../services/services.dart';
+import '../../widgets/brand_logo.dart';
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -26,12 +26,15 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _tab = 0;
-  final ImagePicker _picker = ImagePicker();
   List<ScanHistoryItem> _scanHistory = [];
 
   Map<String, dynamic>? _profil;
   List<Map<String, dynamic>>? _lahanList;
   bool _isLoading = true;
+
+  Map<String, dynamic>? _cuaca;
+  bool _loadingCuaca = true;
+  String? _cuacaError;
 
   @override
   void initState() {
@@ -40,9 +43,27 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   Future<void> _loadData() async {
-    setState(() => _isLoading = true);
+    setState(() {
+      _isLoading = true;
+      _loadingCuaca = true;
+      _cuacaError = null;
+    });
     try {
       final profil = await getProfil();
+      // Guard wajib identitas: user lama yang belum lengkap dipaksa isi.
+      if (!isProfilLengkap(profil)) {
+        if (!mounted) return;
+        setState(() => _isLoading = false);
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (!mounted) return;
+          Navigator.of(context).pushReplacement(
+            MaterialPageRoute(
+              builder: (_) => const LengkapiIdentitasScreen(),
+            ),
+          );
+        });
+        return;
+      }
       final lahanList = await getDaftarLahan();
       // Ambil riwayat scan dari SEMUA lahan (bukan list lokal kosong).
       // Satu lahan gagal tidak menggagalkan yang lain.
@@ -80,10 +101,106 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _isLoading = false;
         });
       }
+      // Cuaca umum ikut identitas diri (bukan per lahan).
+      try {
+        final cuaca = await getCuacaProfil();
+        if (mounted) {
+          setState(() {
+            _cuaca = cuaca;
+            _loadingCuaca = false;
+          });
+        }
+      } catch (e) {
+        if (!mounted) return;
+        // Backend 400 = identitas belum lengkap → paksa ke form.
+        if (e is ApiException && e.statusCode == 400) {
+          WidgetsBinding.instance.addPostFrameCallback((_) {
+            if (!mounted) return;
+            Navigator.of(context).pushReplacement(
+              MaterialPageRoute(
+                builder: (_) => const LengkapiIdentitasScreen(),
+              ),
+            );
+          });
+          setState(() => _loadingCuaca = false);
+          return;
+        }
+        setState(() {
+          _loadingCuaca = false;
+          _cuacaError = pesanError(e);
+        });
+      }
     } catch (e) {
       if (mounted) {
-        setState(() => _isLoading = false);
+        setState(() {
+          _isLoading = false;
+          _loadingCuaca = false;
+        });
         _message('Gagal memuat data: ${pesanError(e)}');
+      }
+    }
+  }
+
+  /// Refresh ringan daftar lahan + riwayat scan (tanpa sentuh profil/cuaca).
+  /// Dipakai saat kembali ke tab dashboard atau setelah ubah data di tab lahan.
+  Future<void> _muatUlangLahan() async {
+    try {
+      final lahanList = await getDaftarLahan();
+      final List<ScanHistoryItem> history = [];
+      for (final lahan in lahanList) {
+        final id = (lahan['id'] ?? '').toString();
+        if (id.isEmpty) continue;
+        try {
+          final riwayat = await getRiwayatScan(id);
+          for (final s in riwayat) {
+            final waktu =
+                DateTime.tryParse((s['dipindai_pada'] ?? '').toString()) ??
+                DateTime.now();
+            history.add(
+              ScanHistoryItem(
+                imagePath: '',
+                scannedAt: waktu,
+                idScan: (s['id'] ?? '').toString(),
+                idLahan: id,
+                urlGambar: (s['url_gambar'] ?? '').toString(),
+                statusHasil: (s['status_hasil'] ?? '').toString(),
+              ),
+            );
+          }
+        } catch (_) {
+          // Lewati lahan yang gagal dimuat, lanjut ke lahan berikut.
+        }
+      }
+      history.sort((a, b) => b.scannedAt.compareTo(a.scannedAt));
+      if (mounted) {
+        setState(() {
+          _lahanList = lahanList;
+          _scanHistory = history;
+        });
+      }
+    } catch (_) {
+      // Abaikan: dashboard tetap tampilkan data terakhir.
+    }
+  }
+
+  Future<void> _muatUlangCuaca() async {    setState(() {
+      _loadingCuaca = true;
+      _cuacaError = null;
+    });
+    try {
+      final cuaca = await getCuacaProfil();
+      if (mounted) {
+        setState(() {
+          _cuaca = cuaca;
+          _loadingCuaca = false;
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _loadingCuaca = false;
+          _cuacaError = pesanError(e);
+        });
       }
     }
   }
@@ -93,7 +210,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final pages = [
       _buildDashboard(),
       RiwayatScanScreen(items: _scanHistory, onScan: () => _openScan()),
-      LahanPage(isActive: _tab == 2),
+      LahanPage(isActive: _tab == 2, onChanged: _muatUlangLahan),
       const NotifikasiScreen(),
       const AkunScreen(),
     ];
@@ -103,7 +220,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
       bottomNavigationBar: _BottomNav(
         selectedIndex: _tab == 4 ? 3 : (_tab < 3 ? _tab : -1),
         onSelected: (index) {
-          setState(() => _tab = index == 3 ? 4 : index);
+          final target = index == 3 ? 4 : index;
+          setState(() => _tab = target);
+          // Kembali ke dashboard → segarkan daftar agar tidak basi
+          // (mis. habis hapus lahan di tab lahan).
+          if (target == 0) _muatUlangLahan();
         },
         onScan: () => _openScan(),
       ),
@@ -202,15 +323,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       ),
       child: Row(
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: p.primary,
-              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
-            ),
-            child: const Icon(Icons.eco_rounded, color: Colors.white, size: 20),
-          ),
+          const CapseeMark(size: 32),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,
@@ -310,6 +423,94 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Widget _climateCard() {
     final p = context.palette;
 
+    // Lokasi domisili dari identitas diri (fallback kalau cuaca gagal).
+    final profilKec = (_profil?['kecamatan'] ?? '').toString();
+    final profilKota = (_profil?['kota'] ?? '').toString();
+    final profilProv = (_profil?['provinsi'] ?? '').toString();
+
+    if (_loadingCuaca) {
+      return CapseeCard(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          children: [
+            Row(
+              children: [
+                Icon(Icons.location_on_rounded, color: p.accent, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    [profilKec, profilKota].where((s) => s.isNotEmpty).join(', ').isEmpty
+                        ? 'Memuat lokasi...'
+                        : [profilKec, profilKota].where((s) => s.isNotEmpty).join(', '),
+                    style: AppText.subtitle(context),
+                  ),
+                ),
+                const SizedBox(
+                  width: 18,
+                  height: 18,
+                  child: CircularProgressIndicator(strokeWidth: 2),
+                ),
+              ],
+            ),
+            const SizedBox(height: 8),
+            Text('Mengambil prakiraan BMKG...', style: AppText.caption(context)),
+          ],
+        ),
+      );
+    }
+
+    if (_cuacaError != null || _cuaca == null) {
+      return CapseeCard(
+        padding: const EdgeInsets.all(14),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Row(
+              children: [
+                Icon(Icons.location_on_rounded, color: p.accent, size: 20),
+                const SizedBox(width: 8),
+                Expanded(
+                  child: Text(
+                    [profilKec, profilKota].where((s) => s.isNotEmpty).join(', ').isEmpty
+                        ? 'Lokasi belum tersedia'
+                        : [profilKec, profilKota].where((s) => s.isNotEmpty).join(', '),
+                    style: AppText.subtitle(context),
+                  ),
+                ),
+                IconButton(
+                  tooltip: 'Muat ulang cuaca',
+                  onPressed: _muatUlangCuaca,
+                  icon: const Icon(Icons.refresh_rounded, size: 20),
+                ),
+              ],
+            ),
+            const SizedBox(height: 6),
+            Text(
+              'Cuaca gagal dimuat: ${_cuacaError ?? 'data kosong'}',
+              style: AppText.caption(context),
+            ),
+            Text('Sumber: BMKG', style: AppText.caption(context)),
+          ],
+        ),
+      );
+    }
+
+    final lokasi = Map<String, dynamic>.from((_cuaca!['lokasi'] as Map?) ?? {});
+    final prakiraan = List<Map<String, dynamic>>.from(
+      (_cuaca!['prakiraan'] as List? ?? []).map((e) => Map<String, dynamic>.from(e as Map)),
+    );
+    final hariIni = prakiraan.isNotEmpty ? prakiraan.first : <String, dynamic>{};
+
+    final labelLokasi = [
+      (lokasi['kecamatan'] ?? profilKec).toString(),
+      (lokasi['kota_kabupaten'] ?? profilKota).toString(),
+    ].where((s) => s.isNotEmpty).join(', ');
+    final suhu = hariIni['suhu'];
+    final cuacaDesc = (hariIni['cuaca'] ?? '-').toString();
+    final lembap = hariIni['kelembapan'];
+    final angin = hariIni['kecepatan_angin'];
+    final hujan = hariIni['kemungkinan_hujan'] == true;
+
     return CapseeCard(
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -323,18 +524,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Lembang, Bandung Barat',
+                      labelLokasi.isEmpty ? '-' : labelLokasi,
                       style: AppText.subtitle(context),
                     ),
                     Text(
-                      'Elevasi 1.240 mdpl',
+                      profilProv.isNotEmpty ? profilProv : 'Sumber: BMKG',
                       style: AppText.caption(context),
                     ),
                   ],
                 ),
               ),
               Text(
-                '24°C • Berawan',
+                suhu == null ? cuacaDesc : '$suhu°C • $cuacaDesc',
                 style: AppText.caption(
                   context,
                   color: p.title,
@@ -343,18 +544,18 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ],
           ),
           const SizedBox(height: 14),
-          const Row(
+          Row(
             children: [
               _Climate(
                 icon: Icons.water_drop_rounded,
                 title: 'Kelembapan',
-                value: '78%',
+                value: lembap == null ? '-' : '$lembap%',
               ),
-              SizedBox(width: 7),
+              const SizedBox(width: 7),
               _Climate(
                 icon: Icons.air_rounded,
                 title: 'Angin',
-                value: '12 km/j',
+                value: angin == null ? '-' : '$angin km/j',
               ),
             ],
           ),
@@ -368,11 +569,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.lightbulb_rounded, color: p.accent, size: 19),
+                Icon(
+                  hujan ? Icons.umbrella_rounded : Icons.lightbulb_rounded,
+                  color: p.accent,
+                  size: 19,
+                ),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    'Kondisi ideal untuk penyemprotan nutrisi pagi ini sebelum pukul 10:00 WIB. Daun kering sempurna dan angin tenang.',
+                    hujan
+                        ? 'Berpotensi hujan hari ini di $labelLokasi. Tunda penyemprotan dan pastikan drainase petak lancar.'
+                        : 'Kondisi ideal untuk penyemprotan nutrisi pagi ini sebelum pukul 10:00 WIB di $labelLokasi.',
                     style: AppText.caption(context, color: p.title),
                   ),
                 ),
@@ -600,49 +807,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // 1. Pilih lahan dulu. Batal = berhenti, jangan buka kamera/upload.
     target ??= await _pilihLahanUntukScan();
     if (target == null || !mounted) return;
-    final String idLahanTarget = (target['id'] ?? '').toString();
-    if (idLahanTarget.isEmpty) {
+    if ((target['id'] ?? '').toString().isEmpty) {
       showErrorPopup(context, 'Lahan belum tersinkron. Pilih lahan lain.');
       return;
     }
 
-    try {
-      // 2. Baru buka kamera setelah lahan jelas.
-      final picked = await _picker.pickImage(source: ImageSource.camera);
-      if (picked == null || !mounted) return;
-
-      // Tampilkan loading dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
-      );
-
-      // Panggil backend: ini akan otomatis kompres, upload ke Cloudinary, dan simpan ke DB!
-      await uploadScan(
-        file: picked,
-        idLahan: idLahanTarget,
-        bagianTanaman: 'daun', // Default dari dashboard
-      );
-
-      if (!mounted) return;
-      Navigator.of(context).pop(); // Tutup loading
-
-      if (mounted) showSuccessPopup(context, 'Upload berhasil! Hasil scan tersimpan di database.');
-
-      // Buka halaman hasil statis (tampilannya masih statis, tapi datanya sudah masuk DB)
-      await Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const HasilScanTidakSehatPage()),
-      );
-
-      // Muat ulang data untuk memperbarui riwayat lahan
-      _loadData();
-    } catch (e) {
-      if (!mounted) return;
-      // Tutup loading kalau masih terbuka (jangan pop halaman dashboard).
-      if (Navigator.of(context).canPop()) Navigator.of(context).pop();
-      showErrorPopup(context, 'Gagal melakukan scan atau upload: ${pesanError(e)}');
-    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LandDetailScreen(
+          land: _landDataFromMap(target!),
+          initialTab: 0,
+        ),
+      ),
+    );
+    if (mounted) await _muatUlangLahan();
   }
 
   Future<void> _addLand() async {
@@ -658,30 +836,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
     Navigator.of(context)
         .push(
           MaterialPageRoute(
-            builder: (_) => LandDetailScreen(
-              land: LandData(
-                id: land['id'] as String?,
-                name: land['nama'] ?? 'Lahan',
-                province: land['provinsi'] ?? '',
-                city: land['kota'] ?? '',
-                district: land['kecamatan'] ?? '',
-                plantAgeMonths: land['umur_tanaman_bulan'] ?? 1,
-                lastWatered: land['tanggal_terakhir_siram'] != null
-                    ? (DateTime.tryParse(land['tanggal_terakhir_siram']) ??
-                          DateTime.now())
-                    : DateTime.now(),
-                lastFertilized: land['tanggal_terakhir_pupuk'] != null
-                    ? (DateTime.tryParse(land['tanggal_terakhir_pupuk']) ??
-                          DateTime.now())
-                    : DateTime.now(),
-                fertilizeIntervalWeeks: land['interval_pupuk_minggu'] ?? 1,
-                wateringIntervalWeeks:
-                    (land['interval_siram_minggu'] as num?)?.toInt() ?? 1,
-              ),
-            ),
+            builder: (_) => LandDetailScreen(land: _landDataFromMap(land)),
           ),
         )
         .then((_) => _loadData()); // Muat ulang setelah kembali dari detail
+  }
+
+  LandData _landDataFromMap(Map<String, dynamic> land) {
+    final now = DateTime.now();
+    DateTime dateValue(dynamic value) =>
+        DateTime.tryParse((value ?? '').toString()) ?? now;
+
+    return LandData(
+      id: land['id']?.toString(),
+      name: (land['nama'] ?? 'Lahan').toString(),
+      province: (land['provinsi'] ?? '').toString(),
+      city: (land['kota'] ?? '').toString(),
+      district: (land['kecamatan'] ?? '').toString(),
+      plantAgeMonths: (land['umur_tanaman_bulan'] as num?)?.toInt() ?? 1,
+      lastWatered: dateValue(land['tanggal_terakhir_siram']),
+      lastFertilized: dateValue(land['tanggal_terakhir_pupuk']),
+      fertilizeIntervalWeeks:
+          (land['interval_pupuk_minggu'] as num?)?.toInt() ?? 1,
+      wateringIntervalWeeks:
+          (land['interval_siram_minggu'] as num?)?.toInt() ?? 1,
+    );
   }
 
   void _message(String message) {

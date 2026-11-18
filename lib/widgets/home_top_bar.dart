@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/app_text.dart';
 import '../core/app_theme.dart';
+import 'brand_logo.dart';
 
 /// Bar atas Beranda dan tab Lahan: logo, judul, lonceng notifikasi, dan avatar.
 ///
@@ -37,15 +38,7 @@ class HomeTopBar extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 32,
-            height: 32,
-            decoration: BoxDecoration(
-              color: p.primary,
-              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
-            ),
-            child: Icon(Icons.eco_rounded, color: p.onPrimary, size: 20),
-          ),
+          const CapseeMark(size: 32),
           const SizedBox(width: 8),
           Column(
             crossAxisAlignment: CrossAxisAlignment.start,

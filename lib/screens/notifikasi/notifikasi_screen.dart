@@ -80,10 +80,11 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
   }
 
   Future<void> _loadNotif() async {
-    setState(() => _isLoading = true);
-    final p = context.palette;
     try {
       final data = await getDaftarNotifikasi();
+      if (!mounted) return;
+      // context.palette baru boleh diakses setelah initState selesai.
+      final p = context.palette;
       final List<NotifItem> mapped = data.map((n) {
         // Mapping sederhana dari backend ke NotifItem visual
         return NotifItem(

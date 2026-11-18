@@ -2,11 +2,11 @@
 Router cuaca — proxy ke API publik BMKG.
 
 Alur:
-1. Flutter memanggil GET /api/cuaca/{id_lahan}
-2. Backend ambil data lahan (provinsi + kota + kecamatan) dari DB
-3. Backend cari kode ADM4 lewat API wilayah emsifa
-4. Backend panggil BMKG prakiraan-cuaca?adm4=...
-5. Backend kembalikan ringkasan cuaca hari ini + 2 hari ke depan
+1a. Flutter memanggil GET /api/cuaca/{id_lahan} (cuaca per lahan, lama)
+1b. Flutter memanggil GET /api/cuaca/profil (cuaca umum ikut identitas diri)
+2. Backend lookup kode ADM4 lewat API wilayah emsifa
+3. Backend panggil BMKG prakiraan-cuaca?adm4=...
+4. Backend kembalikan ringkasan cuaca hari ini + 2 hari ke depan
 
 Sumber data BMKG: https://api.bmkg.go.id/publik/prakiraan-cuaca
 Wajib mencantumkan BMKG sebagai sumber pada tampilan aplikasi.
@@ -120,28 +120,58 @@ def _ringkas_cuaca(cuaca_raw: list[list[dict]]) -> list[dict]:
     return ringkasan
 
 
-@router.get("/{id_lahan}")
-def cuaca_lahan(id_lahan: str, id_pengguna: str = Depends(verifikasi_token)):
+def _kandidat_adm4(kec_id: str, desa_list: list[dict], nama_kota: str) -> list[str]:
+    """Susun kandidat kode ADM4 BMKG untuk satu kecamatan.
+
+    Latar: emsifa pakai akhiran 0001.. (Kemendagri), sedangkan BMKG pakai
+    1001.. untuk kelurahan (kota) dan 2001.. untuk desa (kabupaten).
+    Contoh nyata: Lowokwaru emsifa 3573050004 → BMKG 35.73.05.1006;
+    Lembang emsifa 3217050xxx → BMKG 32.17.01.2001.
+    Daftar desa emsifa juga bisa kedaluwarsa (mis. Tunggulwulung ada di
+    BMKG tapi tidak ada di emsifa), jadi sapu juga 1001-1015/2001-2020.
     """
-    Ambil prakiraan cuaca BMKG untuk lahan milik pengguna yang login.
+    kandidat: list[str] = []
+    seen: set[str] = set()
 
-    Mengembalikan:
-    - sumber   : "BMKG"
-    - lokasi   : dict (dari BMKG — provinsi, kota, kecamatan, desa, lat, lon)
-    - prakiraan: list ringkasan cuaca per hari (3 hari ke depan)
-    """
-    # 1. Ambil data lahan dari DB
-    with get_db_connection() as conn:
-        cur = conn.cursor()
-        pastikan_lahan_milik_pengguna(cur, id_lahan, id_pengguna)
-        cur.execute("SELECT * FROM lahan WHERE id = %s", (id_lahan,))
-        lahan = row_to_dict(cur, cur.fetchone())
+    def _dorong(adm4: str) -> None:
+        if adm4 and adm4 not in seen:
+            seen.add(adm4)
+            kandidat.append(adm4)
 
-    nama_provinsi  = lahan.get("provinsi", "")
-    nama_kota      = lahan.get("kota", "")
-    nama_kecamatan = lahan.get("kecamatan", "")
+    # 1. Kode emsifa mentah (legacy, kalau kebetulan cocok).
+    for desa in desa_list:
+        raw = str(desa.get("id", ""))
+        if len(raw) >= 10:
+            _dorong(f"{raw[0:2]}.{raw[2:4]}.{raw[4:6]}.{raw[6:]}")
 
-    # 2. Lookup kode ADM4 via API emsifa
+    # 2. Varian 0xxx → 1xxx/2xxx untuk tiap desa emsifa.
+    for desa in desa_list:
+        raw = str(desa.get("id", ""))
+        if len(raw) >= 10 and len(raw[6:]) == 4:
+            prefix = f"{raw[0:2]}.{raw[2:4]}.{raw[4:6]}"
+            suffix = raw[6:]
+            for ganti in ("1", "2"):
+                _dorong(f"{prefix}.{ganti}{suffix[1:]}")
+
+    # 3. Sapuan sistematis per kecamatan (tangkap desa yang hilang di emsifa).
+    #    Kota → coba 1xxx dulu, kabupaten → 2xxx dulu.
+    kota_norm = (nama_kota or "").strip().lower()
+    is_kota = kota_norm.startswith("kota")
+    urutan = ("1", "2") if is_kota else ("2", "1")
+    prefix_kec = ""
+    kec = (kec_id or "").strip()
+    if len(kec) >= 6:
+        prefix_kec = f"{kec[0:2]}.{kec[2:4]}.{kec[4:6]}"
+    if prefix_kec:
+        for ganti in urutan:
+            for i in range(1, 21):
+                _dorong(f"{prefix_kec}.{ganti}{i:03d}")
+
+    return kandidat
+
+
+def _cuaca_untuk_wilayah(nama_provinsi: str, nama_kota: str, nama_kecamatan: str) -> dict:
+    """Lookup emsifa → BMKG untuk satu triple wilayah. Dipakai lahan & profil."""
     try:
         with httpx.Client(timeout=_TIMEOUT) as client:
             # Provinsi
@@ -184,32 +214,26 @@ def cuaca_lahan(id_lahan: str, id_pengguna: str = Depends(verifikasi_token)):
                     detail=f"Tidak ada data desa/kelurahan untuk kecamatan '{nama_kecamatan}'"
                 )
 
-            # Konversi kode emsifa (tanpa titik, 10 digit) → format BMKG (titik, e.g. "35.07.01.1001")
-            # (kode dipakai di langkah 3; desa pertama belum tentu dikenal BMKG)
-
             # 3. Panggil API BMKG.
             #    Satu kecamatan punya banyak desa; kode desa pertama tidak
-            #    selalu terdaftar di BMKG (404). Coba desa lain sekecamatan
-            #    sampai ada yang dikenal BMKG.
+            #    selalu terdaftar di BMKG (404). Coba kandidat sekecamatan
+            #    sampai ada yang dikenal BMKG (emsifa 0xxx vs BMKG 1xxx/2xxx).
             bmkg_data = None
             adm4 = ""
-            for desa in desa_list[:8]:
-                raw = str(desa.get("id", ""))
-                if len(raw) < 10:
-                    continue
-                adm4 = f"{raw[0:2]}.{raw[2:4]}.{raw[4:6]}.{raw[6:]}"
-                r = client.get(_BMKG_URL, params={"adm4": adm4})
+            for kode in _kandidat_adm4(str(kec_id), desa_list, nama_kota):
+                r = client.get(_BMKG_URL, params={"adm4": kode})
                 if r.status_code == 404:
                     continue
                 r.raise_for_status()
                 bmkg_data = r.json()
+                adm4 = kode
                 break
 
             if bmkg_data is None:
                 raise HTTPException(
                     status_code=404,
-                    detail=f"Kecamatan '{nama_kecamatan}' tidak terdaftar di BMKG. "
-                           f"Perbaiki nama provinsi/kota/kecamatan lewat Edit Lahan."
+                    detail=f"Cuaca untuk '{nama_kecamatan}, {nama_kota}' belum tersedia di BMKG. "
+                           f"Coba lagi nanti atau periksa nama wilayah.",
                 )
 
     except httpx.HTTPError as exc:
@@ -239,3 +263,58 @@ def cuaca_lahan(id_lahan: str, id_pengguna: str = Depends(verifikasi_token)):
         },
         "prakiraan": _ringkas_cuaca(cuaca_raw),
     }
+
+
+@router.get("/profil")
+def cuaca_profil(id_pengguna: str = Depends(verifikasi_token)):
+    """
+    Ambil prakiraan cuaca BMKG umum mengikuti identitas diri pengguna
+    (provinsi + kota + kecamatan di tabel pengguna).
+
+    Dipakai kartu cuaca dashboard. Kalau identitas belum lengkap → 400
+    agar frontend mengarahkan ke form identitas.
+    """
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        cur.execute(
+            "SELECT provinsi, kota, kecamatan FROM pengguna WHERE id = %s",
+            (id_pengguna,),
+        )
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Pengguna tidak ditemukan")
+        nama_provinsi, nama_kota, nama_kecamatan = (
+            (row[0] or "").strip(),
+            (row[1] or "").strip(),
+            (row[2] or "").strip(),
+        )
+    if not nama_provinsi or not nama_kota or not nama_kecamatan:
+        raise HTTPException(
+            status_code=400,
+            detail="Lengkapi identitas diri (provinsi, kota, kecamatan) dulu untuk melihat cuaca.",
+        )
+    return _cuaca_untuk_wilayah(nama_provinsi, nama_kota, nama_kecamatan)
+
+
+@router.get("/{id_lahan}")
+def cuaca_lahan(id_lahan: str, id_pengguna: str = Depends(verifikasi_token)):
+    """
+    Ambil prakiraan cuaca BMKG untuk lahan milik pengguna yang login.
+
+    Mengembalikan:
+    - sumber   : "BMKG"
+    - lokasi   : dict (dari BMKG — provinsi, kota, kecamatan, desa, lat, lon)
+    - prakiraan: list ringkasan cuaca per hari (3 hari ke depan)
+    """
+    # 1. Ambil data lahan dari DB
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        pastikan_lahan_milik_pengguna(cur, id_lahan, id_pengguna)
+        cur.execute("SELECT * FROM lahan WHERE id = %s", (id_lahan,))
+        lahan = row_to_dict(cur, cur.fetchone())
+
+    nama_provinsi  = lahan.get("provinsi", "")
+    nama_kota      = lahan.get("kota", "")
+    nama_kecamatan = lahan.get("kecamatan", "")
+
+    return _cuaca_untuk_wilayah(nama_provinsi, nama_kota, nama_kecamatan)

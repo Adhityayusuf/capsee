@@ -8,6 +8,7 @@ import '../../widgets/popup_notifikasi.dart';
 import '../../widgets/ui_kit.dart';
 import 'detail_lahan_screen.dart';
 import 'tambah_lahan_page.dart';
+import '../../widgets/brand_logo.dart';
 
 // ───────────────────────── Warna & Tema ─────────────────────────
 class LahanColors {
@@ -122,7 +123,12 @@ const plots = <Plot>[
 // ───────────────────────── Halaman Utama ─────────────────────────
 class LahanPage extends StatefulWidget {
   final bool isActive;
-  const LahanPage({super.key, this.isActive = false});
+
+  /// Dipanggil setelah data berubah (tambah/edit/hapus) agar induk
+  /// (dashboard) bisa memuat ulang daftarnya juga.
+  final VoidCallback? onChanged;
+
+  const LahanPage({super.key, this.isActive = false, this.onChanged});
 
   @override
   State<LahanPage> createState() => _LahanPageState();
@@ -174,7 +180,10 @@ class _LahanPageState extends State<LahanPage> {
       context,
     ).push(MaterialPageRoute(builder: (_) => const TambahLahanPage()));
     // TambahLahanPage mengembalikan true jika simpan sukses.
-    if (result == true && mounted) _load();
+    if (result == true && mounted) {
+      _load();
+      widget.onChanged?.call();
+    }
   }
 
   void _openDetail(Map<String, dynamic> land) {
@@ -208,7 +217,10 @@ class _LahanPageState extends State<LahanPage> {
             ),
           ),
         )
-        .then((_) => _load());
+        .then((_) {
+          _load();
+          widget.onChanged?.call();
+        });
   }
 
   Future<void> _openEdit(Map<String, dynamic> land) async {
@@ -243,7 +255,10 @@ class _LahanPageState extends State<LahanPage> {
         ),
       ),
     );
-    if (result == true && mounted) _load();
+    if (result == true && mounted) {
+      _load();
+      widget.onChanged?.call();
+    }
   }
 
   Future<void> _hapus(Map<String, dynamic> land) async {
@@ -277,6 +292,7 @@ class _LahanPageState extends State<LahanPage> {
       if (!mounted) return;
       showSuccessPopup(context, 'Lahan dihapus.');
       _load();
+      widget.onChanged?.call();
     } catch (e) {
       if (!mounted) return;
       showErrorPopup(context, 'Gagal menghapus: ${pesanError(e)}');
@@ -602,15 +618,7 @@ class _LahanHeader extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Container(
-            width: 36,
-            height: 36,
-            decoration: BoxDecoration(
-              color: p.primary,
-              borderRadius: BorderRadius.circular(8),
-            ),
-            child: Icon(Icons.eco_rounded, color: p.onPrimary, size: 20),
-          ),
+          const CapseeMark(size: 36),
           const SizedBox(width: 8),
           Expanded(
             child: Column(
