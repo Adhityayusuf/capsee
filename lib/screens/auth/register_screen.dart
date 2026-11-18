@@ -105,16 +105,14 @@ class _RegisterScreenState extends State<RegisterScreen> {
     return AuthScaffold(
       child: Column(
         children: [
-          const AuthTopBar(showBack: true),
-          const SizedBox(height: 20),
+          const AuthTopBar(title: 'Daftar Akun Capsee'),
+          const SizedBox(height: 50),
           AuthCard(
             child: Form(
               key: _formKey,
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  const AuthHeader(title: 'Daftar Akun Capsee'),
-                  const SizedBox(height: 24),
                   const FieldLabel('Nama Lengkap'),
                   const SizedBox(height: 8),
                   _buildNameField(),
@@ -139,7 +137,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
                     onPressed: _submit,
                   ),
                   const SizedBox(height: 18),
-                  const OrDivider('Atau daftar dengan'),
+                  const Center(child: OrDivider('Atau daftar dengan')),
                   const SizedBox(height: 14),
                   Center(
                     child: SocialButton(
@@ -176,7 +174,7 @@ class _RegisterScreenState extends State<RegisterScreen> {
       keyboardType: TextInputType.emailAddress,
       textInputAction: TextInputAction.next,
       style: AppText.body(context, color: context.palette.title),
-      decoration: capseeInputDecoration(context, hint: 'nama@email.com'),
+      decoration: capseeInputDecoration(context, hint: 'nama@gmail.com'),
       validator: validateEmail,
     );
   }
