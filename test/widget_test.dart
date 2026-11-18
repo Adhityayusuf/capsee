@@ -53,7 +53,38 @@ void main() {
 
     await tester.tap(find.text('Scan'));
     await tester.pump();
-    expect(find.text('Hasil Scan Terakhir'), findsOneWidget);
-    expect(find.text('Tanaman Sehat & Bebas Hama'), findsOneWidget);
+    expect(find.text('Gambar Scan'), findsOneWidget);
+    await tester.drag(find.byType(ListView).first, const Offset(0, -400));
+    await tester.pumpAndSettle();
+    expect(find.text('Ambil / pilih gambar'), findsOneWidget);
+    await tester.drag(find.byType(ListView).first, const Offset(0, -300));
+    await tester.pumpAndSettle();
+    expect(find.text('Keterangan Pemeriksaan'), findsOneWidget);
+  });
+
+  testWidgets('Detail lahan bisa dibuka langsung pada tab Scan', (
+    tester,
+  ) async {
+    await tester.pumpWidget(
+      MaterialApp(
+        home: LandDetailScreen(
+          initialTab: 0,
+          land: LandData(
+            id: 'lahan-scan-test',
+            name: 'Petak Cabai Blok B',
+            province: 'Jawa Barat',
+            city: 'Bandung Barat',
+            district: 'Lembang',
+            plantAgeMonths: 3,
+            lastWatered: DateTime(2024, 10, 26),
+            lastFertilized: DateTime(2024, 10, 24),
+            fertilizeIntervalWeeks: 1,
+          ),
+        ),
+      ),
+    );
+
+    expect(find.text('Gambar Scan'), findsOneWidget);
+    expect(find.text('Hasil Scan Terakhir'), findsNothing);
   });
 }

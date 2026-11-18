@@ -1,5 +1,4 @@
 import 'package:flutter/material.dart';
-import 'package:image_picker/image_picker.dart';
 
 import '../../core/app_colors.dart';
 import '../../core/app_text.dart';
@@ -14,7 +13,6 @@ import '../lahan/detail_lahan_screen.dart';
 import '../lahan/lahan_page.dart';
 import '../lahan/tambah_lahan_page.dart';
 import '../notifikasi/notifikasi_screen.dart';
-import '../scan/hasil_scan_tidak_sehat.dart';
 import '../scan/riwayat_scan_screen.dart';
 import '../../services/services.dart';
 import '../../widgets/brand_logo.dart';
@@ -28,7 +26,6 @@ class DashboardScreen extends StatefulWidget {
 
 class _DashboardScreenState extends State<DashboardScreen> {
   int _tab = 0;
-  final ImagePicker _picker = ImagePicker();
   List<ScanHistoryItem> _scanHistory = [];
 
   Map<String, dynamic>? _profil;
@@ -810,49 +807,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
     // 1. Pilih lahan dulu. Batal = berhenti, jangan buka kamera/upload.
     target ??= await _pilihLahanUntukScan();
     if (target == null || !mounted) return;
-    final String idLahanTarget = (target['id'] ?? '').toString();
-    if (idLahanTarget.isEmpty) {
+    if ((target['id'] ?? '').toString().isEmpty) {
       showErrorPopup(context, 'Lahan belum tersinkron. Pilih lahan lain.');
       return;
     }
 
-    try {
-      // 2. Baru buka kamera setelah lahan jelas.
-      final picked = await _picker.pickImage(source: ImageSource.camera);
-      if (picked == null || !mounted) return;
-
-      // Tampilkan loading dialog
-      showDialog(
-        context: context,
-        barrierDismissible: false,
-        builder: (_) => const Center(child: CircularProgressIndicator()),
-      );
-
-      // Panggil backend: ini akan otomatis kompres, upload ke Cloudinary, dan simpan ke DB!
-      await uploadScan(
-        file: picked,
-        idLahan: idLahanTarget,
-        bagianTanaman: 'daun', // Default dari dashboard
-      );
-
-      if (!mounted) return;
-      Navigator.of(context).pop(); // Tutup loading
-
-      if (mounted) showSuccessPopup(context, 'Upload berhasil! Hasil scan tersimpan di database.');
-
-      // Buka halaman hasil statis (tampilannya masih statis, tapi datanya sudah masuk DB)
-      await Navigator.of(context).push(
-        MaterialPageRoute(builder: (_) => const HasilScanTidakSehatPage()),
-      );
-
-      // Muat ulang data untuk memperbarui riwayat lahan
-      _loadData();
-    } catch (e) {
-      if (!mounted) return;
-      // Tutup loading kalau masih terbuka (jangan pop halaman dashboard).
-      if (Navigator.of(context).canPop()) Navigator.of(context).pop();
-      showErrorPopup(context, 'Gagal melakukan scan atau upload: ${pesanError(e)}');
-    }
+    await Navigator.of(context).push(
+      MaterialPageRoute(
+        builder: (_) => LandDetailScreen(
+          land: _landDataFromMap(target!),
+          initialTab: 0,
+        ),
+      ),
+    );
+    if (mounted) await _muatUlangLahan();
   }
 
   Future<void> _addLand() async {
@@ -868,30 +836,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
     Navigator.of(context)
         .push(
           MaterialPageRoute(
-            builder: (_) => LandDetailScreen(
-              land: LandData(
-                id: land['id'] as String?,
-                name: land['nama'] ?? 'Lahan',
-                province: land['provinsi'] ?? '',
-                city: land['kota'] ?? '',
-                district: land['kecamatan'] ?? '',
-                plantAgeMonths: land['umur_tanaman_bulan'] ?? 1,
-                lastWatered: land['tanggal_terakhir_siram'] != null
-                    ? (DateTime.tryParse(land['tanggal_terakhir_siram']) ??
-                          DateTime.now())
-                    : DateTime.now(),
-                lastFertilized: land['tanggal_terakhir_pupuk'] != null
-                    ? (DateTime.tryParse(land['tanggal_terakhir_pupuk']) ??
-                          DateTime.now())
-                    : DateTime.now(),
-                fertilizeIntervalWeeks: land['interval_pupuk_minggu'] ?? 1,
-                wateringIntervalWeeks:
-                    (land['interval_siram_minggu'] as num?)?.toInt() ?? 1,
-              ),
-            ),
+            builder: (_) => LandDetailScreen(land: _landDataFromMap(land)),
           ),
         )
         .then((_) => _loadData()); // Muat ulang setelah kembali dari detail
+  }
+
+  LandData _landDataFromMap(Map<String, dynamic> land) {
+    final now = DateTime.now();
+    DateTime dateValue(dynamic value) =>
+        DateTime.tryParse((value ?? '').toString()) ?? now;
+
+    return LandData(
+      id: land['id']?.toString(),
+      name: (land['nama'] ?? 'Lahan').toString(),
+      province: (land['provinsi'] ?? '').toString(),
+      city: (land['kota'] ?? '').toString(),
+      district: (land['kecamatan'] ?? '').toString(),
+      plantAgeMonths: (land['umur_tanaman_bulan'] as num?)?.toInt() ?? 1,
+      lastWatered: dateValue(land['tanggal_terakhir_siram']),
+      lastFertilized: dateValue(land['tanggal_terakhir_pupuk']),
+      fertilizeIntervalWeeks:
+          (land['interval_pupuk_minggu'] as num?)?.toInt() ?? 1,
+      wateringIntervalWeeks:
+          (land['interval_siram_minggu'] as num?)?.toInt() ?? 1,
+    );
   }
 
   void _message(String message) {
