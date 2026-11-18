@@ -34,11 +34,13 @@ class AuthScaffold extends StatelessWidget {
 }
 
 /// ---------------------------------------------------------------
-/// Bar atas halaman auth: tombol back opsional + nama aplikasi di tengah.
+/// Bar atas halaman auth: tombol back opsional + judul di tengah.
 /// ---------------------------------------------------------------
 class AuthTopBar extends StatelessWidget {
   final bool showBack;
-  const AuthTopBar({super.key, this.showBack = false});
+  final String? title;
+
+  const AuthTopBar({super.key, this.showBack = false, this.title});
 
   @override
   Widget build(BuildContext context) {
@@ -70,8 +72,9 @@ class AuthTopBar extends StatelessWidget {
               ),
             ),
           Text(
-            AppInfo.name,
-            style: AppText.display(context, color: p.accent),
+            title ?? AppInfo.name,
+            style: AppText.display(context, color: p.accent)
+                .copyWith(fontSize: 30),
           ),
         ],
       ),
