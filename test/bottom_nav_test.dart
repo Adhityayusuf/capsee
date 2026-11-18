@@ -24,7 +24,8 @@ void main() {
     );
     await tester.pump();
 
-    expect(find.text('Dashboard'), findsNWidgets(2));
+    expect(find.text('Home'), findsOneWidget);
+    expect(find.text('Capsee'), findsOneWidget);
     expect(find.text('Riwayat'), findsOneWidget);
     expect(find.text('Scan'), findsOneWidget);
     expect(find.text('Lahan'), findsWidgets);
