@@ -20,7 +20,17 @@ class LandDetailScreen extends StatefulWidget {
   final LandData land;
   final int initialTab;
 
-  const LandDetailScreen({super.key, required this.land, this.initialTab = 2});
+  /// Dipakai saat halaman ini ditampilkan sebagai halaman scan dari dashboard.
+  /// Pada alur tersebut halaman tidak didorong ke Navigator, sehingga tombol
+  /// kembali harus memberi tahu parent untuk menutup mode scan.
+  final VoidCallback? onBack;
+
+  const LandDetailScreen({
+    super.key,
+    required this.land,
+    this.initialTab = 2,
+    this.onBack,
+  });
 
   @override
   State<LandDetailScreen> createState() => _LandDetailScreenState();
@@ -957,6 +967,14 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
     );
   }
 
+  void _handleBack() {
+    if (widget.onBack != null) {
+      widget.onBack!();
+    } else {
+      Navigator.of(context).pop();
+    }
+  }
+
   // ---------------------------------------------------------------
   // App bar
   // ---------------------------------------------------------------
@@ -971,7 +989,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       titleSpacing: 0,
       leading: IconButton(
         icon: Icon(Icons.arrow_back_rounded, color: p.title),
-        onPressed: () => Navigator.of(context).pop(),
+        onPressed: _handleBack,
       ),
       title: Text(
         'Detail Lahan ${_land.name}',
