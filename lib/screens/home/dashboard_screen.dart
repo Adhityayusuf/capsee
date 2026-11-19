@@ -27,6 +27,7 @@ class DashboardScreen extends StatefulWidget {
 class _DashboardScreenState extends State<DashboardScreen> {
   int _tab = 0;
   List<ScanHistoryItem> _scanHistory = [];
+  LandData? _activeScanLand;
 
   Map<String, dynamic>? _profil;
   List<Map<String, dynamic>>? _lahanList;
@@ -57,9 +58,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
         WidgetsBinding.instance.addPostFrameCallback((_) {
           if (!mounted) return;
           Navigator.of(context).pushReplacement(
-            MaterialPageRoute(
-              builder: (_) => const LengkapiIdentitasScreen(),
-            ),
+            MaterialPageRoute(builder: (_) => const LengkapiIdentitasScreen()),
           );
         });
         return;
@@ -183,7 +182,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  Future<void> _muatUlangCuaca() async {    setState(() {
+  Future<void> _muatUlangCuaca() async {
+    setState(() {
       _loadingCuaca = true;
       _cuacaError = null;
     });
@@ -213,6 +213,12 @@ class _DashboardScreenState extends State<DashboardScreen> {
       LahanPage(isActive: _tab == 2, onChanged: _muatUlangLahan),
       const NotifikasiScreen(),
       const AkunScreen(),
+      if (_activeScanLand != null)
+        LandDetailScreen(
+          key: ValueKey(_activeScanLand!.id),
+          land: _activeScanLand!,
+          initialTab: 0,
+        ),
     ];
 
     return Scaffold(
@@ -221,7 +227,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
         selectedIndex: _tab == 4 ? 3 : (_tab < 3 ? _tab : -1),
         onSelected: (index) {
           final target = index == 3 ? 4 : index;
-          setState(() => _tab = target);
+          setState(() {
+            _activeScanLand = null;
+            _tab = target;
+          });
           // Kembali ke dashboard → segarkan daftar agar tidak basi
           // (mis. habis hapus lahan di tab lahan).
           if (target == 0) _muatUlangLahan();
@@ -274,7 +283,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     EmptyState(
                       icon: Icons.eco_outlined,
                       title: 'Belum ada data lahan.',
-                      message: 'Ketuk Tambah untuk membuat petak lahan '
+                      message:
+                          'Ketuk Tambah untuk membuat petak lahan '
                           'pertama Anda.',
                     )
                   else ...[
@@ -439,9 +449,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    [profilKec, profilKota].where((s) => s.isNotEmpty).join(', ').isEmpty
+                    [
+                          profilKec,
+                          profilKota,
+                        ].where((s) => s.isNotEmpty).join(', ').isEmpty
                         ? 'Memuat lokasi...'
-                        : [profilKec, profilKota].where((s) => s.isNotEmpty).join(', '),
+                        : [
+                            profilKec,
+                            profilKota,
+                          ].where((s) => s.isNotEmpty).join(', '),
                     style: AppText.subtitle(context),
                   ),
                 ),
@@ -453,7 +469,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
             const SizedBox(height: 8),
-            Text('Mengambil prakiraan BMKG...', style: AppText.caption(context)),
+            Text(
+              'Mengambil prakiraan BMKG...',
+              style: AppText.caption(context),
+            ),
           ],
         ),
       );
@@ -471,9 +490,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
-                    [profilKec, profilKota].where((s) => s.isNotEmpty).join(', ').isEmpty
+                    [
+                          profilKec,
+                          profilKota,
+                        ].where((s) => s.isNotEmpty).join(', ').isEmpty
                         ? 'Lokasi belum tersedia'
-                        : [profilKec, profilKota].where((s) => s.isNotEmpty).join(', '),
+                        : [
+                            profilKec,
+                            profilKota,
+                          ].where((s) => s.isNotEmpty).join(', '),
                     style: AppText.subtitle(context),
                   ),
                 ),
@@ -497,9 +522,13 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
     final lokasi = Map<String, dynamic>.from((_cuaca!['lokasi'] as Map?) ?? {});
     final prakiraan = List<Map<String, dynamic>>.from(
-      (_cuaca!['prakiraan'] as List? ?? []).map((e) => Map<String, dynamic>.from(e as Map)),
+      (_cuaca!['prakiraan'] as List? ?? []).map(
+        (e) => Map<String, dynamic>.from(e as Map),
+      ),
     );
-    final hariIni = prakiraan.isNotEmpty ? prakiraan.first : <String, dynamic>{};
+    final hariIni = prakiraan.isNotEmpty
+        ? prakiraan.first
+        : <String, dynamic>{};
 
     final labelLokasi = [
       (lokasi['kecamatan'] ?? profilKec).toString(),
@@ -674,10 +703,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     ).copyWith(fontWeight: FontWeight.w700),
                   ),
                 ),
-                Text(
-                  statusDetail,
-                  style: AppText.micro(context, color: color),
-                ),
+                Text(statusDetail, style: AppText.micro(context, color: color)),
               ],
             ),
           ),
@@ -757,10 +783,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return showDialog<Map<String, dynamic>>(
       context: context,
       builder: (ctx) => AlertDialog(
-        title: Text(
-          'Pilih Lahan untuk Scan',
-          style: AppText.title(ctx),
-        ),
+        title: Text('Pilih Lahan untuk Scan', style: AppText.title(ctx)),
         content: SizedBox(
           width: double.maxFinite,
           child: ListView.separated(
@@ -797,7 +820,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Future<void> _openScan({Map<String, dynamic>? lahanTetap}) async {
     if (_lahanList == null || _lahanList!.isEmpty) {
-      if (mounted) showInfoPopup(context, 'Buat lahan terlebih dahulu sebelum melakukan scan.');
+      if (mounted)
+        showInfoPopup(
+          context,
+          'Buat lahan terlebih dahulu sebelum melakukan scan.',
+        );
       return;
     }
 
@@ -812,15 +839,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return;
     }
 
-    await Navigator.of(context).push(
-      MaterialPageRoute(
-        builder: (_) => LandDetailScreen(
-          land: _landDataFromMap(target!),
-          initialTab: 0,
-        ),
-      ),
-    );
-    if (mounted) await _muatUlangLahan();
+    setState(() {
+      _activeScanLand = _landDataFromMap(target!);
+      _tab = 5;
+    });
   }
 
   Future<void> _addLand() async {

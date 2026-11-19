@@ -1,5 +1,6 @@
+import 'dart:typed_data';
+
 import 'package:flutter/material.dart';
-import 'package:flutter/services.dart';
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/app_text.dart';
@@ -13,6 +14,7 @@ import 'tambah_lahan_page.dart';
 import '../../services/services.dart';
 import '../../widgets/popup_notifikasi.dart';
 import '../../widgets/ui_kit.dart';
+import '../../widgets/in_app_scan_camera.dart';
 
 class LandDetailScreen extends StatefulWidget {
   final LandData land;
@@ -32,20 +34,20 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   late LandData _land = widget.land;
 
   // State alur scan.
-  int _imageSource = 0;
-  bool _isPickingImage = false;
   bool _isAnalyzing = false;
+  bool _cameraOpen = false;
+  bool _bagianLocked = false;
   XFile? _selectedImage;
   Uint8List? _selectedImageBytes;
-  String _bagianTanaman = 'daun';
+  String _bagianTanaman = 'buah';
   String _selectedPetak = 'A';
   final TextEditingController _catatanController = TextEditingController();
   final PageController _bagianController = PageController(
+    initialPage: 1,
     viewportFraction: 0.88,
   );
   Map<String, dynamic>? _scanResult;
   Map<String, String>? _scanKeterangan;
-  final ImagePicker _picker = ImagePicker();
 
   // ── State cuaca BMKG ──
   Map<String, dynamic>? _cuaca; // prakiraan[0]
@@ -57,6 +59,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   void initState() {
     super.initState();
     _tabIndex = widget.initialTab.clamp(0, 2).toInt();
+    _cameraOpen = _tabIndex == 0;
     _loadCuaca();
   }
 
@@ -222,54 +225,39 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
     showErrorPopup(context, message);
   }
 
-  Future<void> _pickScanImage({int? sourceIndex}) async {
-    // WAJIB ada lahan dulu. Jangan buka kamera/upload kalau id kosong.
-    final idLahan = (widget.land.id ?? '').trim();
+  void _openScanCamera() {
+    final idLahan = (_land.id ?? '').trim();
     if (idLahan.isEmpty) {
       _showError(
         'Pilih/buka lahan dulu sebelum scan agar foto tidak terbuang.',
       );
       return;
     }
-    if (_isPickingImage || _isAnalyzing) return;
-
-    final selectedSource = sourceIndex ?? _imageSource;
-    final source = selectedSource == 0
-        ? ImageSource.camera
-        : ImageSource.gallery;
+    if (_isAnalyzing) return;
     setState(() {
-      _imageSource = selectedSource;
-      _isPickingImage = true;
+      _cameraOpen = true;
+      _bagianLocked = false;
     });
-    try {
-      final pickedFile = await _picker.pickImage(source: source);
-      if (pickedFile == null) return;
-      final imageBytes = await pickedFile.readAsBytes();
+  }
+
+  void _handleCapture(ScanCapture capture) {
+    setState(() {
+      _selectedImage = capture.file;
+      _selectedImageBytes = capture.bytes;
+      _bagianTanaman = capture.bagianTanaman;
+      _bagianLocked = true;
+      _cameraOpen = false;
+      _scanResult = null;
+      _scanKeterangan = null;
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
-      setState(() {
-        _selectedImage = pickedFile;
-        _selectedImageBytes = imageBytes;
-        _scanResult = null;
-        _scanKeterangan = null;
-      });
-    } on PlatformException catch (e) {
-      if (!mounted) return;
-      final message = switch (e.code) {
-        'camera_access_denied' =>
-          'Akses kamera ditolak. Izinkan Capsee menggunakan kamera di pengaturan perangkat.',
-        'photo_access_denied' || 'photo_access_denied_limited' =>
-          'Akses galeri ditolak. Izinkan Capsee mengakses foto di pengaturan perangkat.',
-        _ =>
-          e.message ??
-              'Fitur kamera atau galeri tidak tersedia di perangkat ini.',
-      };
-      _showError(message);
-    } catch (e) {
-      if (!mounted) return;
-      _showError('Gagal membuka gambar: ${pesanError(e)}');
-    } finally {
-      if (mounted) setState(() => _isPickingImage = false);
-    }
+      _bagianController.jumpToPage(_bagianTanaman == 'daun' ? 0 : 1);
+    });
+  }
+
+  void _closeScanCamera() {
+    if (mounted) setState(() => _cameraOpen = false);
   }
 
   Future<void> _handleAnalyze() async {
@@ -343,18 +331,28 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         const SizedBox(height: 14),
         _buildScanSectionLabel(
           'Gambar Scan',
-          'Ambil foto atau pilih dari galeri.',
+          _cameraOpen
+              ? 'Pilih bagian tanaman lalu ambil foto dari kamera internal.'
+              : 'Foto sudah siap untuk diperiksa.',
         ),
         const SizedBox(height: 10),
-        _buildSourceSelector(),
-        const SizedBox(height: 16),
-        _buildViewfinder(),
-        const SizedBox(height: 12),
-        _buildPickImageButton(),
-        const SizedBox(height: 18),
-        _buildScanDetailsForm(),
-        const SizedBox(height: 14),
-        _buildAnalyzeButton(),
+        if (_cameraOpen)
+          InAppScanCamera(
+            initialBagianTanaman: _bagianTanaman,
+            onConfirmed: _handleCapture,
+            onClose: _closeScanCamera,
+          )
+        else ...[
+          _buildViewfinder(),
+          const SizedBox(height: 12),
+          _buildPickImageButton(),
+        ],
+        if (_selectedImage != null) ...[
+          const SizedBox(height: 18),
+          _buildScanDetailsForm(),
+          const SizedBox(height: 14),
+          _buildAnalyzeButton(),
+        ],
         if (_scanResult != null) ...[
           const SizedBox(height: 16),
           _buildScanResultCard(),
@@ -375,65 +373,6 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
           Text(subtitle, style: AppText.bodySm(context)),
         ],
       ],
-    );
-  }
-
-  Widget _buildSourceSelector() {
-    return Row(
-      children: [
-        Expanded(
-          child: _sourceCard(
-            index: 0,
-            icon: Icons.photo_camera_rounded,
-            label: 'Kamera Langsung',
-          ),
-        ),
-        const SizedBox(width: 10),
-        Expanded(
-          child: _sourceCard(
-            index: 1,
-            icon: Icons.photo_library_rounded,
-            label: 'Ambil Galeri',
-          ),
-        ),
-      ],
-    );
-  }
-
-  Widget _sourceCard({
-    required int index,
-    required IconData icon,
-    required String label,
-  }) {
-    final selected = _imageSource == index;
-    final p = context.palette;
-    return InkWell(
-      onTap: _isPickingImage || _isAnalyzing
-          ? null
-          : () => _pickScanImage(sourceIndex: index),
-      borderRadius: BorderRadius.circular(AppSpace.radiusTile),
-      child: Container(
-        padding: const EdgeInsets.symmetric(vertical: 12),
-        decoration: BoxDecoration(
-          color: selected ? p.surface : p.surfaceAlt,
-          borderRadius: BorderRadius.circular(AppSpace.radiusTile),
-          border: Border.all(color: selected ? p.primary : p.border),
-        ),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 18, color: selected ? p.primary : p.icon),
-            const SizedBox(width: 8),
-            Text(
-              label,
-              style: AppText.body(
-                context,
-                color: selected ? p.primary : p.subtitle,
-              ).copyWith(fontWeight: FontWeight.w700),
-            ),
-          ],
-        ),
-      ),
     );
   }
 
@@ -469,20 +408,10 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
 
   Widget _buildPickImageButton() {
     return OutlinedButton.icon(
-      onPressed: _isAnalyzing || _isPickingImage ? null : _pickScanImage,
-      icon: _isPickingImage
-          ? const SizedBox(
-              width: 18,
-              height: 18,
-              child: CircularProgressIndicator(strokeWidth: 2),
-            )
-          : const Icon(Icons.add_photo_alternate_outlined, size: 18),
+      onPressed: _isAnalyzing ? null : _openScanCamera,
+      icon: const Icon(Icons.photo_camera_rounded, size: 18),
       label: Text(
-        _isPickingImage
-            ? 'Membuka kamera / galeri...'
-            : _selectedImage == null
-            ? 'Ambil / pilih gambar'
-            : 'Ganti gambar',
+        _selectedImage == null ? 'Buka Kamera / Galeri' : 'Ganti Foto',
       ),
     );
   }
@@ -505,30 +434,34 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
           const SizedBox(height: 8),
           SizedBox(
             height: 104,
-            child: PageView(
-              controller: _bagianController,
-              onPageChanged: (index) {
-                final bagian = index == 0 ? 'daun' : 'buah';
-                setState(() {
-                  _bagianTanaman = bagian;
-                  _scanResult = null;
-                  _scanKeterangan = null;
-                });
-              },
-              children: [
-                _plantPartSlide(
-                  icon: Icons.eco_outlined,
-                  title: 'Daun',
-                  description: 'Periksa bercak, perubahan warna, atau hama.',
-                  selected: _bagianTanaman == 'daun',
-                ),
-                _plantPartSlide(
-                  icon: Icons.local_florist_outlined,
-                  title: 'Buah',
-                  description: 'Periksa kondisi dan gejala pada buah cabai.',
-                  selected: _bagianTanaman == 'buah',
-                ),
-              ],
+            child: IgnorePointer(
+              ignoring: _bagianLocked,
+              child: PageView(
+                controller: _bagianController,
+                onPageChanged: (index) {
+                  if (_bagianLocked) return;
+                  final bagian = index == 0 ? 'daun' : 'buah';
+                  setState(() {
+                    _bagianTanaman = bagian;
+                    _scanResult = null;
+                    _scanKeterangan = null;
+                  });
+                },
+                children: [
+                  _plantPartSlide(
+                    icon: Icons.eco_outlined,
+                    title: 'Daun',
+                    description: 'Periksa bercak, perubahan warna, atau hama.',
+                    selected: _bagianTanaman == 'daun',
+                  ),
+                  _plantPartSlide(
+                    icon: Icons.local_florist_outlined,
+                    title: 'Buah',
+                    description: 'Periksa kondisi dan gejala pada buah cabai.',
+                    selected: _bagianTanaman == 'buah',
+                  ),
+                ],
+              ),
             ),
           ),
           const SizedBox(height: 6),
@@ -1017,7 +950,12 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
             for (var i = 0; i < tabs.length; i++)
               Expanded(
                 child: GestureDetector(
-                  onTap: () => setState(() => _tabIndex = i),
+                  onTap: () {
+                    setState(() {
+                      _tabIndex = i;
+                      _cameraOpen = i == 0;
+                    });
+                  },
                   child: AnimatedContainer(
                     duration: const Duration(milliseconds: 150),
                     padding: const EdgeInsets.symmetric(vertical: 10),

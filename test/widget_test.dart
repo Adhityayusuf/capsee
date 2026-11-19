@@ -54,12 +54,9 @@ void main() {
     await tester.tap(find.text('Scan'));
     await tester.pump();
     expect(find.text('Gambar Scan'), findsOneWidget);
-    await tester.drag(find.byType(ListView).first, const Offset(0, -400));
-    await tester.pumpAndSettle();
-    expect(find.text('Ambil / pilih gambar'), findsOneWidget);
-    await tester.drag(find.byType(ListView).first, const Offset(0, -300));
-    await tester.pumpAndSettle();
-    expect(find.text('Keterangan Pemeriksaan'), findsOneWidget);
+    expect(find.text('Scan Tanaman'), findsOneWidget);
+    expect(find.text('Galeri'), findsOneWidget);
+    expect(find.text('Buah'), findsOneWidget);
   });
 
   testWidgets('Detail lahan bisa dibuka langsung pada tab Scan', (
