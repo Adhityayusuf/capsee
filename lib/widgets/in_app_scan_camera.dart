@@ -4,6 +4,7 @@ import 'dart:ui' as ui;
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart' show DeviceOrientation;
 import 'package:image_picker/image_picker.dart';
 
 import '../core/app_text.dart';
@@ -418,7 +419,17 @@ class _InAppScanCameraState extends State<InAppScanCamera>
     return LayoutBuilder(
       builder: (context, constraints) {
         final viewportSize = Size(constraints.maxWidth, constraints.maxHeight);
-        final aspectRatio = controller.value.aspectRatio;
+        final orientation = controller.value.isRecordingVideo
+            ? controller.value.recordingOrientation!
+            : (controller.value.previewPauseOrientation ??
+                  controller.value.lockedCaptureOrientation ??
+                  controller.value.deviceOrientation);
+        final isLandscape =
+            orientation == DeviceOrientation.landscapeLeft ||
+            orientation == DeviceOrientation.landscapeRight;
+        final aspectRatio = isLandscape
+            ? controller.value.aspectRatio
+            : 1 / controller.value.aspectRatio;
         final previewSize = aspectRatio > viewportSize.aspectRatio
             ? Size(viewportSize.height * aspectRatio, viewportSize.height)
             : Size(viewportSize.width, viewportSize.width / aspectRatio);
