@@ -143,8 +143,7 @@ Future<http.Response> apiPatch(
   Duration timeout = _requestTimeout,
 }) {
   return _denganPesanRamah(
-    () =>
-        http.patch(_uri(path), headers: headers, body: body).timeout(timeout),
+    () => http.patch(_uri(path), headers: headers, body: body).timeout(timeout),
   );
 }
 
@@ -172,6 +171,7 @@ Future<http.Response> apiSend(
     return http.Response.fromStream(streamed).timeout(timeout);
   });
 }
+
 /// Key untuk menyimpan token JWT di SharedPreferences.
 const String _tokenKey = 'auth_token';
 
@@ -222,9 +222,7 @@ Future<Map<String, String>> headerAuth() async {
 /// Header multipart + Bearer token (untuk upload file/gambar).
 Future<Map<String, String>> headerAuthMultipart() async {
   final token = await ambilToken();
-  return {
-    if (token != null) 'Authorization': 'Bearer $token',
-  };
+  return {if (token != null) 'Authorization': 'Bearer $token'};
 }
 
 // ─────────────────────────────────────────────────────────
@@ -240,7 +238,9 @@ Map<String, dynamic> parseResponse(http.Response res) {
   } catch (_) {
     // Backend mengembalikan non-JSON (mis. 502 gateway HTML, timeout proxy).
     final snippet = utf8.decode(res.bodyBytes, allowMalformed: true).trim();
-    final preview = snippet.length > 200 ? '${snippet.substring(0, 200)}…' : snippet;
+    final preview = snippet.length > 200
+        ? '${snippet.substring(0, 200)}…'
+        : snippet;
     throw ApiException(
       'Respons server tidak valid (${res.statusCode})${preview.isEmpty ? '' : ': $preview'}',
       res.statusCode,
