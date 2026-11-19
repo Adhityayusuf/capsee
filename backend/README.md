@@ -37,8 +37,10 @@ dalam kode Flutter.
    ```
    uvicorn app.main:app --host 0.0.0.0 --port 8000
    ```
-   lalu samakan `baseUrl` di `lib/services/api_client.dart` dengan IPv4
-   laptop (cek via `ipconfig`), misal `http://192.168.75.116:8000`.
+   Aplikasi memakai `http://192.168.67.113:8000` sebagai alamat backend
+   default. Jika IPv4 laptop berubah, perbarui `_defaultLanBaseUrl` di
+   `lib/services/api_client.dart` atau jalankan Flutter dengan
+   `--dart-define=BASE_URL=http://<IPv4-laptop>:8000`.
    Buka izin firewall Windows untuk port 8000 bila HP tidak bisa konek.
 
 ## Skema & seed database (Neon)

@@ -1,4 +1,6 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
@@ -42,7 +44,7 @@ class _InAppScanCameraState extends State<InAppScanCamera>
   String? _errorMessage;
   bool _initializing = true;
   bool _busy = false;
-  bool _showGrid = true;
+  bool _showScanFrame = true;
   String _bagianTanaman = 'buah';
   double _minZoom = 1;
   double _maxZoom = 1;
@@ -50,6 +52,7 @@ class _InAppScanCameraState extends State<InAppScanCamera>
   XFile? _reviewFile;
   Uint8List? _reviewBytes;
   FlashMode _flashMode = FlashMode.off;
+  final GlobalKey _cameraSurfaceKey = GlobalKey();
 
   @override
   void initState() {
@@ -153,10 +156,21 @@ class _InAppScanCameraState extends State<InAppScanCamera>
     setState(() => _busy = true);
     try {
       final file = await controller.takePicture();
-      final bytes = await file.readAsBytes();
+      final viewportSize = _cameraSurfaceKey.currentContext?.size;
+      if (viewportSize == null) {
+        throw StateError('Area kamera belum siap untuk diproses.');
+      }
+      final bytes = await _cropToScanFrame(
+        await file.readAsBytes(),
+        viewportSize,
+      );
       if (!mounted) return;
       setState(() {
-        _reviewFile = file;
+        _reviewFile = XFile.fromData(
+          bytes,
+          name: 'capsee-scan.png',
+          mimeType: 'image/png',
+        );
         _reviewBytes = bytes;
         _busy = false;
       });
@@ -176,10 +190,21 @@ class _InAppScanCameraState extends State<InAppScanCamera>
         if (mounted) setState(() => _busy = false);
         return;
       }
-      final bytes = await file.readAsBytes();
+      final viewportSize = _cameraSurfaceKey.currentContext?.size;
+      if (viewportSize == null) {
+        throw StateError('Area kamera belum siap untuk diproses.');
+      }
+      final bytes = await _cropToScanFrame(
+        await file.readAsBytes(),
+        viewportSize,
+      );
       if (!mounted) return;
       setState(() {
-        _reviewFile = file;
+        _reviewFile = XFile.fromData(
+          bytes,
+          name: 'capsee-scan.png',
+          mimeType: 'image/png',
+        );
         _reviewBytes = bytes;
         _busy = false;
       });
@@ -217,6 +242,76 @@ class _InAppScanCameraState extends State<InAppScanCamera>
     }
   }
 
+  Future<Uint8List> _cropToScanFrame(Uint8List bytes, Size viewportSize) async {
+    final codec = await ui.instantiateImageCodec(bytes);
+    try {
+      final source = (await codec.getNextFrame()).image;
+      try {
+        final sourceSize = Size(
+          source.width.toDouble(),
+          source.height.toDouble(),
+        );
+        final scale = math.max(
+          viewportSize.width / sourceSize.width,
+          viewportSize.height / sourceSize.height,
+        );
+        final renderedSize = Size(
+          sourceSize.width * scale,
+          sourceSize.height * scale,
+        );
+        final frame = _scanFrameRect(viewportSize);
+        final cropRect = Rect.fromLTRB(
+          (frame.left - (viewportSize.width - renderedSize.width) / 2) / scale,
+          (frame.top - (viewportSize.height - renderedSize.height) / 2) / scale,
+          (frame.right - (viewportSize.width - renderedSize.width) / 2) / scale,
+          (frame.bottom - (viewportSize.height - renderedSize.height) / 2) /
+              scale,
+        ).intersect(Offset.zero & sourceSize);
+        final left = cropRect.left.floor();
+        final top = cropRect.top.floor();
+        final right = cropRect.right.ceil().clamp(left + 1, source.width);
+        final bottom = cropRect.bottom.ceil().clamp(top + 1, source.height);
+        final width = right - left;
+        final height = bottom - top;
+        final recorder = ui.PictureRecorder();
+        final canvas = Canvas(recorder);
+        canvas.drawImageRect(
+          source,
+          Rect.fromLTRB(
+            left.toDouble(),
+            top.toDouble(),
+            right.toDouble(),
+            bottom.toDouble(),
+          ),
+          Rect.fromLTWH(0, 0, width.toDouble(), height.toDouble()),
+          Paint()..filterQuality = FilterQuality.high,
+        );
+        final picture = recorder.endRecording();
+        ui.Image croppedImage;
+        try {
+          croppedImage = await picture.toImage(width, height);
+        } finally {
+          picture.dispose();
+        }
+        try {
+          final data = await croppedImage.toByteData(
+            format: ui.ImageByteFormat.png,
+          );
+          if (data == null) {
+            throw StateError('Foto hasil scan tidak dapat disiapkan.');
+          }
+          return data.buffer.asUint8List();
+        } finally {
+          croppedImage.dispose();
+        }
+      } finally {
+        source.dispose();
+      }
+    } finally {
+      codec.dispose();
+    }
+  }
+
   void _confirmPhoto() {
     final file = _reviewFile;
     final bytes = _reviewBytes;
@@ -251,6 +346,7 @@ class _InAppScanCameraState extends State<InAppScanCamera>
   Widget build(BuildContext context) {
     final p = context.palette;
     return ClipRRect(
+      key: _cameraSurfaceKey,
       borderRadius: BorderRadius.circular(AppSpace.radiusCard),
       child: SizedBox(
         height: 500,
@@ -258,8 +354,8 @@ class _InAppScanCameraState extends State<InAppScanCamera>
           fit: StackFit.expand,
           children: [
             _buildPreview(context),
-            if (_reviewFile == null && _showGrid)
-              const IgnorePointer(child: _GridOverlay()),
+            if (_reviewFile == null && _showScanFrame)
+              const IgnorePointer(child: _ScanFrameOverlay()),
             _buildTopControls(context, p),
             if (_reviewFile == null)
               _buildLiveControls(context, p)
@@ -319,7 +415,25 @@ class _InAppScanCameraState extends State<InAppScanCamera>
         ),
       );
     }
-    return Center(child: CameraPreview(controller));
+    return LayoutBuilder(
+      builder: (context, constraints) {
+        final viewportSize = Size(constraints.maxWidth, constraints.maxHeight);
+        final aspectRatio = controller.value.aspectRatio;
+        final previewSize = aspectRatio > viewportSize.aspectRatio
+            ? Size(viewportSize.height * aspectRatio, viewportSize.height)
+            : Size(viewportSize.width, viewportSize.width / aspectRatio);
+        return ClipRect(
+          child: FittedBox(
+            fit: BoxFit.cover,
+            child: SizedBox(
+              width: previewSize.width,
+              height: previewSize.height,
+              child: CameraPreview(controller),
+            ),
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildTopControls(BuildContext context, AppPalette p) {
@@ -353,13 +467,17 @@ class _InAppScanCameraState extends State<InAppScanCamera>
               ),
             ),
             IconButton(
-              tooltip: _showGrid ? 'Sembunyikan grid' : 'Tampilkan grid',
+              tooltip: _showScanFrame
+                  ? 'Sembunyikan bingkai scan'
+                  : 'Tampilkan bingkai scan',
               onPressed: _reviewFile == null
-                  ? () => setState(() => _showGrid = !_showGrid)
+                  ? () => setState(() => _showScanFrame = !_showScanFrame)
                   : null,
               color: Colors.white,
               icon: Icon(
-                _showGrid ? Icons.grid_on_rounded : Icons.grid_off_rounded,
+                _showScanFrame
+                    ? Icons.center_focus_strong_rounded
+                    : Icons.center_focus_weak_rounded,
               ),
             ),
           ],
@@ -548,35 +666,101 @@ class _InAppScanCameraState extends State<InAppScanCamera>
   }
 }
 
-class _GridOverlay extends StatelessWidget {
-  const _GridOverlay();
+class _ScanFrameOverlay extends StatelessWidget {
+  const _ScanFrameOverlay();
 
   @override
   Widget build(BuildContext context) {
-    return CustomPaint(painter: _GridPainter());
+    return CustomPaint(painter: _ScanFramePainter());
   }
 }
 
-class _GridPainter extends CustomPainter {
+Rect _scanFrameRect(Size size) {
+  final width = math.min(size.width * 0.82, size.height * 0.62);
+  final height = math.min(width, size.height * 0.52);
+  final centerY = (size.height * 0.38).clamp(
+    height / 2,
+    size.height - height / 2,
+  );
+  return Rect.fromCenter(
+    center: Offset(size.width / 2, centerY),
+    width: width,
+    height: height,
+  );
+}
+
+class _ScanFramePainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
-    final paint = Paint()
-      ..color = Colors.white54
+    final frame = _scanFrameRect(size);
+    final roundedFrame = RRect.fromRectAndRadius(
+      frame,
+      const Radius.circular(24),
+    );
+    final mask = Path()
+      ..fillType = PathFillType.evenOdd
+      ..addRect(Offset.zero & size)
+      ..addRRect(roundedFrame);
+    canvas.drawPath(mask, Paint()..color = const Color.fromARGB(48, 0, 0, 0));
+    canvas.drawRRect(
+      roundedFrame,
+      Paint()
+        ..color = const Color.fromARGB(150, 255, 255, 255)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 1.2,
+    );
+
+    final cornerLength = math.min(frame.width, frame.height) * 0.12;
+    final corners = Path()
+      ..moveTo(frame.left, frame.top + cornerLength)
+      ..lineTo(frame.left, frame.top + 24)
+      ..quadraticBezierTo(frame.left, frame.top, frame.left + 24, frame.top)
+      ..lineTo(frame.left + cornerLength, frame.top)
+      ..moveTo(frame.right - cornerLength, frame.top)
+      ..lineTo(frame.right - 24, frame.top)
+      ..quadraticBezierTo(frame.right, frame.top, frame.right, frame.top + 24)
+      ..lineTo(frame.right, frame.top + cornerLength)
+      ..moveTo(frame.right, frame.bottom - cornerLength)
+      ..lineTo(frame.right, frame.bottom - 24)
+      ..quadraticBezierTo(
+        frame.right,
+        frame.bottom,
+        frame.right - 24,
+        frame.bottom,
+      )
+      ..lineTo(frame.right - cornerLength, frame.bottom)
+      ..moveTo(frame.left + cornerLength, frame.bottom)
+      ..lineTo(frame.left + 24, frame.bottom)
+      ..quadraticBezierTo(
+        frame.left,
+        frame.bottom,
+        frame.left,
+        frame.bottom - 24,
+      )
+      ..lineTo(frame.left, frame.bottom - cornerLength);
+    canvas.drawPath(
+      corners,
+      Paint()
+        ..color = Colors.white
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 3
+        ..strokeCap = StrokeCap.round
+        ..strokeJoin = StrokeJoin.round,
+    );
+
+    final guidePaint = Paint()
+      ..color = const Color.fromARGB(80, 255, 255, 255)
       ..strokeWidth = 1;
-    final thirdWidth = size.width / 3;
-    final thirdHeight = size.height / 3;
-    for (var i = 1; i < 3; i++) {
-      canvas.drawLine(
-        Offset(thirdWidth * i, 0),
-        Offset(thirdWidth * i, size.height),
-        paint,
-      );
-      canvas.drawLine(
-        Offset(0, thirdHeight * i),
-        Offset(size.width, thirdHeight * i),
-        paint,
-      );
-    }
+    canvas.drawLine(
+      Offset(frame.left + 24, frame.center.dy),
+      Offset(frame.right - 24, frame.center.dy),
+      guidePaint,
+    );
+    canvas.drawLine(
+      Offset(frame.center.dx, frame.top + 24),
+      Offset(frame.center.dx, frame.bottom - 24),
+      guidePaint,
+    );
   }
 
   @override
