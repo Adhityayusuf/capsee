@@ -33,6 +33,10 @@ android {
         // flag during build.
         versionCode = flutter.versionCode
         versionName = flutter.versionName
+        ndk {
+            // TFLite native libraries – sertakan ABI yang umum dipakai perangkat Android
+            abiFilters += listOf("armeabi-v7a", "arm64-v8a", "x86_64")
+        }
     }
 
     signingConfigs {
