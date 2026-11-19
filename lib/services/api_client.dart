@@ -6,14 +6,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import 'package:flutter/foundation.dart';
 
+const _buildBaseUrl = String.fromEnvironment('BASE_URL');
+
 /// Alamat default backend yang otomatis menyesuaikan platform:
 /// - Android Emulator: 'http://10.0.2.2:8000' (karena 127.0.0.1 di emulator merujuk ke hp itu sendiri)
 /// - Web / Desktop (Windows/macOS/Linux) / iOS Simulator: 'http://127.0.0.1:8000'
 /// - Bisa dioverride saat build: --dart-define=BASE_URL=http://...
 /// - Bisa juga disimpan dinamis di SharedPreferences jika ingin ubah di runtime.
 String get defaultBaseUrl {
-  const envUrl = String.fromEnvironment('BASE_URL');
-  if (envUrl.isNotEmpty) return envUrl;
+  if (_buildBaseUrl.isNotEmpty) {
+    return _buildBaseUrl.replaceAll(RegExp(r'/+$'), '');
+  }
 
   if (kIsWeb) {
     return 'http://127.0.0.1:8000';
@@ -30,6 +33,11 @@ String get baseUrl => _cachedBaseUrl;
 
 /// Inisialisasi baseUrl (opsional dari SharedPreferences jika pengguna pernah mengubah IP di app).
 Future<String> initBaseUrl() async {
+  if (_buildBaseUrl.isNotEmpty) {
+    _cachedBaseUrl = defaultBaseUrl;
+    return _cachedBaseUrl;
+  }
+
   final prefs = await SharedPreferences.getInstance();
   final saved = prefs.getString('custom_base_url');
   if (saved != null && saved.isNotEmpty) {
