@@ -5,7 +5,8 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _buildBaseUrl = String.fromEnvironment('BASE_URL');
-const _defaultLanBaseUrl = 'http://192.168.67.113:8000';
+const _defaultLanBaseUrl = 'http://10.10.1.131:8000';
+const String apiCodeNotChiliPlant = 'not_chili_plant';
 
 /// Alamat default backend untuk perangkat di jaringan lokal yang sama.
 /// - Bisa dioverride saat build: --dart-define=BASE_URL=http://...
@@ -247,8 +248,12 @@ Map<String, dynamic> parseResponse(http.Response res) {
     );
   }
   if (res.statusCode >= 200 && res.statusCode < 300) return body;
-  final pesan = body['detail'] ?? 'Terjadi kesalahan (${res.statusCode})';
-  throw ApiException(pesan.toString(), res.statusCode);
+  final detail = body['detail'];
+  final code = detail is Map ? detail['code']?.toString() : null;
+  final pesan = detail is Map
+      ? (detail['message'] ?? 'Terjadi kesalahan (${res.statusCode})')
+      : (detail ?? 'Terjadi kesalahan (${res.statusCode})');
+  throw ApiException(pesan.toString(), res.statusCode, code: code);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -259,7 +264,9 @@ Map<String, dynamic> parseResponse(http.Response res) {
 class ApiException implements Exception {
   final String pesan;
   final int statusCode;
-  ApiException(this.pesan, this.statusCode);
+  final String? code;
+
+  ApiException(this.pesan, this.statusCode, {this.code});
 
   @override
   String toString() => pesan;

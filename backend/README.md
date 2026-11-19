@@ -79,5 +79,8 @@ setelah server jalan untuk daftar lengkap dan interaktif.
 ## TODO
 
 - Ganti hasil placeholder di `app/routers/pemindaian.py` dengan
-  pemanggilan model ML sesungguhnya.
+  pemanggilan model ML sesungguhnya. Jika foto bukan daun/buah cabai,
+  endpoint scan perlu mengembalikan HTTP 422 dengan `detail` seperti:
+  `{"code":"not_chili_plant","message":"Foto bukan daun atau buah cabai."}`.
+  Aplikasi akan menampilkan dialog foto tidak sesuai dan meminta foto baru.
 - Integrasi BMKG untuk jadwal penyiraman otomatis.
