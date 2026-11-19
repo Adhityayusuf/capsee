@@ -4,27 +4,17 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:flutter/foundation.dart';
-
 const _buildBaseUrl = String.fromEnvironment('BASE_URL');
+const _defaultLanBaseUrl = 'http://192.168.67.113:8000';
 
-/// Alamat default backend yang otomatis menyesuaikan platform:
-/// - Android Emulator: 'http://10.0.2.2:8000' (karena 127.0.0.1 di emulator merujuk ke hp itu sendiri)
-/// - Web / Desktop (Windows/macOS/Linux) / iOS Simulator: 'http://127.0.0.1:8000'
+/// Alamat default backend untuk perangkat di jaringan lokal yang sama.
 /// - Bisa dioverride saat build: --dart-define=BASE_URL=http://...
 /// - Bisa juga disimpan dinamis di SharedPreferences jika ingin ubah di runtime.
 String get defaultBaseUrl {
   if (_buildBaseUrl.isNotEmpty) {
     return _buildBaseUrl.replaceAll(RegExp(r'/+$'), '');
   }
-
-  if (kIsWeb) {
-    return 'http://127.0.0.1:8000';
-  }
-  if (Platform.isAndroid) {
-    return 'http://10.0.2.2:8000';
-  }
-  return 'http://127.0.0.1:8000';
+  return _defaultLanBaseUrl;
 }
 
 /// Alamat backend saat ini.
