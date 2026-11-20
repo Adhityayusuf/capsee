@@ -20,13 +20,30 @@ class ScanDaunResultScreen extends StatelessWidget {
   final Uint8List imageBytes;
   final LeafInferenceResult result;
   final VoidCallback onScanUlang;
+  final Future<bool> Function() onSimpan;
 
   const ScanDaunResultScreen({
     super.key,
     required this.imageBytes,
     required this.result,
     required this.onScanUlang,
+    required this.onSimpan,
   });
+
+  Future<void> _simpan(BuildContext context) async {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final saved = await onSimpan();
+    if (!context.mounted) return;
+    Navigator.of(context).pop();
+    if (saved && context.mounted) {
+      Navigator.of(context).pop(true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -45,7 +62,11 @@ class ScanDaunResultScreen extends StatelessWidget {
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
-            AppSpace.page, AppSpace.gapMd, AppSpace.page, 32),
+          AppSpace.page,
+          AppSpace.gapMd,
+          AppSpace.page,
+          32,
+        ),
         children: [
           _buildImageCard(context, p),
           const SizedBox(height: AppSpace.gapMd),
@@ -101,7 +122,9 @@ class ScanDaunResultScreen extends StatelessWidget {
                     right: 0,
                     child: Container(
                       padding: const EdgeInsets.symmetric(
-                          horizontal: 14, vertical: 8),
+                        horizontal: 14,
+                        vertical: 8,
+                      ),
                       decoration: const BoxDecoration(
                         gradient: LinearGradient(
                           begin: Alignment.bottomCenter,
@@ -111,13 +134,18 @@ class ScanDaunResultScreen extends StatelessWidget {
                       ),
                       child: Row(
                         children: [
-                          Icon(Icons.eco_rounded,
-                              color: Colors.white70, size: 14),
+                          Icon(
+                            Icons.eco_rounded,
+                            color: Colors.white70,
+                            size: 14,
+                          ),
                           const SizedBox(width: 5),
                           Text(
                             'Scan Daun Cabai',
-                            style: AppText.micro(context, color: Colors.white70)
-                                .copyWith(fontWeight: FontWeight.w700),
+                            style: AppText.micro(
+                              context,
+                              color: Colors.white70,
+                            ).copyWith(fontWeight: FontWeight.w700),
                           ),
                         ],
                       ),
@@ -137,9 +165,7 @@ class ScanDaunResultScreen extends StatelessWidget {
   Widget _buildResultCard(BuildContext context, AppPalette p) {
     final isHealthy = result.isHealthy;
     final accentColor = isHealthy ? p.accent : p.error;
-    final bgColor = isHealthy
-        ? p.accentSoft
-        : p.error.withValues(alpha: .10);
+    final bgColor = isHealthy ? p.accentSoft : p.error.withValues(alpha: .10);
 
     return CapseeCard(
       child: Column(
@@ -172,8 +198,10 @@ class ScanDaunResultScreen extends StatelessWidget {
               children: [
                 Text(
                   isHealthy ? 'Daun Sehat' : 'Penyakit Terdeteksi',
-                  style: AppText.caption(context, color: accentColor)
-                      .copyWith(fontWeight: FontWeight.w700),
+                  style: AppText.caption(
+                    context,
+                    color: accentColor,
+                  ).copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
                 Text(
@@ -279,23 +307,21 @@ class ScanDaunResultScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFEF3C7),
         borderRadius: BorderRadius.circular(AppSpace.radiusCard),
-        border: Border.all(color: const Color(0xFFF59E0B).withValues(alpha: .4)),
+        border: Border.all(
+          color: const Color(0xFFF59E0B).withValues(alpha: .4),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.warning_rounded,
-              color: Color(0xFFB45309), size: 20),
+          const Icon(Icons.warning_rounded, color: Color(0xFFB45309), size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               'Hasil prediksi memiliki tingkat keyakinan rendah. '
               'Hasil ini belum dapat dipastikan. '
               'Silakan ambil gambar ulang untuk memperoleh hasil yang lebih baik.',
-              style: AppText.bodySm(
-                context,
-                color: const Color(0xFF78350F),
-              ),
+              style: AppText.bodySm(context, color: const Color(0xFF78350F)),
             ),
           ),
         ],
@@ -316,8 +342,12 @@ class ScanDaunResultScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppSpace.gapMd),
           _infoRow(context, p, 'Model', 'MobileNetV2 (Klasifikasi Daun)'),
-          _infoRow(context, p, 'Kelas tersedia',
-              ModelConfig.leafLabels.length.toString()),
+          _infoRow(
+            context,
+            p,
+            'Kelas tersedia',
+            ModelConfig.leafLabels.length.toString(),
+          ),
           _infoRow(
             context,
             p,
@@ -357,6 +387,16 @@ class ScanDaunResultScreen extends StatelessWidget {
   Widget _buildActions(BuildContext context, AppPalette p) {
     return Column(
       children: [
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: FilledButton.icon(
+            onPressed: () => _simpan(context),
+            icon: const Icon(Icons.bookmark_add_outlined, size: 18),
+            label: const Text('Simpan ke Riwayat'),
+          ),
+        ),
+        const SizedBox(height: 10),
         SizedBox(
           width: double.infinity,
           height: 50,

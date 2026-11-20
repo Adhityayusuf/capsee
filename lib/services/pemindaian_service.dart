@@ -24,6 +24,9 @@ Future<Map<String, dynamic>> uploadScan({
   required XFile file,
   required String idLahan,
   required String bagianTanaman, // 'daun' atau 'buah'
+  String? statusHasil,
+  String? labelHasil,
+  double? skorKeyakinan,
 }) async {
   final headers = await headerAuthMultipart();
   final uri = Uri.parse('$baseUrl/api/pemindaian');
@@ -33,14 +36,18 @@ Future<Map<String, dynamic>> uploadScan({
     ..fields['id_lahan'] = idLahan
     ..fields['bagian_tanaman'] = bagianTanaman;
 
+  if (statusHasil != null) request.fields['status_hasil'] = statusHasil;
+  if (labelHasil != null) request.fields['label_hasil'] = labelHasil;
+  if (skorKeyakinan != null) {
+    request.fields['skor_keyakinan'] = skorKeyakinan.toString();
+  }
+
   // Membaca bytes secara langsung memungkinkan upload dari Flutter Web (browser)
   // karena MultipartFile.fromPath tidak didukung di web (memerlukan dart:io).
   final bytes = await file.readAsBytes();
-  request.files.add(http.MultipartFile.fromBytes(
-    'gambar',
-    bytes,
-    filename: file.name,
-  ));
+  request.files.add(
+    http.MultipartFile.fromBytes('gambar', bytes, filename: file.name),
+  );
 
   final res = await apiSend(request);
   return parseResponse(res);
