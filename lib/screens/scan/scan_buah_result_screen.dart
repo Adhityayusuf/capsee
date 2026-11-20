@@ -1,4 +1,5 @@
 import 'dart:typed_data';
+import 'dart:ui' as ui;
 
 import 'package:flutter/material.dart';
 
@@ -24,6 +25,7 @@ class ScanBuahResultScreen extends StatelessWidget {
   final double imageWidth;
   final double imageHeight;
   final VoidCallback onScanUlang;
+  final Future<bool> Function() onSimpan;
 
   const ScanBuahResultScreen({
     super.key,
@@ -32,7 +34,23 @@ class ScanBuahResultScreen extends StatelessWidget {
     required this.imageWidth,
     required this.imageHeight,
     required this.onScanUlang,
+    required this.onSimpan,
   });
+
+  Future<void> _simpan(BuildContext context) async {
+    showDialog<void>(
+      context: context,
+      barrierDismissible: false,
+      builder: (_) => const Center(child: CircularProgressIndicator()),
+    );
+
+    final saved = await onSimpan();
+    if (!context.mounted) return;
+    Navigator.of(context).pop();
+    if (saved && context.mounted) {
+      Navigator.of(context).pop(true);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -51,7 +69,11 @@ class ScanBuahResultScreen extends StatelessWidget {
       ),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
-            AppSpace.page, AppSpace.gapMd, AppSpace.page, 32),
+          AppSpace.page,
+          AppSpace.gapMd,
+          AppSpace.page,
+          32,
+        ),
         children: [
           _buildImageWithBoxes(context, p),
           const SizedBox(height: AppSpace.gapMd),
@@ -207,10 +229,7 @@ class ScanBuahResultScreen extends StatelessWidget {
           children: [
             Icon(icon, color: color, size: 18),
             const SizedBox(height: 4),
-            Text(
-              value,
-              style: AppText.title(context, color: color),
-            ),
+            Text(value, style: AppText.title(context, color: color)),
             Text(
               label,
               textAlign: TextAlign.center,
@@ -259,23 +278,20 @@ class ScanBuahResultScreen extends StatelessWidget {
       decoration: BoxDecoration(
         color: const Color(0xFFFEF3C7),
         borderRadius: BorderRadius.circular(AppSpace.radiusCard),
-        border:
-            Border.all(color: const Color(0xFFF59E0B).withValues(alpha: .4)),
+        border: Border.all(
+          color: const Color(0xFFF59E0B).withValues(alpha: .4),
+        ),
       ),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          const Icon(Icons.warning_rounded,
-              color: Color(0xFFB45309), size: 20),
+          const Icon(Icons.warning_rounded, color: Color(0xFFB45309), size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
               'Beberapa deteksi memiliki tingkat keyakinan rendah (ditandai ⚠). '
               'Ambil gambar ulang untuk memperoleh hasil yang lebih akurat.',
-              style: AppText.bodySm(
-                context,
-                color: const Color(0xFF78350F),
-              ),
+              style: AppText.bodySm(context, color: const Color(0xFF78350F)),
             ),
           ),
         ],
@@ -330,8 +346,10 @@ class ScanBuahResultScreen extends StatelessWidget {
             child: Center(
               child: Text(
                 '$index',
-                style: AppText.caption(context, color: accentColor)
-                    .copyWith(fontWeight: FontWeight.w800),
+                style: AppText.caption(
+                  context,
+                  color: accentColor,
+                ).copyWith(fontWeight: FontWeight.w800),
               ),
             ),
           ),
@@ -342,14 +360,14 @@ class ScanBuahResultScreen extends StatelessWidget {
               children: [
                 Row(
                   children: [
-                    Text(
-                      detection.className,
-                      style: AppText.subtitle(context),
-                    ),
+                    Text(detection.className, style: AppText.subtitle(context)),
                     if (!detection.isHighConfidence) ...[
                       const SizedBox(width: 4),
-                      const Icon(Icons.warning_rounded,
-                          color: Color(0xFFB45309), size: 14),
+                      const Icon(
+                        Icons.warning_rounded,
+                        color: Color(0xFFB45309),
+                        size: 14,
+                      ),
                     ],
                   ],
                 ),
@@ -428,8 +446,12 @@ class ScanBuahResultScreen extends StatelessWidget {
           ),
           const SizedBox(height: AppSpace.gapMd),
           _infoRow(context, p, 'Model', 'YOLOv5n (Deteksi Buah)'),
-          _infoRow(context, p, 'Kelas tersedia',
-              ModelConfig.fruitLabels.length.toString()),
+          _infoRow(
+            context,
+            p,
+            'Kelas tersedia',
+            ModelConfig.fruitLabels.length.toString(),
+          ),
           _infoRow(
             context,
             p,
@@ -475,6 +497,16 @@ class ScanBuahResultScreen extends StatelessWidget {
   Widget _buildActions(BuildContext context, AppPalette p) {
     return Column(
       children: [
+        SizedBox(
+          width: double.infinity,
+          height: 50,
+          child: FilledButton.icon(
+            onPressed: () => _simpan(context),
+            icon: const Icon(Icons.bookmark_add_outlined, size: 18),
+            label: const Text('Simpan ke Riwayat'),
+          ),
+        ),
+        const SizedBox(height: 10),
         SizedBox(
           width: double.infinity,
           height: 50,
@@ -542,14 +574,14 @@ class _BoundingBoxPainter extends CustomPainter {
       final top = box.top * scale + offsetY;
       final right = box.right * scale + offsetX;
       final bottom = box.bottom * scale + offsetY;
-      final rect = Rect.fromLTRB(left, top, right, bottom);
+      final rect = ui.Rect.fromLTRB(left, top, right, bottom);
 
       // Warna bounding box
       final color = isHealthy
           ? const Color(0xFF16A34A)
           : isHighConf
-              ? const Color(0xFFDC2626)
-              : const Color(0xFFF59E0B);
+          ? const Color(0xFFDC2626)
+          : const Color(0xFFF59E0B);
 
       // Gambar border box
       final boxPaint = Paint()
@@ -577,7 +609,7 @@ class _BoundingBoxPainter extends CustomPainter {
         textDirection: TextDirection.ltr,
       )..layout();
 
-      final labelRect = Rect.fromLTWH(
+      final labelRect = ui.Rect.fromLTWH(
         left,
         top - tp.height - labelPadV * 2,
         tp.width + labelPadH * 2,

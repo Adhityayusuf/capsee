@@ -68,47 +68,58 @@ class _ScanDetailScreenState extends State<ScanDetailScreen> {
       body: _loading
           ? const Center(child: CircularProgressIndicator())
           : _error != null
-              ? Center(
-                  child: Padding(
-                    padding: const EdgeInsets.all(AppSpace.page),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Text(_error!, style: AppText.body(context)),
-                        const SizedBox(height: AppSpace.gapMd),
-                        OutlinedButton.icon(
-                          onPressed: _load,
-                          icon: const Icon(Icons.refresh, size: 16),
-                          label: const Text('Coba lagi'),
-                        ),
-                      ],
+          ? Center(
+              child: Padding(
+                padding: const EdgeInsets.all(AppSpace.page),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Text(_error!, style: AppText.body(context)),
+                    const SizedBox(height: AppSpace.gapMd),
+                    OutlinedButton.icon(
+                      onPressed: _load,
+                      icon: const Icon(Icons.refresh, size: 16),
+                      label: const Text('Coba lagi'),
                     ),
-                  ),
-                )
-              : _isi(),
+                  ],
+                ),
+              ),
+            )
+          : _isi(),
     );
   }
 
   Widget _isi() {
     final scan = (_data!['pemindaian'] ?? {}) as Map<String, dynamic>;
     final penyakit = _data!['penyakit'] as Map<String, dynamic>?;
-    final penanganan =
-        List<Map<String, dynamic>>.from(_data!['penanganan'] ?? []);
-    final langkah =
-        List<Map<String, dynamic>>.from(_data!['langkah_tindakan'] ?? []);
-    final pencegahan =
-        List<Map<String, dynamic>>.from(_data!['pencegahan'] ?? []);
+    final penanganan = List<Map<String, dynamic>>.from(
+      _data!['penanganan'] ?? [],
+    );
+    final langkah = List<Map<String, dynamic>>.from(
+      _data!['langkah_tindakan'] ?? [],
+    );
+    final pencegahan = List<Map<String, dynamic>>.from(
+      _data!['pencegahan'] ?? [],
+    );
 
     final status = (scan['status_hasil'] ?? '').toString();
     final isSehat = status == 'sehat';
-    final tanggal = (scan['dipindai_pada'] ?? '').toString().replaceAll('T', ' ');
+    final tanggal = (scan['dipindai_pada'] ?? '').toString().replaceAll(
+      'T',
+      ' ',
+    );
     final skor = scan['skor_keyakinan']?.toString() ?? '-';
     final bagian = (scan['bagian_tanaman'] ?? '-').toString();
+    final labelHasil = (scan['label_hasil'] ?? '').toString().trim();
     final url = (scan['url_gambar'] ?? '').toString();
 
     return ListView(
       padding: const EdgeInsets.fromLTRB(
-          AppSpace.page, AppSpace.gapMd, AppSpace.page, 24),
+        AppSpace.page,
+        AppSpace.gapMd,
+        AppSpace.page,
+        24,
+      ),
       children: [
         if (url.isNotEmpty)
           ClipRRect(
@@ -121,8 +132,11 @@ class _ScanDetailScreenState extends State<ScanDetailScreen> {
               errorBuilder: (_, _, _) => Container(
                 height: 220,
                 color: context.palette.surfaceAlt,
-                child: Icon(Icons.broken_image_outlined,
-                    size: 48, color: context.palette.icon),
+                child: Icon(
+                  Icons.broken_image_outlined,
+                  size: 48,
+                  color: context.palette.icon,
+                ),
               ),
             ),
           ),
@@ -134,8 +148,10 @@ class _ScanDetailScreenState extends State<ScanDetailScreen> {
               Row(
                 children: [
                   Expanded(
-                    child: Text('Hasil Diagnosa',
-                        style: AppText.subtitle(context)),
+                    child: Text(
+                      'Hasil Diagnosa',
+                      style: AppText.subtitle(context),
+                    ),
                   ),
                   StatusBadge(
                     label: isSehat ? 'Sehat' : 'Tidak sehat',
@@ -146,17 +162,20 @@ class _ScanDetailScreenState extends State<ScanDetailScreen> {
               const SizedBox(height: AppSpace.gapSm),
               _baris('Tanggal', tanggal.isEmpty ? '-' : tanggal),
               _baris('Bagian tanaman', bagian),
+              if (labelHasil.isNotEmpty) _baris('Diagnosis model', labelHasil),
               _baris('Keyakinan AI', '$skor%'),
               if (penyakit != null) ...[
                 const Divider(height: 20),
-                Text((penyakit['nama'] ?? 'Penyakit').toString(),
-                    style: AppText.title(context)),
+                Text(
+                  (penyakit['nama'] ?? 'Penyakit').toString(),
+                  style: AppText.title(context),
+                ),
                 if ((penyakit['nama_latin'] ?? '').toString().isNotEmpty)
                   Text(
                     (penyakit['nama_latin'] ?? '').toString(),
-                    style: AppText.bodySm(context).copyWith(
-                      fontStyle: FontStyle.italic,
-                    ),
+                    style: AppText.bodySm(
+                      context,
+                    ).copyWith(fontStyle: FontStyle.italic),
                   ),
                 const SizedBox(height: 6),
                 Text(
@@ -183,14 +202,20 @@ class _ScanDetailScreenState extends State<ScanDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text((t['nama_produk'] ?? '-').toString(),
-                        style: AppText.subtitle(context)),
+                    Text(
+                      (t['nama_produk'] ?? '-').toString(),
+                      style: AppText.subtitle(context),
+                    ),
                     if ((t['dosis'] ?? '').toString().isNotEmpty)
-                      Text('Dosis: ${t['dosis']}',
-                          style: AppText.caption(context)),
+                      Text(
+                        'Dosis: ${t['dosis']}',
+                        style: AppText.caption(context),
+                      ),
                     if ((t['cara_pakai'] ?? '').toString().isNotEmpty)
-                      Text((t['cara_pakai'] ?? '').toString(),
-                          style: AppText.bodySm(context)),
+                      Text(
+                        (t['cara_pakai'] ?? '').toString(),
+                        style: AppText.bodySm(context),
+                      ),
                   ],
                 ),
               ),
@@ -211,11 +236,15 @@ class _ScanDetailScreenState extends State<ScanDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text((l['judul'] ?? '-').toString(),
-                        style: AppText.subtitle(context)),
+                    Text(
+                      (l['judul'] ?? '-').toString(),
+                      style: AppText.subtitle(context),
+                    ),
                     if ((l['deskripsi'] ?? '').toString().isNotEmpty)
-                      Text((l['deskripsi'] ?? '').toString(),
-                          style: AppText.bodySm(context)),
+                      Text(
+                        (l['deskripsi'] ?? '').toString(),
+                        style: AppText.bodySm(context),
+                      ),
                   ],
                 ),
               ),
@@ -223,10 +252,7 @@ class _ScanDetailScreenState extends State<ScanDetailScreen> {
         ],
         if (pencegahan.isNotEmpty) ...[
           const SizedBox(height: AppSpace.gapMd),
-          SectionHeader(
-            icon: Icons.shield_outlined,
-            title: 'Pencegahan',
-          ),
+          SectionHeader(icon: Icons.shield_outlined, title: 'Pencegahan'),
           const SizedBox(height: AppSpace.gapSm),
           for (final c in pencegahan)
             Padding(
@@ -236,11 +262,15 @@ class _ScanDetailScreenState extends State<ScanDetailScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text((c['judul'] ?? '-').toString(),
-                        style: AppText.subtitle(context)),
+                    Text(
+                      (c['judul'] ?? '-').toString(),
+                      style: AppText.subtitle(context),
+                    ),
                     if ((c['deskripsi'] ?? '').toString().isNotEmpty)
-                      Text((c['deskripsi'] ?? '').toString(),
-                          style: AppText.bodySm(context)),
+                      Text(
+                        (c['deskripsi'] ?? '').toString(),
+                        style: AppText.bodySm(context),
+                      ),
                   ],
                 ),
               ),

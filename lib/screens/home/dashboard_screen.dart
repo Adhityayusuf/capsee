@@ -139,6 +139,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 idLahan: id,
                 urlGambar: (s['url_gambar'] ?? '').toString(),
                 statusHasil: (s['status_hasil'] ?? '').toString(),
+                labelHasil: (s['label_hasil'] ?? '').toString(),
               ),
             );
           }
@@ -218,6 +219,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 idLahan: id,
                 urlGambar: (s['url_gambar'] ?? '').toString(),
                 statusHasil: (s['status_hasil'] ?? '').toString(),
+                labelHasil: (s['label_hasil'] ?? '').toString(),
               ),
             );
           }
@@ -274,6 +276,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           land: _activeScanLand!,
           initialTab: 0,
           onBack: _closeActiveScan,
+          onScanSaved: _muatUlangLahan,
         ),
     ];
 
