@@ -1,13 +1,22 @@
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
+import 'package:image/image.dart' as img_lib;
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
+import '../../core/ml/chili_object_validator.dart';
+import '../../core/ml/fruit_detector.dart';
+import '../../core/ml/image_quality_validator.dart';
+import '../../core/ml/inference_result.dart';
+import '../../core/ml/leaf_classifier.dart';
 import '../../models/activity_log.dart';
 import '../../models/land_data.dart';
 import '../../widgets/land_card.dart';
+import '../scan/scan_buah_result_screen.dart';
+import '../scan/scan_daun_result_screen.dart';
+import '../scan/scan_validasi_gagal_screen.dart';
 import '../scan/treatment_recommendation_screen.dart';
 import 'tab_jadwal.dart';
 import 'tambah_lahan_page.dart';
@@ -20,17 +29,7 @@ class LandDetailScreen extends StatefulWidget {
   final LandData land;
   final int initialTab;
 
-  /// Dipakai saat halaman ini ditampilkan sebagai halaman scan dari dashboard.
-  /// Pada alur tersebut halaman tidak didorong ke Navigator, sehingga tombol
-  /// kembali harus memberi tahu parent untuk menutup mode scan.
-  final VoidCallback? onBack;
-
-  const LandDetailScreen({
-    super.key,
-    required this.land,
-    this.initialTab = 2,
-    this.onBack,
-  });
+  const LandDetailScreen({super.key, required this.land, this.initialTab = 2});
 
   @override
   State<LandDetailScreen> createState() => _LandDetailScreenState();
@@ -285,118 +284,150 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
     }
 
     final bagian = _bagianTanaman;
-    final petak = _selectedPetak;
-    final catatan = _catatanController.text.trim();
+    final bytes = _selectedImageBytes;
+    if (bytes == null) {
+      _showError('Gagal membaca file gambar.');
+      return;
+    }
+
     setState(() => _isAnalyzing = true);
 
     try {
-      final result = await uploadScan(
-        file: image,
-        idLahan: idLahan,
-        bagianTanaman: bagian,
-      );
+      // ── 1. Validasi kualitas gambar ──────────────────────────────────────
+      final qualityValidator = const ImageQualityValidator();
+      final qualityResult = await qualityValidator.validate(bytes);
+      if (!qualityResult.isValid) {
+        if (!mounted) return;
+        setState(() => _isAnalyzing = false);
+        await Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => ScanValidasiGagalScreen(
+            kind: ScanProblemKind.imageTechnical,
+            customMessage: qualityResult.reason,
+            onAmbilUlang: _openScanCamera,
+            onPilihLain: () => _pickFromGallery(),
+          ),
+        ));
+        return;
+      }
 
-      if (!mounted) return;
-      setState(() {
-        _scanResult = result;
-        _scanKeterangan = {
-          'bagian': bagian,
-          'petak': petak,
-          'catatan': catatan,
-        };
-        _isAnalyzing = false;
-      });
+      // ── 2. Validasi objek cabai (stub – siap diintegrasikan) ─────────────
+      final chiValidator = const ChiliObjectValidator();
+      final chiResult = await chiValidator.validate(bytes, bagian);
+      if (!chiResult.isValid) {
+        if (!mounted) return;
+        setState(() => _isAnalyzing = false);
+        await Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => ScanValidasiGagalScreen(
+            kind: bagian == 'daun'
+                ? ScanProblemKind.invalidLeaf
+                : ScanProblemKind.invalidFruit,
+            customMessage: chiResult.reason,
+            onAmbilUlang: _openScanCamera,
+            onPilihLain: () => _pickFromGallery(),
+          ),
+        ));
+        return;
+      }
+
+      // ── 3a. Inferensi model daun (MobileNetV2) ──────────────────────────
+      if (bagian == 'daun') {
+        final classifier = LeafClassifier();
+        final leafResult = await classifier.classify(bytes);
+        if (!mounted) return;
+        setState(() => _isAnalyzing = false);
+
+        await Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => ScanDaunResultScreen(
+            imageBytes: bytes,
+            result: leafResult,
+            onScanUlang: _openScanCamera,
+          ),
+        ));
+        return;
+      }
+
+      // ── 3b. Inferensi model buah (YOLOv5n) ──────────────────────────────
+      if (bagian == 'buah') {
+        // Ambil dimensi gambar asli untuk mapping bounding box
+        final decodedImg = img_lib.decodeImage(bytes);
+        final origW = decodedImg?.width.toDouble() ?? 320.0;
+        final origH = decodedImg?.height.toDouble() ?? 320.0;
+
+        final detector = FruitDetector();
+        final fruitResult = await detector.detect(bytes);
+        if (!mounted) return;
+        setState(() => _isAnalyzing = false);
+
+        // Jika tidak ada deteksi sama sekali, navigasi ke screen gagal
+        if (fruitResult.isEmpty) {
+          await Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => ScanValidasiGagalScreen(
+              kind: ScanProblemKind.invalidFruit,
+              customMessage:
+                  'Belum ditemukan objek buah cabai yang dapat dikenali. '
+                  'Silakan ambil gambar ulang.',
+              onAmbilUlang: _openScanCamera,
+              onPilihLain: () => _pickFromGallery(),
+            ),
+          ));
+          return;
+        }
+
+        await Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => ScanBuahResultScreen(
+            imageBytes: bytes,
+            result: fruitResult,
+            imageWidth: origW,
+            imageHeight: origH,
+            onScanUlang: _openScanCamera,
+          ),
+        ));
+        return;
+      }
     } catch (e) {
       if (!mounted) return;
       setState(() => _isAnalyzing = false);
-      if (e is ApiException && e.code == apiCodeNotChiliPlant) {
-        setState(() {
-          _scanResult = null;
-          _scanKeterangan = null;
-        });
-        await _showNotChiliPlantSheet();
-        return;
+
+      // Cek apakah error karena file model belum ada
+      final errorMsg = e.toString();
+      if (errorMsg.contains('assets/models') ||
+          errorMsg.contains('tflite') ||
+          errorMsg.contains('model')) {
+        _showError(
+          'Model TFLite belum tersedia.\n'
+          'Pastikan file best.tflite (daun) dan yolov5n.tflite (buah) '
+          'sudah diletakkan di folder assets/models/ dan flutter pub get sudah dijalankan.\n\n'
+          'Detail: $errorMsg',
+        );
+      } else {
+        _showError('Gagal melakukan pemeriksaan: ${pesanError(e)}');
       }
-      _showError('Gagal melakukan pemeriksaan: ${pesanError(e)}');
+    } finally {
+      if (mounted && _isAnalyzing) {
+        setState(() => _isAnalyzing = false);
+      }
     }
   }
 
-  Future<void> _showNotChiliPlantSheet() async {
-    final p = context.palette;
-    await showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      backgroundColor: p.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (sheetContext) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 42,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: p.border,
-                  borderRadius: BorderRadius.circular(AppSpace.radiusPill),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: p.error.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.image_not_supported_outlined,
-                color: p.error,
-                size: 28,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Foto belum terlihat seperti tanaman cabai',
-              style: AppText.title(context),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Capsee hanya dapat memeriksa daun atau buah cabai. '
-              'Ambil gambar tanaman cabai dan pastikan bagian tersebut '
-              'terlihat jelas di dalam bingkai.',
-              style: AppText.body(context, color: p.subtitle),
-            ),
-            const SizedBox(height: 22),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: () {
-                  Navigator.pop(sheetContext);
-                  if (!mounted) return;
-                  setState(() {
-                    _selectedImage = null;
-                    _selectedImageBytes = null;
-                    _scanResult = null;
-                    _scanKeterangan = null;
-                    _cameraOpen = true;
-                    _bagianLocked = false;
-                  });
-                },
-                icon: const Icon(Icons.camera_alt_rounded),
-                label: const Text('Ambil gambar baru'),
-              ),
-            ),
-            const SizedBox(height: 4),
-          ],
-        ),
-      ),
-    );
+  /// Ambil gambar dari galeri (diperlukan oleh ScanValidasiGagalScreen).
+  Future<void> _pickFromGallery() async {
+    final picker = ImagePicker();
+    try {
+      final file = await picker.pickImage(source: ImageSource.gallery);
+      if (file == null || !mounted) return;
+      final bytes = await file.readAsBytes();
+      if (!mounted) return;
+      setState(() {
+        _selectedImage = file;
+        _selectedImageBytes = bytes;
+        _bagianLocked = false;
+        _cameraOpen = false;
+        _scanResult = null;
+        _scanKeterangan = null;
+      });
+    } catch (e) {
+      if (mounted) _showError('Gagal membuka galeri: $e');
+    }
   }
 
   @override
@@ -967,14 +998,6 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
     );
   }
 
-  void _handleBack() {
-    if (widget.onBack != null) {
-      widget.onBack!();
-    } else {
-      Navigator.of(context).pop();
-    }
-  }
-
   // ---------------------------------------------------------------
   // App bar
   // ---------------------------------------------------------------
@@ -989,7 +1012,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       titleSpacing: 0,
       leading: IconButton(
         icon: Icon(Icons.arrow_back_rounded, color: p.title),
-        onPressed: _handleBack,
+        onPressed: () => Navigator.of(context).pop(),
       ),
       title: Text(
         'Detail Lahan ${_land.name}',
