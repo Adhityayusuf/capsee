@@ -445,6 +445,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isAnalyzing = false);
+<<<<<<< HEAD
 
       // Penolakan dari backend (bila jalur API dipakai kembali) untuk gambar
       // yang bukan tanaman cabai.
@@ -456,6 +457,8 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         await _showNotChiliPlantSheet();
         return;
       }
+=======
+>>>>>>> f0b03d5640d8557e52f1d0b9ea777e20b18effc5
 
       // Bedakan gagal memuat model dengan kegagalan inference lainnya.
       final errorMsg = e.toString();
@@ -505,6 +508,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       });
     } catch (e) {
       if (mounted) _showError('Gagal membuka galeri: $e');
+<<<<<<< HEAD
     }
   }
 
@@ -540,85 +544,9 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
           ),
         );
       }
+=======
+>>>>>>> f0b03d5640d8557e52f1d0b9ea777e20b18effc5
     }
-  }
-
-  Future<void> _showNotChiliPlantSheet() async {
-    final p = context.palette;
-    await showModalBottomSheet<void>(
-      context: context,
-      useSafeArea: true,
-      backgroundColor: p.surface,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(28)),
-      ),
-      builder: (sheetContext) => Padding(
-        padding: const EdgeInsets.fromLTRB(24, 12, 24, 24),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Center(
-              child: Container(
-                width: 42,
-                height: 4,
-                decoration: BoxDecoration(
-                  color: p.border,
-                  borderRadius: BorderRadius.circular(AppSpace.radiusPill),
-                ),
-              ),
-            ),
-            const SizedBox(height: 24),
-            Container(
-              width: 56,
-              height: 56,
-              decoration: BoxDecoration(
-                color: p.error.withValues(alpha: 0.1),
-                shape: BoxShape.circle,
-              ),
-              child: Icon(
-                Icons.image_not_supported_outlined,
-                color: p.error,
-                size: 28,
-              ),
-            ),
-            const SizedBox(height: 16),
-            Text(
-              'Foto belum terlihat seperti tanaman cabai',
-              style: AppText.title(context),
-            ),
-            const SizedBox(height: 8),
-            Text(
-              'Capsee hanya dapat memeriksa daun atau buah cabai. '
-              'Ambil gambar tanaman cabai dan pastikan bagian tersebut '
-              'terlihat jelas di dalam bingkai.',
-              style: AppText.body(context, color: p.subtitle),
-            ),
-            const SizedBox(height: 22),
-            SizedBox(
-              width: double.infinity,
-              child: FilledButton.icon(
-                onPressed: () {
-                  Navigator.pop(sheetContext);
-                  if (!mounted) return;
-                  setState(() {
-                    _selectedImage = null;
-                    _selectedImageBytes = null;
-                    _scanResult = null;
-                    _scanKeterangan = null;
-                    _cameraOpen = true;
-                    _bagianLocked = false;
-                  });
-                },
-                icon: const Icon(Icons.camera_alt_rounded),
-                label: const Text('Ambil gambar baru'),
-              ),
-            ),
-            const SizedBox(height: 4),
-          ],
-        ),
-      ),
-    );
   }
 
   @override
