@@ -54,7 +54,11 @@ class FruitDetector {
       iouThreshold: ModelConfig.nmsIouThreshold,
     );
 
-    return FruitInferenceResult(detections: filtered);
+    return FruitInferenceResult(
+      detections: filtered,
+      imageWidth: letterbox.origWidth,
+      imageHeight: letterbox.origHeight,
+    );
   }
 
   /// Decode output YOLO [6300, 9] menjadi list [FruitDetection].
@@ -96,7 +100,7 @@ class FruitDetector {
 
       // Konversi ke koordinat piksel gambar asli
       final coords = letterbox.toOriginalCoords(cx, cy, bw, bh);
-      final box = Rect(coords[0], coords[1], coords[2], coords[3]);
+      final box = BoxRect(coords[0], coords[1], coords[2], coords[3]);
 
       // Filter box degeneratif
       if (box.width <= 0 || box.height <= 0) continue;

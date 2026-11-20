@@ -6,13 +6,21 @@ import 'api_client.dart';
 // PEMINDAIAN SERVICE
 // ─────────────────────────────────────────────────────────
 
-/// Upload gambar scan ke backend (multipart/form-data).
-/// Backend akan kompres, upload ke Cloudinary, panggil model ML,
-/// lalu simpan semua hasil ke database.
+/// Upload gambar scan + hasil inferensi TFLite ke backend.
 ///
-/// [file] — file gambar dari kamera/galeri (gunakan image_picker)
-/// [idLahan] — UUID lahan yang sedang di-scan
-/// [bagianTanaman] — 'daun' atau 'buah'
+/// Backend akan:
+/// 1. Validasi kepemilikan lahan.
+/// 2. Kompres gambar dan upload ke Cloudinary.
+/// 3. Simpan hasil ke database (menggunakan [namaKelas] dan [skorKeyakinan]
+///    dari model on-device, bukan placeholder random).
+/// 4. Update status_kesehatan lahan.
+/// 5. Kembalikan data penyakit + penanganan (jika tidak sehat).
+///
+/// [file]            — file gambar dari kamera/galeri
+/// [idLahan]         — UUID lahan yang sedang di-scan
+/// [bagianTanaman]   — 'daun' atau 'buah'
+/// [namaKelas]       — nama kelas hasil inferensi TFLite (mis. "Healthy Leaf", "Cercospora")
+/// [skorKeyakinan]   — confidence dalam persen (0–100)
 ///
 /// Mengembalikan Map berisi:
 /// - 'pemindaian': hasil scan utama
@@ -24,6 +32,8 @@ Future<Map<String, dynamic>> uploadScan({
   required XFile file,
   required String idLahan,
   required String bagianTanaman, // 'daun' atau 'buah'
+  required String namaKelas,     // hasil inferensi TFLite
+  required double skorKeyakinan, // confidence persen (0–100)
 }) async {
   final headers = await headerAuthMultipart();
   final uri = Uri.parse('$baseUrl/api/pemindaian');
@@ -31,7 +41,9 @@ Future<Map<String, dynamic>> uploadScan({
   final request = http.MultipartRequest('POST', uri)
     ..headers.addAll(headers)
     ..fields['id_lahan'] = idLahan
-    ..fields['bagian_tanaman'] = bagianTanaman;
+    ..fields['bagian_tanaman'] = bagianTanaman
+    ..fields['nama_kelas'] = namaKelas
+    ..fields['skor_keyakinan'] = skorKeyakinan.toStringAsFixed(2);
 
   // Membaca bytes secara langsung memungkinkan upload dari Flutter Web (browser)
   // karena MultipartFile.fromPath tidak didukung di web (memerlukan dart:io).

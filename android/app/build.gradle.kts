@@ -23,6 +23,10 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
 
+    androidResources {
+        noCompress += listOf("tflite", "lite")
+    }
+
     defaultConfig {
         applicationId = "id.capsee.app"
         minSdk = flutter.minSdkVersion
@@ -59,6 +63,14 @@ android {
                 // dengan debug key. Jangan dipakai untuk distribusi.
                 signingConfigs.getByName("debug")
             }
+
+            // Nonaktifkan R8/shrinking agar build rilis tidak gagal karena
+            // referensi Java API TensorFlow Lite yang dikecualikan di
+            // android/build.gradle.kts (namespace collision). Inferensi
+            // TFLite di app ini lewat FFI native (tflite_flutter), jadi
+            // kelas Java API tidak dipakai saat runtime.
+            isMinifyEnabled = false
+            isShrinkResources = false
         }
     }
 }

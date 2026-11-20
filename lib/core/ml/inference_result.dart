@@ -47,7 +47,7 @@ class FruitDetection {
   double get confidencePercent => confidence * 100;
 
   /// Bounding box dalam koordinat piksel gambar asli: [left, top, right, bottom].
-  final Rect boundingBox;
+  final BoxRect boundingBox;
 
   /// True jika buah sehat.
   bool get isHealthy => className.toLowerCase().contains('healthy');
@@ -69,13 +69,16 @@ class FruitDetection {
 }
 
 /// Bounding box sederhana dalam koordinat piksel.
-class Rect {
+///
+/// Namanya sengaja bukan `Rect` agar tidak bentrok dengan `Rect` dari
+/// `dart:ui` yang dipakai painter Flutter.
+class BoxRect {
   final double left;
   final double top;
   final double right;
   final double bottom;
 
-  const Rect(this.left, this.top, this.right, this.bottom);
+  const BoxRect(this.left, this.top, this.right, this.bottom);
 
   double get width => right - left;
   double get height => bottom - top;
@@ -84,13 +87,19 @@ class Rect {
 
   @override
   String toString() =>
-      'Rect(l=${left.toStringAsFixed(1)}, t=${top.toStringAsFixed(1)}, r=${right.toStringAsFixed(1)}, b=${bottom.toStringAsFixed(1)})';
+      'BoxRect(l=${left.toStringAsFixed(1)}, t=${top.toStringAsFixed(1)}, r=${right.toStringAsFixed(1)}, b=${bottom.toStringAsFixed(1)})';
 }
 
 /// Hasil inferensi model deteksi buah (YOLOv5n).
 class FruitInferenceResult {
   /// Daftar deteksi setelah NMS.
   final List<FruitDetection> detections;
+
+  /// Lebar gambar asli (setelah orientasi EXIF diterapkan).
+  final double imageWidth;
+
+  /// Tinggi gambar asli (setelah orientasi EXIF diterapkan).
+  final double imageHeight;
 
   /// True jika tidak ada deteksi sama sekali setelah NMS.
   bool get isEmpty => detections.isEmpty;
@@ -112,7 +121,11 @@ class FruitInferenceResult {
     return map;
   }
 
-  const FruitInferenceResult({required this.detections});
+  const FruitInferenceResult({
+    required this.detections,
+    this.imageWidth = 0,
+    this.imageHeight = 0,
+  });
 
   @override
   String toString() => 'FruitResult(${detections.length} detections)';

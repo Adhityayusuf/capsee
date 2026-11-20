@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart';
 import 'package:tflite_flutter/tflite_flutter.dart';
 import 'model_config.dart';
 
@@ -61,13 +62,37 @@ class ModelLoader {
 
   static Future<Interpreter> _load(String assetPath) async {
     try {
-      final options = InterpreterOptions()..threads = 2;
-      return await Interpreter.fromAsset(assetPath, options: options);
+      try {
+        final options = InterpreterOptions()..threads = 2;
+        final interpreter =
+            await Interpreter.fromAsset(assetPath, options: options);
+        _logTensors(assetPath, interpreter);
+        return interpreter;
+      } catch (optErr) {
+        debugPrint('[TFLite] Gagal memuat dengan threads=2, mencoba opsi default: $optErr');
+        final interpreter = await Interpreter.fromAsset(assetPath);
+        _logTensors(assetPath, interpreter);
+        return interpreter;
+      }
     } catch (e) {
       throw Exception(
         'Gagal memuat model TFLite dari "$assetPath": $e\n'
         'Pastikan file model tersedia di folder assets/models/.',
       );
+    }
+  }
+
+  /// Cetak info tensor untuk memverifikasi model di perangkat (debug).
+  static void _logTensors(String assetPath, Interpreter interpreter) {
+    if (!kDebugMode) return;
+    try {
+      final input = interpreter.getInputTensor(0);
+      final output = interpreter.getOutputTensor(0);
+      debugPrint('[TFLite] $assetPath '
+          'input=${input.shape} ${input.type} | '
+          'output=${output.shape} ${output.type}');
+    } catch (e) {
+      debugPrint('[TFLite] Gagal membaca info tensor: $e');
     }
   }
 

@@ -1,7 +1,7 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
-import 'package:image/image.dart' as img_lib;
 import 'package:image_picker/image_picker.dart';
 
 import '../../core/app_text.dart';
@@ -11,6 +11,7 @@ import '../../core/ml/fruit_detector.dart';
 import '../../core/ml/image_quality_validator.dart';
 import '../../core/ml/inference_result.dart';
 import '../../core/ml/leaf_classifier.dart';
+import '../../core/ml/model_loader.dart';
 import '../../models/activity_log.dart';
 import '../../models/land_data.dart';
 import '../../widgets/land_card.dart';
@@ -76,6 +77,8 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   void dispose() {
     _catatanController.dispose();
     _bagianController.dispose();
+    // Lepaskan interpreter TFLite saat layar scan ditutup.
+    ModelLoader.disposeAll();
     super.dispose();
   }
 
@@ -333,6 +336,35 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       if (bagian == 'daun') {
         final classifier = LeafClassifier();
         final leafResult = await classifier.classify(bytes);
+
+        // Gerbang plausibilitas opsional (nonaktif secara default).
+        final leafPlausibility = chiValidator.evaluateConfidence(
+          scanType: 'daun',
+          topConfidence: leafResult.confidence,
+        );
+        if (!leafPlausibility.isValid) {
+          if (!mounted) return;
+          setState(() => _isAnalyzing = false);
+          await Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => ScanValidasiGagalScreen(
+              kind: ScanProblemKind.invalidLeaf,
+              customMessage: leafPlausibility.reason,
+              onAmbilUlang: _openScanCamera,
+              onPilihLain: _pickFromGallery,
+            ),
+          ));
+          return;
+        }
+
+        // ── Upload gambar + hasil inferensi ke backend (background) ─────
+        // Tidak di-await di sini agar UI result screen langsung muncul.
+        // Error upload tidak memblokir user melihat hasil.
+        _uploadKeBackend(
+          file: image,
+          namaKelas: leafResult.className,
+          skorKeyakinan: leafResult.confidencePercent,
+        );
+
         if (!mounted) return;
         setState(() => _isAnalyzing = false);
 
@@ -348,11 +380,6 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
 
       // ── 3b. Inferensi model buah (YOLOv5n) ──────────────────────────────
       if (bagian == 'buah') {
-        // Ambil dimensi gambar asli untuk mapping bounding box
-        final decodedImg = img_lib.decodeImage(bytes);
-        final origW = decodedImg?.width.toDouble() ?? 320.0;
-        final origH = decodedImg?.height.toDouble() ?? 320.0;
-
         final detector = FruitDetector();
         final fruitResult = await detector.detect(bytes);
         if (!mounted) return;
@@ -373,12 +400,43 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
           return;
         }
 
+        // Gerbang plausibilitas opsional (nonaktif secara default).
+        final topFruitConfidence = fruitResult.detections
+            .map((d) => d.confidence)
+            .reduce(math.max);
+        final fruitPlausibility = chiValidator.evaluateConfidence(
+          scanType: 'buah',
+          topConfidence: topFruitConfidence,
+        );
+        if (!fruitPlausibility.isValid) {
+          await Navigator.of(context).push(MaterialPageRoute(
+            builder: (_) => ScanValidasiGagalScreen(
+              kind: ScanProblemKind.invalidFruit,
+              customMessage: fruitPlausibility.reason,
+              onAmbilUlang: _openScanCamera,
+              onPilihLain: _pickFromGallery,
+            ),
+          ));
+          return;
+        }
+
+        // ── Upload gambar + hasil inferensi ke backend (background) ─────
+        // Pilih deteksi dengan confidence tertinggi sebagai representasi hasil.
+        final topDetection = fruitResult.detections.reduce(
+          (a, b) => a.confidence >= b.confidence ? a : b,
+        );
+        _uploadKeBackend(
+          file: image,
+          namaKelas: topDetection.className,
+          skorKeyakinan: topDetection.confidencePercent,
+        );
+
         await Navigator.of(context).push(MaterialPageRoute(
           builder: (_) => ScanBuahResultScreen(
             imageBytes: bytes,
             result: fruitResult,
-            imageWidth: origW,
-            imageHeight: origH,
+            imageWidth: fruitResult.imageWidth,
+            imageHeight: fruitResult.imageHeight,
             onScanUlang: _openScanCamera,
           ),
         ));
@@ -387,7 +445,9 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isAnalyzing = false);
-<<<<<<< HEAD
+
+      // Penolakan dari backend (bila jalur API dipakai kembali) untuk gambar
+      // yang bukan tanaman cabai.
       if (e is ApiException && e.code == apiCodeNotChiliPlant) {
         setState(() {
           _scanResult = null;
@@ -396,22 +456,29 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         await _showNotChiliPlantSheet();
         return;
       }
-      _showError('Gagal melakukan pemeriksaan: ${pesanError(e)}');
-=======
 
-      // Cek apakah error karena file model belum ada
+      // Bedakan gagal memuat model dengan kegagalan inference lainnya.
       final errorMsg = e.toString();
-      if (errorMsg.contains('assets/models') ||
-          errorMsg.contains('tflite') ||
-          errorMsg.contains('model')) {
+      final isModelLoadFailure = errorMsg.contains('assets/models') ||
+          errorMsg.contains('Gagal memuat model TFLite');
+      if (isModelLoadFailure) {
         _showError(
-          'Model TFLite belum tersedia.\n'
+          'Model TFLite belum tersedia atau gagal dimuat.\n'
           'Pastikan file best.tflite (daun) dan yolov5n.tflite (buah) '
           'sudah diletakkan di folder assets/models/ dan flutter pub get sudah dijalankan.\n\n'
           'Detail: $errorMsg',
         );
       } else {
-        _showError('Gagal melakukan pemeriksaan: ${pesanError(e)}');
+        if (!mounted) return;
+        await Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => ScanValidasiGagalScreen(
+            kind: ScanProblemKind.inferenceError,
+            customMessage:
+                'Terjadi kesalahan saat memproses gambar: ${pesanError(e)}',
+            onAmbilUlang: _openScanCamera,
+            onPilihLain: _pickFromGallery,
+          ),
+        ));
       }
     } finally {
       if (mounted && _isAnalyzing) {
@@ -438,7 +505,41 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       });
     } catch (e) {
       if (mounted) _showError('Gagal membuka galeri: $e');
->>>>>>> c43d0f8d4d2ba5eb3ba18e06f5df2c01de53cb91
+    }
+  }
+
+  /// Upload gambar + hasil inferensi TFLite ke backend secara background.
+  ///
+  /// Dipanggil setelah inferensi lokal berhasil. Error upload ditangkap
+  /// secara senyap — user sudah bisa melihat hasil di layar, dan kegagalan
+  /// sinkronisasi tidak perlu memblokir pengalaman mereka.
+  Future<void> _uploadKeBackend({
+    required XFile file,
+    required String namaKelas,
+    required double skorKeyakinan,
+  }) async {
+    final idLahan = (_land.id ?? '').trim();
+    if (idLahan.isEmpty) return;
+    try {
+      await uploadScan(
+        file: file,
+        idLahan: idLahan,
+        bagianTanaman: _bagianTanaman,
+        namaKelas: namaKelas,
+        skorKeyakinan: skorKeyakinan,
+      );
+    } catch (e) {
+      // Gagal simpan ke backend: tampilkan snackbar ringan, jangan crash.
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(
+              'Hasil scan tidak tersimpan ke riwayat: ${pesanError(e)}',
+            ),
+            duration: const Duration(seconds: 4),
+          ),
+        );
+      }
     }
   }
 

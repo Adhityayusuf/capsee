@@ -1,11 +1,13 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'package:image/image.dart' as img;
 import 'model_config.dart';
 
 /// Preprocessing gambar sebelum diteruskan ke model TFLite.
 ///
-/// MobileNetV2 (daun): resize bilinear ke 224×224 + normalisasi [0,1]
-/// YOLOv5n (buah): letterbox ke 320×320 + normalisasi [0,1]
+/// Daun (MobileNetV2) : resize bilinear ke 224×224 + normalisasi [-1,1]
+///                      (setara `tf.keras.applications.mobilenet_v2.preprocess_input`)
+/// Buah (YOLOv5n)     : letterbox ke 320×320 + normalisasi [0,1]
 class ImagePreprocessor {
   const ImagePreprocessor();
 
@@ -15,10 +17,17 @@ class ImagePreprocessor {
 
   /// Memproses [bytes] untuk model daun MobileNetV2.
   ///
-  /// Output: Float32List berbentuk [1 * 224 * 224 * 3] dengan nilai [0.0, 1.0].
+  /// Output: Float32List berbentuk [1 * 224 * 224 * 3] dengan nilai [-1.0, 1.0].
+  ///
+  /// Model dilatih memakai `mobilenet_v2.preprocess_input`, yaitu
+  /// `pixel / 127.5 - 1.0` (bukan `pixel / 255`). Diverifikasi lewat
+  /// `tool/eval_leaf_hypotheses.py`: normalisasi [-1,1] memberi akurasi
+  /// 63,6% vs 54,5% untuk [0,1] pada 11 gambar uji berlabel.
   Float32List preprocessForLeaf(Uint8List bytes) {
-    final image = img.decodeImage(bytes);
-    if (image == null) throw ArgumentError('Gambar tidak dapat didekode.');
+    final decoded = img.decodeImage(bytes);
+    if (decoded == null) throw ArgumentError('Gambar tidak dapat didekode.');
+    // Terapkan orientasi EXIF agar hasil sama dengan yang ditampilkan Flutter.
+    final image = img.bakeOrientation(decoded);
 
     // Resize ke 224×224
     final resized = img.copyResize(
@@ -28,16 +37,16 @@ class ImagePreprocessor {
       interpolation: img.Interpolation.linear,
     );
 
-    // Normalisasi piksel ke [0, 1]
+    // Normalisasi piksel ke [-1, 1] (MobileNetV2 preprocess_input)
     final size = ModelConfig.leafInputSize;
     final input = Float32List(1 * size * size * 3);
     int index = 0;
     for (int y = 0; y < size; y++) {
       for (int x = 0; x < size; x++) {
         final pixel = resized.getPixel(x, y);
-        input[index++] = pixel.r / 255.0;
-        input[index++] = pixel.g / 255.0;
-        input[index++] = pixel.b / 255.0;
+        input[index++] = pixel.r / 127.5 - 1.0;
+        input[index++] = pixel.g / 127.5 - 1.0;
+        input[index++] = pixel.b / 127.5 - 1.0;
       }
     }
     return input;
@@ -55,17 +64,18 @@ class ImagePreprocessor {
     Uint8List bytes,
     LetterboxInfo letterboxInfo,
   ) {
-    final image = img.decodeImage(bytes);
-    if (image == null) throw ArgumentError('Gambar tidak dapat didekode.');
+    final decoded = img.decodeImage(bytes);
+    if (decoded == null) throw ArgumentError('Gambar tidak dapat didekode.');
+    // Terapkan orientasi EXIF agar koordinat bounding box cocok dengan
+    // gambar yang ditampilkan di layar (Image.memory).
+    final image = img.bakeOrientation(decoded);
 
     final targetSize = ModelConfig.fruitInputSize;
     final origW = image.width.toDouble();
     final origH = image.height.toDouble();
 
-    // Hitung skala dan padding untuk letterbox
-    final scale = (targetSize / origW).compareTo(targetSize / origH) <= 0
-        ? targetSize / origW
-        : targetSize / origH;
+    // Hitung skala dan padding untuk letterbox (skala minimum, seperti YOLOv5)
+    final scale = math.min(targetSize / origW, targetSize / origH);
     final newW = (origW * scale).round();
     final newH = (origH * scale).round();
     final padX = (targetSize - newW) ~/ 2;

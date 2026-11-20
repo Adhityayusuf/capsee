@@ -1,6 +1,6 @@
 import uuid
 from datetime import date, timedelta
-from typing import Literal
+from typing import Literal, Optional
 
 from fastapi import APIRouter, Depends, File, Form, HTTPException, UploadFile
 
@@ -13,36 +13,35 @@ from app.security import verifikasi_token
 router = APIRouter(prefix="/api/pemindaian", tags=["Pemindaian"])
 
 
-import random
+# ─── Label-ke-status mapper ──────────────────────────────────────────────────
+# Daftar nama kelas yang dianggap "sehat" dari kedua model TFLite.
+# Cocokkan dengan ModelConfig.leafLabels & ModelConfig.fruitLabels di Flutter.
+_HEALTHY_LABELS = {"Healthy Leaf", "Healthy Fruit"}
 
-def _jalankan_model_ml() -> dict:
-    """Placeholder hasil model ML.
+# Pemetaan nama kelas penyakit (dari Flutter) ke nama penyakit di tabel penyakit.
+# Kunci = className dari model TFLite, Nilai = nama di kolom `nama` tabel penyakit.
+_CLASS_TO_DISEASE_NAME: dict[str, str] = {
+    "Bacterial Spot":       "Bacterial Spot",
+    "Cercospora":           "Cercospora",
+    "Leaf Curl":            "Leaf Curl",
+    "Nutrition Deficiency": "Nutrition Deficiency",
+    "White Spot":           "White Spot",
+    "Anthracnose":          "Anthracnose",
+    "Fruit Fly":            "Fruit Fly",
+    "Fruit Rot":            "Fruit Rot",
+}
 
-    Secara acak mengembalikan 'sehat' atau 'tidak_sehat' agar UI bisa diuji.
-    """
-    is_sehat = random.choice([True, False])
-    
-    if is_sehat:
-        return {
-            "status_hasil": "sehat",
-            "id_penyakit": None,
-            "skor_keyakinan": random.uniform(85.0, 99.9),
-            "tanggal_scan_ulang_disarankan": date.today() + timedelta(days=7),
-        }
-    else:
-        # Menggunakan ID penyakit yang baru saja di-seed ('Bercak Daun')
-        with get_db_connection() as conn:
-            cur = conn.cursor()
-            cur.execute("SELECT id FROM penyakit LIMIT 1")
-            row = cur.fetchone()
-            id_penyakit = row[0] if row else None
-            
-        return {
-            "status_hasil": "tidak_sehat",
-            "id_penyakit": id_penyakit,
-            "skor_keyakinan": random.uniform(75.0, 98.5),
-            "tanggal_scan_ulang_disarankan": date.today() + timedelta(days=3),
-        }
+
+def _resolve_id_penyakit(cur, nama_kelas: str | None) -> str | None:
+    """Cari id penyakit dari nama kelas model. Kembalikan None jika tidak ditemukan."""
+    if not nama_kelas:
+        return None
+    disease_name = _CLASS_TO_DISEASE_NAME.get(nama_kelas)
+    if not disease_name:
+        return None
+    cur.execute("SELECT id FROM penyakit WHERE nama = %s LIMIT 1", (disease_name,))
+    row = cur.fetchone()
+    return row[0] if row else None
 
 
 @router.post("", status_code=201)
@@ -50,6 +49,11 @@ async def buat_pemindaian(
     id_lahan: str = Form(...),
     bagian_tanaman: Literal["daun", "buah"] = Form(...),
     gambar: UploadFile = File(...),
+    # ── Hasil inferensi TFLite dari Flutter (on-device) ──────────────────────
+    # Dikirim sebagai form field tambahan. Backend menggunakannya langsung
+    # tanpa menjalankan ulang model ML.
+    nama_kelas: Optional[str] = Form(None),          # e.g. "Healthy Leaf", "Cercospora"
+    skor_keyakinan: Optional[float] = Form(None),     # 0.0 – 100.0
     id_pengguna: str = Depends(verifikasi_token),
 ):
     # 0. WAJIB cek lahan dulu SEBELUM baca/upload gambar.
@@ -84,16 +88,23 @@ async def buat_pemindaian(
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Upload ke Cloudinary gagal: {exc}") from exc
 
-    hasil_ml = _jalankan_model_ml()
+    # 3. Bangun hasil ML dari data inferensi Flutter
     id_scan = str(uuid.uuid4())
 
-    # 3. Semua operasi DB dalam SATU blok koneksi
-    #    (cek ulang kepemilikan agar aman dari race delete di tengah upload)
+    # Semua operasi DB dalam SATU blok koneksi
+    # (cek ulang kepemilikan agar aman dari race delete di tengah upload)
     with get_db_connection() as conn:
         cur = conn.cursor()
 
         # Pastikan lahan masih milik pengguna setelah upload selesai
         pastikan_lahan_milik_pengguna(cur, id_lahan, id_pengguna)
+
+        # Tentukan status dan id_penyakit dari nama kelas yang dikirim Flutter
+        status_hasil = "sehat" if nama_kelas in _HEALTHY_LABELS else "tidak_sehat"
+        id_penyakit = None if status_hasil == "sehat" else _resolve_id_penyakit(cur, nama_kelas)
+        keyakinan = skor_keyakinan if skor_keyakinan is not None else 0.0
+        hari_ulang = 7 if status_hasil == "sehat" else 3
+        tanggal_scan_ulang = date.today() + timedelta(days=hari_ulang)
 
         cur.execute(
             """
@@ -103,15 +114,14 @@ async def buat_pemindaian(
             VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING *
             """,
-            (id_scan, id_lahan, bagian_tanaman, url_gambar, hasil_ml["status_hasil"],
-             hasil_ml["id_penyakit"], hasil_ml["skor_keyakinan"],
-             hasil_ml["tanggal_scan_ulang_disarankan"]),
+            (id_scan, id_lahan, bagian_tanaman, url_gambar, status_hasil,
+             id_penyakit, keyakinan, tanggal_scan_ulang),
         )
         scan = row_to_dict(cur, cur.fetchone())
 
         cur.execute(
             "UPDATE lahan SET status_kesehatan = %s WHERE id = %s",
-            (hasil_ml["status_hasil"], id_lahan),
+            (status_hasil, id_lahan),
         )
 
         cur.execute(
@@ -120,7 +130,7 @@ async def buat_pemindaian(
             VALUES (%s, %s, 'scan', %s, %s)
             """,
             (str(uuid.uuid4()), id_lahan, id_scan,
-             f"Scan {bagian_tanaman}: {hasil_ml['status_hasil']}"),
+             f"Scan {bagian_tanaman} ({nama_kelas or 'unknown'}): {status_hasil}"),
         )
 
         penanganan = []
@@ -128,9 +138,7 @@ async def buat_pemindaian(
         pencegahan = []
         penyakit = None
 
-        if hasil_ml["status_hasil"] == "tidak_sehat" and hasil_ml["id_penyakit"]:
-            id_penyakit = hasil_ml["id_penyakit"]
-
+        if status_hasil == "tidak_sehat" and id_penyakit:
             cur.execute("SELECT * FROM penyakit WHERE id = %s", (id_penyakit,))
             row_penyakit = cur.fetchone()
             if row_penyakit:

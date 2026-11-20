@@ -1,5 +1,7 @@
 import 'dart:typed_data';
 
+import 'model_config.dart';
+
 /// Stub validasi objek cabai.
 ///
 /// ## Status saat ini
@@ -38,6 +40,30 @@ class ChiliObjectValidator {
     // Untuk saat ini, semua gambar dianggap lolos validasi objek.
     // Validasi kualitas teknis gambar sudah dilakukan oleh [ImageQualityValidator].
     return ChiliValidationResult.passed();
+  }
+
+  /// Gerbang plausibilitas opsional berdasarkan confidence model utama.
+  ///
+  /// Dipakai SETELAH model utama dijalankan (hasilnya dipakai ulang, tidak
+  /// menjalankan inference dua kali). Hanya aktif bila
+  /// [ModelConfig.chiliPlausibilityGateEnabled] bernilai true.
+  ///
+  /// Ini heuristik, bukan model validasi objek cabai. Lihat catatan di
+  /// bagian atas file.
+  ChiliValidationResult evaluateConfidence({
+    required String scanType,
+    required double topConfidence,
+  }) {
+    if (!ModelConfig.chiliPlausibilityGateEnabled) {
+      return ChiliValidationResult.passed();
+    }
+    if (topConfidence >= ModelConfig.chiliPlausibilityMinConfidence) {
+      return ChiliValidationResult.passed();
+    }
+    final objek = scanType == 'daun' ? 'daun cabai' : 'buah cabai';
+    return ChiliValidationResult.rejected(
+      'Input tidak valid. Pastikan gambar yang dimasukkan merupakan $objek.',
+    );
   }
 }
 

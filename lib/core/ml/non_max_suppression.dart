@@ -40,7 +40,7 @@ class NonMaxSuppression {
   }
 
   /// Hitung IoU (Intersection over Union) dua bounding box.
-  double _iou(Rect a, Rect b) {
+  double _iou(BoxRect a, BoxRect b) {
     final interLeft = a.left > b.left ? a.left : b.left;
     final interTop = a.top > b.top ? a.top : b.top;
     final interRight = a.right < b.right ? a.right : b.right;

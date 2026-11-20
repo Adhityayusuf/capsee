@@ -17,7 +17,7 @@ class LeafClassifier {
   ///
   /// Throws [Exception] jika model gagal dimuat atau terjadi error inference.
   Future<LeafInferenceResult> classify(Uint8List imageBytes) async {
-    // 1. Preprocessing: resize 224×224 + normalisasi [0,1]
+    // 1. Preprocessing: resize 224×224 + normalisasi [-1,1]
     final input = _preprocessor.preprocessForLeaf(imageBytes);
 
     // 2. Siapkan tensor input sebagai nested list [1, 224, 224, 3]
@@ -65,12 +65,12 @@ class LeafClassifier {
 
   /// Hitung confidence kelas teratas.
   ///
-  /// Jika sum ≈ 1 → output sudah softmax, ambil langsung.
-  /// Jika tidak → hitung softmax manual.
+  /// Jika seluruh skor berada di rentang 0–1 dan totalnya ≈ 1, output sudah
+  /// softmax → ambil langsung. Selain itu dianggap logits → softmax manual.
   double _confidenceFromScores(List<double> scores, int topIndex) {
     final sum = scores.fold(0.0, (a, b) => a + b);
-    if ((sum - 1.0).abs() < 0.05) {
-      // Sudah softmax
+    final allProbabilities = scores.every((s) => s >= 0.0 && s <= 1.0);
+    if (allProbabilities && (sum - 1.0).abs() < 0.05) {
       return scores[topIndex].clamp(0.0, 1.0);
     }
 
