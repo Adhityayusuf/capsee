@@ -58,6 +58,7 @@ CREATE TABLE IF NOT EXISTS pemindaian (
   bagian_tanaman VARCHAR NOT NULL CHECK (bagian_tanaman IN ('daun', 'buah')),
   url_gambar TEXT NOT NULL,
   status_hasil VARCHAR NOT NULL CHECK (status_hasil IN ('sehat', 'tidak_sehat')),
+  label_hasil VARCHAR,
   id_penyakit UUID REFERENCES penyakit(id),
   skor_keyakinan NUMERIC,
   tanggal_scan_ulang_disarankan DATE,
@@ -67,6 +68,8 @@ CREATE TABLE IF NOT EXISTS pemindaian (
   kondisi_klorofil NUMERIC,
   tingkat_kebasahan_daun NUMERIC
 );
+
+ALTER TABLE pemindaian ADD COLUMN IF NOT EXISTS label_hasil VARCHAR;
 
 CREATE TABLE IF NOT EXISTS parameter_pemindaian (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

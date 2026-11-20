@@ -50,6 +50,9 @@ async def buat_pemindaian(
     id_lahan: str = Form(...),
     bagian_tanaman: Literal["daun", "buah"] = Form(...),
     gambar: UploadFile = File(...),
+    status_hasil: Literal["sehat", "tidak_sehat"] | None = Form(None),
+    label_hasil: str | None = Form(None),
+    skor_keyakinan: float | None = Form(None),
     id_pengguna: str = Depends(verifikasi_token),
 ):
     # 0. WAJIB cek lahan dulu SEBELUM baca/upload gambar.
@@ -84,7 +87,18 @@ async def buat_pemindaian(
     except Exception as exc:
         raise HTTPException(status_code=502, detail=f"Upload ke Cloudinary gagal: {exc}") from exc
 
-    hasil_ml = _jalankan_model_ml()
+    if status_hasil is not None:
+        # Gunakan hasil model on-device jika dikirim aplikasi.
+        hasil_ml = {
+            "status_hasil": status_hasil,
+            "id_penyakit": None,
+            "skor_keyakinan": skor_keyakinan,
+            "tanggal_scan_ulang_disarankan": date.today()
+            + timedelta(days=7 if status_hasil == "sehat" else 3),
+        }
+    else:
+        # Fallback untuk client lama yang belum mengirim hasil model.
+        hasil_ml = _jalankan_model_ml()
     id_scan = str(uuid.uuid4())
 
     # 3. Semua operasi DB dalam SATU blok koneksi
@@ -99,12 +113,12 @@ async def buat_pemindaian(
             """
             INSERT INTO pemindaian
                 (id, id_lahan, bagian_tanaman, url_gambar, status_hasil,
-                 id_penyakit, skor_keyakinan, tanggal_scan_ulang_disarankan)
-            VALUES (%s, %s, %s, %s, %s, %s, %s, %s)
+                 label_hasil, id_penyakit, skor_keyakinan, tanggal_scan_ulang_disarankan)
+            VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)
             RETURNING *
             """,
             (id_scan, id_lahan, bagian_tanaman, url_gambar, hasil_ml["status_hasil"],
-             hasil_ml["id_penyakit"], hasil_ml["skor_keyakinan"],
+             label_hasil, hasil_ml["id_penyakit"], hasil_ml["skor_keyakinan"],
              hasil_ml["tanggal_scan_ulang_disarankan"]),
         )
         scan = row_to_dict(cur, cur.fetchone())
