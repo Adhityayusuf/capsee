@@ -1,8 +1,10 @@
 import 'package:flutter/material.dart';
 
+import '../../core/dashboard_style.dart';
 import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import '../../services/services.dart';
+import '../../widgets/dashboard_header.dart';
 import '../../widgets/ui_kit.dart';
 
 /// Detail satu hasil scan dari server.
@@ -52,18 +54,17 @@ class _ScanDetailScreenState extends State<ScanDetailScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
     return Scaffold(
-      backgroundColor: p.background,
-      appBar: AppBar(
-        backgroundColor: p.surface,
-        surfaceTintColor: Colors.transparent,
-        elevation: 0,
-        leading: IconButton(
-          icon: Icon(Icons.arrow_back_rounded, color: p.title),
-          onPressed: () => Navigator.maybePop(context),
+      backgroundColor: dashboardBackgroundColor(context),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(54),
+        child: SafeArea(
+          bottom: false,
+          child: DashboardHeader(
+            title: 'Hasil Scan',
+            onBack: () => Navigator.maybePop(context),
+          ),
         ),
-        title: Text('Hasil Scan', style: AppText.headline(context)),
       ),
       body: _loading
           ? const Center(child: CircularProgressIndicator())

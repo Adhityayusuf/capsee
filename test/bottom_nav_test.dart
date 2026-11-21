@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:capsee/core/app_theme.dart';
+import 'package:capsee/core/dashboard_style.dart';
 import 'package:capsee/core/theme_mode_scope.dart';
 import 'package:capsee/screens/home/dashboard_screen.dart';
 import 'package:capsee/screens/lahan/lahan_page.dart';
@@ -114,12 +115,12 @@ void main() {
     expect(find.text('Real-time Sensor'), findsNothing);
     expect(
       tester.widget<Text>(headerLahan).style?.color,
-      AppPalette.dark.title,
+      AppPalette.dark.subtitle,
     );
     expect(tester.takeException(), isNull);
     expect(
       tester.widget<Scaffold>(find.byType(Scaffold).first).backgroundColor,
-      AppPalette.dark.background,
+      dashboardDarkBackground,
     );
   });
 }

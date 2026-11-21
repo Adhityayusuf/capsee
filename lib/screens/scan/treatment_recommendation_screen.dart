@@ -3,7 +3,9 @@ import 'package:flutter/material.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
+import '../../core/dashboard_style.dart';
 import '../../models/treatment_recommendation.dart';
+import '../../widgets/dashboard_header.dart';
 import '../../widgets/ui_kit.dart';
 
 class TreatmentRecommendationScreen extends StatefulWidget {
@@ -24,9 +26,9 @@ class _TreatmentRecommendationScreenState
   int _selectedOption = 0; // index ke sampleTreatmentOptions
 
   void _showTodo(String message) {
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(content: Text(message)),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(SnackBar(content: Text(message)));
   }
 
   BadgeKind _badgeKindFor(TreatmentOption option) {
@@ -41,11 +43,15 @@ class _TreatmentRecommendationScreenState
     final option = sampleTreatmentOptions[_selectedOption];
 
     return Scaffold(
-      backgroundColor: p.background,
+      backgroundColor: dashboardBackgroundColor(context),
       appBar: _buildAppBar(),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
-            AppSpace.page, 12, AppSpace.page, 24),
+          AppSpace.page,
+          12,
+          AppSpace.page,
+          24,
+        ),
         children: [
           Center(
             child: ConstrainedBox(
@@ -56,13 +62,13 @@ class _TreatmentRecommendationScreenState
                     padding: const EdgeInsets.only(bottom: 12),
                     child: Row(
                       children: [
-                        Icon(Icons.qr_code_2_rounded,
-                            size: 14, color: p.icon),
+                        Icon(Icons.qr_code_2_rounded, size: 14, color: p.icon),
                         const SizedBox(width: 6),
                         Text(
                           'ID Diagnosa ${widget.diagnosis.diagnosisId}',
-                          style: AppText.caption(context)
-                              .copyWith(fontWeight: FontWeight.w600),
+                          style: AppText.caption(
+                            context,
+                          ).copyWith(fontWeight: FontWeight.w600),
                         ),
                       ],
                     ),
@@ -110,8 +116,7 @@ class _TreatmentRecommendationScreenState
                     child: ElevatedButton.icon(
                       onPressed: () =>
                           _showTodo('Rekomendasi disimpan ke riwayat tanaman'),
-                      icon: const Icon(Icons.bookmark_added_outlined,
-                          size: 20),
+                      icon: const Icon(Icons.bookmark_added_outlined, size: 20),
                       label: const Text('Simpan ke Riwayat Tanaman'),
                       style: ElevatedButton.styleFrom(
                         backgroundColor: p.primary,
@@ -119,7 +124,8 @@ class _TreatmentRecommendationScreenState
                         elevation: 0,
                         shape: RoundedRectangleBorder(
                           borderRadius: BorderRadius.circular(
-                              AppSpace.radiusTile),
+                            AppSpace.radiusTile,
+                          ),
                         ),
                       ),
                     ),
@@ -138,31 +144,31 @@ class _TreatmentRecommendationScreenState
   // ---------------------------------------------------------------
   PreferredSizeWidget _buildAppBar() {
     final p = context.palette;
-    return AppBar(
-      backgroundColor: p.surface,
-      surfaceTintColor: Colors.transparent,
-      elevation: 0,
-      scrolledUnderElevation: 0,
-      shape: Border(bottom: BorderSide(color: p.border)),
-      leading: IconButton(
-        icon: Icon(Icons.arrow_back_rounded, color: p.title),
-        onPressed: () => Navigator.of(context).pop(),
-      ),
-      title: Text(
-        'Rekomendasi Penanganan',
-        style: AppText.subtitle(context),
-      ),
-      actions: [
-        IconButton(
-          icon: Icon(Icons.ios_share_rounded, color: p.icon),
-          onPressed: () => _showTodo('Bagikan rekomendasi belum dibuat'),
+    return PreferredSize(
+      preferredSize: const Size.fromHeight(54),
+      child: SafeArea(
+        bottom: false,
+        child: DashboardHeader(
+          title: 'Rekomendasi Penanganan',
+          onBack: () => Navigator.of(context).pop(),
+          actions: [
+            DashboardHeaderAction(
+              tooltip: 'Bagikan rekomendasi',
+              icon: Icons.ios_share_rounded,
+              onPressed: () => _showTodo('Bagikan rekomendasi belum dibuat'),
+              backgroundColor: p.surfaceAlt,
+              foregroundColor: p.accent,
+            ),
+            DashboardHeaderAction(
+              tooltip: 'Simpan rekomendasi',
+              icon: Icons.bookmark_border_rounded,
+              onPressed: () => _showTodo('Simpan cepat belum dibuat'),
+              backgroundColor: p.surfaceAlt,
+              foregroundColor: p.accent,
+            ),
+          ],
         ),
-        IconButton(
-          icon: Icon(Icons.bookmark_border_rounded,
-              color: p.icon),
-          onPressed: () => _showTodo('Simpan cepat belum dibuat'),
-        ),
-      ],
+      ),
     );
   }
 
@@ -182,11 +188,9 @@ class _TreatmentRecommendationScreenState
             height: 56,
             decoration: BoxDecoration(
               color: p.surfaceAlt,
-              borderRadius:
-                  BorderRadius.circular(AppSpace.radiusTile),
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             ),
-            child: Icon(Icons.eco_outlined,
-                size: 26, color: p.icon),
+            child: Icon(Icons.eco_outlined, size: 26, color: p.icon),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -200,32 +204,27 @@ class _TreatmentRecommendationScreenState
                         d.plantName,
                         maxLines: 1,
                         overflow: TextOverflow.ellipsis,
-                        style: AppText.body(context, color: p.subtitle)
-                            .copyWith(fontWeight: FontWeight.w700),
+                        style: AppText.body(
+                          context,
+                          color: p.subtitle,
+                        ).copyWith(fontWeight: FontWeight.w700),
                       ),
                     ),
-                    StatusBadge(
-                      label: d.statusLabel,
-                      kind: BadgeKind.warning,
-                    ),
+                    StatusBadge(label: d.statusLabel, kind: BadgeKind.warning),
                   ],
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  d.diseaseName,
-                  style: AppText.title(context),
-                ),
+                Text(d.diseaseName, style: AppText.title(context)),
                 const SizedBox(height: 2),
                 Text(
                   d.latinName,
-                  style: AppText.bodySm(context, color: p.subtitle)
-                      .copyWith(fontStyle: FontStyle.italic),
+                  style: AppText.bodySm(
+                    context,
+                    color: p.subtitle,
+                  ).copyWith(fontStyle: FontStyle.italic),
                 ),
                 const SizedBox(height: 6),
-                Text(
-                  d.dateTime,
-                  style: AppText.caption(context),
-                ),
+                Text(d.dateTime, style: AppText.caption(context)),
               ],
             ),
           ),
@@ -259,20 +258,18 @@ class _TreatmentRecommendationScreenState
             child: Icon(icon, size: 16, color: iconColor),
           ),
           const SizedBox(height: 10),
-          Text(
-            label,
-            style: AppText.caption(context),
-          ),
+          Text(label, style: AppText.caption(context)),
           const SizedBox(height: 3),
           Text(
             value,
-            style: AppText.subtitle(context, color: p.title)
-                .copyWith(fontSize: 12.5, fontWeight: FontWeight.w800),
+            style: AppText.subtitle(
+              context,
+              color: p.title,
+            ).copyWith(fontSize: 12.5, fontWeight: FontWeight.w800),
           ),
           const SizedBox(height: 8),
           ClipRRect(
-            borderRadius:
-                BorderRadius.circular(AppSpace.radiusPill),
+            borderRadius: BorderRadius.circular(AppSpace.radiusPill),
             child: LinearProgressIndicator(
               value: progress.clamp(0, 1),
               minHeight: 6,
@@ -296,10 +293,7 @@ class _TreatmentRecommendationScreenState
         const SectionHeader(
           icon: Icons.flag_rounded,
           title: 'Langkah Tindakan Segera',
-          trailing: StatusBadge(
-            label: 'Hari Ini',
-            kind: BadgeKind.success,
-          ),
+          trailing: StatusBadge(label: 'Hari Ini', kind: BadgeKind.success),
         ),
         const SizedBox(height: 8),
         Text(
@@ -316,8 +310,7 @@ class _TreatmentRecommendationScreenState
                 _buildActionStepTile(sampleActionSteps[i]),
                 if (i != sampleActionSteps.length - 1)
                   Padding(
-                    padding:
-                        const EdgeInsets.symmetric(horizontal: 14),
+                    padding: const EdgeInsets.symmetric(horizontal: 14),
                     child: Divider(height: 1, color: p.border),
                   ),
               ],
@@ -351,14 +344,13 @@ class _TreatmentRecommendationScreenState
               children: [
                 Text(
                   step.title,
-                  style: AppText.body(context, color: p.title)
-                      .copyWith(fontWeight: FontWeight.w800),
+                  style: AppText.body(
+                    context,
+                    color: p.title,
+                  ).copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  step.description,
-                  style: AppText.bodySm(context),
-                ),
+                Text(step.description, style: AppText.bodySm(context)),
               ],
             ),
           ),
@@ -377,10 +369,7 @@ class _TreatmentRecommendationScreenState
         const SectionHeader(
           icon: Icons.medical_services_outlined,
           title: 'Opsi Solusi Penanganan',
-          trailing: StatusBadge(
-            label: 'Terverifikasi',
-            kind: BadgeKind.info,
-          ),
+          trailing: StatusBadge(label: 'Terverifikasi', kind: BadgeKind.info),
         ),
         const SizedBox(height: 12),
         _buildOptionTabs(),
@@ -404,31 +393,27 @@ class _TreatmentRecommendationScreenState
                 duration: const Duration(milliseconds: 150),
                 padding: const EdgeInsets.symmetric(vertical: 12),
                 decoration: BoxDecoration(
-                  color: _selectedOption == i
-                      ? p.primary
-                      : p.surface,
-                  borderRadius: BorderRadius.circular(
-                      AppSpace.radiusTile),
+                  color: _selectedOption == i ? p.primary : p.surface,
+                  borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                   border: Border.all(
-                    color: _selectedOption == i
-                        ? p.primary
-                        : p.border,
+                    color: _selectedOption == i ? p.primary : p.border,
                   ),
                 ),
                 child: Column(
                   children: [
                     Text(
                       sampleTreatmentOptions[i].tabLabel,
-                      style: AppText.subtitle(context,
-                          color: _selectedOption == i
-                              ? p.onPrimary
-                              : p.title),
+                      style: AppText.subtitle(
+                        context,
+                        color: _selectedOption == i ? p.onPrimary : p.title,
+                      ),
                     ),
                     if (sampleTreatmentOptions[i].recommended) ...[
                       const SizedBox(height: 2),
                       Text(
                         '(Direkomendasikan)',
-                        style: AppText.micro(context,
+                        style: AppText.micro(
+                          context,
                           color: _selectedOption == i
                               ? p.onPrimary.withValues(alpha: 0.7)
                               : p.subtitle,
@@ -458,39 +443,43 @@ class _TreatmentRecommendationScreenState
               Expanded(
                 child: Text(
                   option.title,
-                  style: AppText.subtitle(context,
-                          color: p.title)
-                      .copyWith(fontSize: 15, fontWeight: FontWeight.w800),
+                  style: AppText.subtitle(
+                    context,
+                    color: p.title,
+                  ).copyWith(fontSize: 15, fontWeight: FontWeight.w800),
                 ),
               ),
               const SizedBox(width: 8),
-              StatusBadge(
-                label: option.badge,
-                kind: _badgeKindFor(option),
-              ),
+              StatusBadge(label: option.badge, kind: _badgeKindFor(option)),
             ],
           ),
           const SizedBox(height: 8),
-          Text(
-            option.description,
-            style: AppText.body(context),
-          ),
+          Text(option.description, style: AppText.body(context)),
           const SizedBox(height: 14),
           Row(
             children: [
               Expanded(
                 child: _buildOptionStat(
-                    Icons.science_outlined, 'Dosis', option.dosis),
-              ),
-              _buildOptionDivider(),
-              Expanded(
-                child: _buildOptionStat(Icons.schedule_rounded,
-                    'Waktu Aplikasi', option.waktuAplikasi),
+                  Icons.science_outlined,
+                  'Dosis',
+                  option.dosis,
+                ),
               ),
               _buildOptionDivider(),
               Expanded(
                 child: _buildOptionStat(
-                    Icons.repeat_rounded, 'Frekuensi', option.frekuensi),
+                  Icons.schedule_rounded,
+                  'Waktu Aplikasi',
+                  option.waktuAplikasi,
+                ),
+              ),
+              _buildOptionDivider(),
+              Expanded(
+                child: _buildOptionStat(
+                  Icons.repeat_rounded,
+                  'Frekuensi',
+                  option.frekuensi,
+                ),
               ),
             ],
           ),
@@ -500,14 +489,12 @@ class _TreatmentRecommendationScreenState
             padding: const EdgeInsets.all(AppSpace.tile),
             decoration: BoxDecoration(
               color: p.surfaceAlt,
-              borderRadius:
-                  BorderRadius.circular(AppSpace.radiusTile),
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             ),
             child: Row(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Icon(Icons.water_drop_outlined,
-                    size: 16, color: p.icon),
+                Icon(Icons.water_drop_outlined, size: 16, color: p.icon),
                 const SizedBox(width: 8),
                 Expanded(
                   child: Text(
@@ -538,8 +525,10 @@ class _TreatmentRecommendationScreenState
         Text(
           value,
           textAlign: TextAlign.center,
-          style: AppText.caption(context, color: p.title)
-              .copyWith(fontWeight: FontWeight.w800, fontSize: 12),
+          style: AppText.caption(
+            context,
+            color: p.title,
+          ).copyWith(fontWeight: FontWeight.w800, fontSize: 12),
         ),
       ],
     );
@@ -590,8 +579,7 @@ class _TreatmentRecommendationScreenState
             height: 36,
             decoration: BoxDecoration(
               color: infoBg,
-              borderRadius:
-                  BorderRadius.circular(AppSpace.radiusTile),
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             ),
             child: Icon(tip.icon, size: 18, color: infoFg),
           ),
@@ -602,14 +590,13 @@ class _TreatmentRecommendationScreenState
               children: [
                 Text(
                   tip.title,
-                  style: AppText.body(context, color: p.title)
-                      .copyWith(fontWeight: FontWeight.w800),
+                  style: AppText.body(
+                    context,
+                    color: p.title,
+                  ).copyWith(fontWeight: FontWeight.w800),
                 ),
                 const SizedBox(height: 4),
-                Text(
-                  tip.description,
-                  style: AppText.bodySm(context),
-                ),
+                Text(tip.description, style: AppText.bodySm(context)),
               ],
             ),
           ),
