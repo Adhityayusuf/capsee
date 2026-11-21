@@ -4,27 +4,18 @@ import 'dart:io';
 import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
-import 'package:flutter/foundation.dart';
-
 const _buildBaseUrl = String.fromEnvironment('BASE_URL');
+const _defaultLanBaseUrl = 'http://192.168.138.150:8000';
+const String apiCodeNotChiliPlant = 'not_chili_plant';
 
-/// Alamat default backend yang otomatis menyesuaikan platform:
-/// - Android Emulator: 'http://10.0.2.2:8000' (karena 127.0.0.1 di emulator merujuk ke hp itu sendiri)
-/// - Web / Desktop (Windows/macOS/Linux) / iOS Simulator: 'http://127.0.0.1:8000'
+/// Alamat default backend untuk perangkat di jaringan lokal yang sama.
 /// - Bisa dioverride saat build: --dart-define=BASE_URL=http://...
 /// - Bisa juga disimpan dinamis di SharedPreferences jika ingin ubah di runtime.
 String get defaultBaseUrl {
   if (_buildBaseUrl.isNotEmpty) {
     return _buildBaseUrl.replaceAll(RegExp(r'/+$'), '');
   }
-
-  if (kIsWeb) {
-    return 'http://127.0.0.1:8000';
-  }
-  if (Platform.isAndroid) {
-    return 'http://10.0.2.2:8000';
-  }
-  return 'http://127.0.0.1:8000';
+  return _defaultLanBaseUrl;
 }
 
 /// Alamat backend saat ini.
@@ -153,8 +144,7 @@ Future<http.Response> apiPatch(
   Duration timeout = _requestTimeout,
 }) {
   return _denganPesanRamah(
-    () =>
-        http.patch(_uri(path), headers: headers, body: body).timeout(timeout),
+    () => http.patch(_uri(path), headers: headers, body: body).timeout(timeout),
   );
 }
 
@@ -182,6 +172,7 @@ Future<http.Response> apiSend(
     return http.Response.fromStream(streamed).timeout(timeout);
   });
 }
+
 /// Key untuk menyimpan token JWT di SharedPreferences.
 const String _tokenKey = 'auth_token';
 
@@ -232,9 +223,7 @@ Future<Map<String, String>> headerAuth() async {
 /// Header multipart + Bearer token (untuk upload file/gambar).
 Future<Map<String, String>> headerAuthMultipart() async {
   final token = await ambilToken();
-  return {
-    if (token != null) 'Authorization': 'Bearer $token',
-  };
+  return {if (token != null) 'Authorization': 'Bearer $token'};
 }
 
 // ─────────────────────────────────────────────────────────
@@ -250,15 +239,21 @@ Map<String, dynamic> parseResponse(http.Response res) {
   } catch (_) {
     // Backend mengembalikan non-JSON (mis. 502 gateway HTML, timeout proxy).
     final snippet = utf8.decode(res.bodyBytes, allowMalformed: true).trim();
-    final preview = snippet.length > 200 ? '${snippet.substring(0, 200)}…' : snippet;
+    final preview = snippet.length > 200
+        ? '${snippet.substring(0, 200)}…'
+        : snippet;
     throw ApiException(
       'Respons server tidak valid (${res.statusCode})${preview.isEmpty ? '' : ': $preview'}',
       res.statusCode,
     );
   }
   if (res.statusCode >= 200 && res.statusCode < 300) return body;
-  final pesan = body['detail'] ?? 'Terjadi kesalahan (${res.statusCode})';
-  throw ApiException(pesan.toString(), res.statusCode);
+  final detail = body['detail'];
+  final code = detail is Map ? detail['code']?.toString() : null;
+  final pesan = detail is Map
+      ? (detail['message'] ?? 'Terjadi kesalahan (${res.statusCode})')
+      : (detail ?? 'Terjadi kesalahan (${res.statusCode})');
+  throw ApiException(pesan.toString(), res.statusCode, code: code);
 }
 
 // ─────────────────────────────────────────────────────────
@@ -269,7 +264,9 @@ Map<String, dynamic> parseResponse(http.Response res) {
 class ApiException implements Exception {
   final String pesan;
   final int statusCode;
-  ApiException(this.pesan, this.statusCode);
+  final String? code;
+
+  ApiException(this.pesan, this.statusCode, {this.code});
 
   @override
   String toString() => pesan;

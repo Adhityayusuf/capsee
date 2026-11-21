@@ -308,10 +308,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 12),
                         _addLandPrompt(),
                         const SizedBox(height: 20),
-                        _sectionHeading('Menu Cepat', trailing: '4 fitur'),
-                        const SizedBox(height: 10),
-                        _quickActions(),
-                        const SizedBox(height: 18),
                         _summaryCard(),
                         const SizedBox(height: 20),
                         _sectionHeading(
@@ -513,88 +509,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _quickActions() {
-    final p = context.palette;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: p.border.withValues(alpha: .75)),
-      ),
-      child: Row(
-        children: [
-          _quickAction(
-            Icons.document_scanner_rounded,
-            'Scan',
-            const Color(0xFF35D5A2),
-            _openScan,
-          ),
-          _quickAction(
-            Icons.history_rounded,
-            'Riwayat',
-            const Color(0xFF55A8FF),
-            () => setState(() => _tab = 1),
-          ),
-          _quickAction(
-            Icons.eco_rounded,
-            'Lahan',
-            const Color(0xFFFFC857),
-            () => setState(() => _tab = 2),
-          ),
-          _quickAction(
-            Icons.notifications_active_rounded,
-            'Notifikasi',
-            const Color(0xFFB88CFF),
-            () => setState(() => _tab = 3),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _quickAction(
-    IconData icon,
-    String label,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    final p = context.palette;
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: .14),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: color, size: 21),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppText.micro(
-                  context,
-                  color: p.subtitle,
-                ).copyWith(fontWeight: FontWeight.w700),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }
