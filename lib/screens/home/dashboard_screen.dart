@@ -83,6 +83,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
   int _tab = 0;
   List<ScanHistoryItem> _scanHistory = [];
   LandData? _activeScanLand;
+  int _scanReturnTab = 0;
 
   Map<String, dynamic>? _profil;
   List<Map<String, dynamic>>? _lahanList;
@@ -139,6 +140,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 idLahan: id,
                 urlGambar: (s['url_gambar'] ?? '').toString(),
                 statusHasil: (s['status_hasil'] ?? '').toString(),
+                labelHasil: (s['label_hasil'] ?? '').toString(),
               ),
             );
           }
@@ -218,6 +220,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 idLahan: id,
                 urlGambar: (s['url_gambar'] ?? '').toString(),
                 statusHasil: (s['status_hasil'] ?? '').toString(),
+                labelHasil: (s['label_hasil'] ?? '').toString(),
               ),
             );
           }
@@ -273,25 +276,31 @@ class _DashboardScreenState extends State<DashboardScreen> {
           key: ValueKey(_activeScanLand!.id),
           land: _activeScanLand!,
           initialTab: 0,
+          onBack: _closeActiveScan,
+          onScanSaved: _muatUlangLahan,
         ),
     ];
 
     return Scaffold(
       body: IndexedStack(index: _tab, children: pages),
-      bottomNavigationBar: _BottomNav(
-        selectedIndex: _tab == 4 ? 3 : (_tab < 3 ? _tab : -1),
-        onSelected: (index) {
-          final target = index == 3 ? 4 : index;
-          setState(() {
-            _activeScanLand = null;
-            _tab = target;
-          });
-          // Kembali ke dashboard → segarkan daftar agar tidak basi
-          // (mis. habis hapus lahan di tab lahan).
-          if (target == 0) _muatUlangLahan();
-        },
-        onScan: () => _openScan(),
-      ),
+      // Halaman scan dari menu cepat tampil sebagai halaman internal dashboard.
+      // Bottom bar disembunyikan agar tidak ikut tampil saat kamera digunakan.
+      bottomNavigationBar: _activeScanLand == null
+          ? _BottomNav(
+              selectedIndex: _tab == 4 ? 3 : (_tab < 3 ? _tab : -1),
+              onSelected: (index) {
+                final target = index == 3 ? 4 : index;
+                setState(() {
+                  _activeScanLand = null;
+                  _tab = target;
+                });
+                // Kembali ke dashboard → segarkan daftar agar tidak basi
+                // (mis. habis hapus lahan di tab lahan).
+                if (target == 0) _muatUlangLahan();
+              },
+              onScan: () => _openScan(),
+            )
+          : null,
     );
   }
 
@@ -1155,6 +1164,15 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
+  void _closeActiveScan() {
+    if (!mounted) return;
+    setState(() {
+      _activeScanLand = null;
+      _tab = _scanReturnTab;
+    });
+    if (_scanReturnTab == 0) _muatUlangLahan();
+  }
+
   Future<void> _openScan({Map<String, dynamic>? lahanTetap}) async {
     if (_lahanList == null || _lahanList!.isEmpty) {
       if (mounted) {
@@ -1178,6 +1196,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
 
     setState(() {
+      _scanReturnTab = _tab;
       _activeScanLand = _landDataFromMap(target!);
       _tab = 5;
     });

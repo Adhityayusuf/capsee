@@ -111,6 +111,7 @@ class _ScanDetailScreenState extends State<ScanDetailScreen> {
     );
     final skor = scan['skor_keyakinan']?.toString() ?? '-';
     final bagian = (scan['bagian_tanaman'] ?? '-').toString();
+    final labelHasil = (scan['label_hasil'] ?? '').toString().trim();
     final url = (scan['url_gambar'] ?? '').toString();
 
     return ListView(
@@ -162,6 +163,7 @@ class _ScanDetailScreenState extends State<ScanDetailScreen> {
               const SizedBox(height: AppSpace.gapSm),
               _baris('Tanggal', tanggal.isEmpty ? '-' : tanggal),
               _baris('Bagian tanaman', bagian),
+              if (labelHasil.isNotEmpty) _baris('Diagnosis model', labelHasil),
               _baris('Keyakinan AI', '$skor%'),
               if (penyakit != null) ...[
                 const Divider(height: 20),

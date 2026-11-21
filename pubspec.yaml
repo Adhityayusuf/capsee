@@ -40,6 +40,10 @@ dependencies:
   http: ^1.2.2
   shared_preferences: ^2.3.2
 
+  # TFLite & image processing untuk inferensi model ML on-device
+  tflite_flutter: 0.12.1
+  image: ^4.3.0
+
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -64,6 +68,7 @@ flutter:
 
   assets:
     - assets/branding/
+    - assets/models/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/to/resolution-aware-images
