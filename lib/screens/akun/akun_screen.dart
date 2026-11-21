@@ -10,7 +10,8 @@ import 'dart:ui' show ImageFilter;
 
 import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
-import '../../widgets/brand_logo.dart';
+import '../../core/dashboard_style.dart';
+import '../../widgets/dashboard_header.dart';
 import '../../widgets/ui_kit.dart';
 import '../auth/login_screen.dart';
 import '../bantuan/bantuan_faq_screen.dart';
@@ -91,9 +92,9 @@ class _AkunScreenState extends State<AkunScreen> {
         title: 'Edit Profil',
         subtitle: 'Ubah identitas, foto profil, dan kontak lahan',
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const EditProfileScreen()),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const EditProfileScreen()));
         },
       ),
       _MenuItem(
@@ -115,7 +116,9 @@ class _AkunScreenState extends State<AkunScreen> {
         onTap: () {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Pengaturan notifikasi mengikuti data BMKG per lahan.'),
+              content: Text(
+                'Pengaturan notifikasi mengikuti data BMKG per lahan.',
+              ),
             ),
           );
         },
@@ -135,9 +138,9 @@ class _AkunScreenState extends State<AkunScreen> {
         title: 'Panduan & FAQ Petani',
         subtitle: 'Solusi penyakit cabai, dosis pupuk, & tutorial',
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const BantuanFaqScreen()),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const BantuanFaqScreen()));
         },
       ),
       _MenuItem(
@@ -146,9 +149,9 @@ class _AkunScreenState extends State<AkunScreen> {
         title: 'Syarat dan Ketentuan',
         subtitle: 'Ketentuan layanan aplikasi',
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const SyaratScreen()),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const SyaratScreen()));
         },
       ),
       _MenuItem(
@@ -157,9 +160,9 @@ class _AkunScreenState extends State<AkunScreen> {
         title: 'Kebijakan Privasi',
         subtitle: 'Privasi data agrikultur Anda',
         onTap: () {
-          Navigator.of(context).push(
-            MaterialPageRoute(builder: (_) => const PrivasiScreen()),
-          );
+          Navigator.of(
+            context,
+          ).push(MaterialPageRoute(builder: (_) => const PrivasiScreen()));
         },
       ),
       _MenuItem(
@@ -184,18 +187,22 @@ class _AkunScreenState extends State<AkunScreen> {
     final p = context.palette;
     if (_isLoading) {
       return Scaffold(
-        backgroundColor: p.background,
+        backgroundColor: dashboardBackgroundColor(context),
         appBar: _buildAppBar(),
         body: const Center(child: CircularProgressIndicator()),
       );
     }
 
     return Scaffold(
-      backgroundColor: p.background,
+      backgroundColor: dashboardBackgroundColor(context),
       appBar: _buildAppBar(),
       body: ListView(
         padding: const EdgeInsets.fromLTRB(
-            AppSpace.page, 8, AppSpace.page, AppSpace.gapXl),
+          AppSpace.page,
+          8,
+          AppSpace.page,
+          AppSpace.gapXl,
+        ),
         children: [
           _buildGreeting(),
           const SizedBox(height: 16),
@@ -203,11 +210,19 @@ class _AkunScreenState extends State<AkunScreen> {
           const SizedBox(height: 24),
           _buildSensorBanner(),
           const SizedBox(height: 24),
-          _buildSection('Pengaturan Akun', 'Preferensi', p.subtitle,
-              _getAccountItems(context)),
+          _buildSection(
+            'Pengaturan Akun',
+            'Preferensi',
+            p.subtitle,
+            _getAccountItems(context),
+          ),
           const SizedBox(height: 24),
-          _buildSection('Bantuan & Informasi', 'Dukungan Lapangan', p.accent,
-              _getHelpItems(context)),
+          _buildSection(
+            'Bantuan & Informasi',
+            'Dukungan Lapangan',
+            p.accent,
+            _getHelpItems(context),
+          ),
           const SizedBox(height: 24),
           _buildLogout(context),
           const SizedBox(height: 24),
@@ -219,59 +234,14 @@ class _AkunScreenState extends State<AkunScreen> {
 
   // ───────── Header ─────────
   PreferredSizeWidget _buildAppBar() {
-    final p = context.palette;
-
+    final canPop = Navigator.of(context).canPop();
     return PreferredSize(
-      preferredSize: const Size.fromHeight(64),
-      child: Container(
-        decoration: BoxDecoration(
-          color: p.surface.withValues(alpha: 0.95),
-          boxShadow: [
-            BoxShadow(
-                color: p.shadow, blurRadius: 8, offset: const Offset(0, 1)),
-          ],
-        ),
-        child: SafeArea(
-          bottom: false,
-          child: SizedBox(
-            height: 64,
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 16),
-              child: Row(
-                children: [
-                  if (Navigator.of(context).canPop()) ...[
-                    IconButton(
-                      tooltip: 'Kembali',
-                      onPressed: () => Navigator.of(context).maybePop(),
-                      icon: Icon(Icons.arrow_back_rounded,
-                          size: 22, color: p.title),
-                      style: IconButton.styleFrom(
-                        minimumSize: const Size(40, 40),
-                        shape: const CircleBorder(),
-                      ),
-                    ),
-                    const SizedBox(width: 4),
-                  ],
-                  const CapseeMark(size: 32),
-                  const SizedBox(width: 8),
-                  Expanded(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      children: [
-                        Text('PROFIL & PENGATURAN',
-                            style: AppText.overline(context, color: p.accent)),
-                        Text('Akun Saya',
-                            overflow: TextOverflow.ellipsis,
-                            style: AppText.headline(context)),
-                      ],
-                    ),
-                  ),
-                  const SizedBox(width: 4),
-                ],
-              ),
-            ),
-          ),
+      preferredSize: const Size.fromHeight(54),
+      child: SafeArea(
+        bottom: false,
+        child: DashboardHeader(
+          title: 'Akun Saya',
+          onBack: canPop ? () => Navigator.of(context).maybePop() : null,
         ),
       ),
     );
@@ -281,11 +251,7 @@ class _AkunScreenState extends State<AkunScreen> {
   Widget _buildGreeting() {
     final p = context.palette;
 
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-      ],
-    );
+    return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: []);
   }
 
   // ───────── Kartu profil ─────────
@@ -326,22 +292,27 @@ class _AkunScreenState extends State<AkunScreen> {
                         child: Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text(_profil?['nama'] ?? 'Pengguna',
-                                overflow: TextOverflow.ellipsis,
-                                style: AppText.headline(context)),
+                            Text(
+                              _profil?['nama'] ?? 'Pengguna',
+                              overflow: TextOverflow.ellipsis,
+                              style: AppText.headline(context),
+                            ),
                             const SizedBox(height: 2),
                             Row(
                               children: [
-                                Icon(Icons.eco,
-                                    size: 15,
-                                    color: context.palette.accent),
+                                Icon(
+                                  Icons.eco,
+                                  size: 15,
+                                  color: context.palette.accent,
+                                ),
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
                                     _lokasiSingkat(),
                                     overflow: TextOverflow.ellipsis,
-                                    style: AppText.bodySm(context).copyWith(
-                                        fontWeight: FontWeight.w600),
+                                    style: AppText.bodySm(
+                                      context,
+                                    ).copyWith(fontWeight: FontWeight.w600),
                                   ),
                                 ),
                               ],
@@ -405,8 +376,11 @@ class _AkunScreenState extends State<AkunScreen> {
                   child: SizedBox(
                     width: 24,
                     height: 24,
-                    child: Icon(Icons.photo_camera,
-                        size: 13, color: p.onPrimary),
+                    child: Icon(
+                      Icons.photo_camera,
+                      size: 13,
+                      color: p.onPrimary,
+                    ),
                   ),
                 ),
               ),
@@ -436,15 +410,22 @@ class _AkunScreenState extends State<AkunScreen> {
                   children: [
                     Icon(Icons.location_on, size: 18, color: p.accent),
                     const SizedBox(width: 8),
-                    Text('Lahan Aktif',
-                        style: AppText.bodySm(context)
-                            .copyWith(fontWeight: FontWeight.w600)),
+                    Text(
+                      'Lahan Aktif',
+                      style: AppText.bodySm(
+                        context,
+                      ).copyWith(fontWeight: FontWeight.w600),
+                    ),
                   ],
                 ),
               ),
-              Text('2 Petak Terdaftar',
-                  style: AppText.bodySm(context, color: p.title)
-                      .copyWith(fontWeight: FontWeight.w600)),
+              Text(
+                '2 Petak Terdaftar',
+                style: AppText.bodySm(
+                  context,
+                  color: p.title,
+                ).copyWith(fontWeight: FontWeight.w600),
+              ),
             ],
           ),
           const SizedBox(height: 8),
@@ -458,11 +439,12 @@ class _AkunScreenState extends State<AkunScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                          (_profil?['email'] ?? '').toString().isEmpty
-                              ? '-'
-                              : (_profil?['email'] ?? '').toString(),
-                          overflow: TextOverflow.ellipsis,
-                          style: AppText.bodySm(context)),
+                        (_profil?['email'] ?? '').toString().isEmpty
+                            ? '-'
+                            : (_profil?['email'] ?? '').toString(),
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.bodySm(context),
+                      ),
                     ),
                   ],
                 ),
@@ -481,11 +463,12 @@ class _AkunScreenState extends State<AkunScreen> {
                     const SizedBox(width: 8),
                     Expanded(
                       child: Text(
-                          (_profil?['nomor_hp'] ?? '').toString().isEmpty
-                              ? 'Belum diisi'
-                              : (_profil?['nomor_hp'] ?? '').toString(),
-                          overflow: TextOverflow.ellipsis,
-                          style: AppText.bodySm(context)),
+                        (_profil?['nomor_hp'] ?? '').toString().isEmpty
+                            ? 'Belum diisi'
+                            : (_profil?['nomor_hp'] ?? '').toString(),
+                        overflow: TextOverflow.ellipsis,
+                        style: AppText.bodySm(context),
+                      ),
                     ),
                   ],
                 ),
@@ -501,13 +484,16 @@ class _AkunScreenState extends State<AkunScreen> {
   // ───────── Banner sensor ─────────
   Widget _buildSensorBanner() {
     final p = context.palette;
-    return Container(
-    );
+    return Container();
   }
 
   // ───────── Section menu ─────────
-  Widget _buildSection(String title, String trailing, Color trailingColor,
-      List<_MenuItem> items) {
+  Widget _buildSection(
+    String title,
+    String trailing,
+    Color trailingColor,
+    List<_MenuItem> items,
+  ) {
     final p = context.palette;
 
     return Column(
@@ -518,10 +504,14 @@ class _AkunScreenState extends State<AkunScreen> {
           child: Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(title.toUpperCase(),
-                  style: AppText.overline(context, color: p.icon)),
-              Text(trailing,
-                  style: AppText.micro(context, color: trailingColor)),
+              Text(
+                title.toUpperCase(),
+                style: AppText.overline(context, color: p.icon),
+              ),
+              Text(
+                trailing,
+                style: AppText.micro(context, color: trailingColor),
+              ),
             ],
           ),
         ),
@@ -537,7 +527,8 @@ class _AkunScreenState extends State<AkunScreen> {
                     Container(
                       height: 1,
                       margin: const EdgeInsets.symmetric(
-                          horizontal: AppSpace.card),
+                        horizontal: AppSpace.card,
+                      ),
                       color: p.border,
                     ),
                 ],
@@ -569,8 +560,10 @@ class _AkunScreenState extends State<AkunScreen> {
               children: [
                 Icon(Icons.logout, size: 20, color: p.error),
                 const SizedBox(width: 8),
-                Text('Keluar dari Akun',
-                    style: AppText.subtitle(context, color: p.error)),
+                Text(
+                  'Keluar dari Akun',
+                  style: AppText.subtitle(context, color: p.error),
+                ),
               ],
             ),
           ),
@@ -586,16 +579,21 @@ class _AkunScreenState extends State<AkunScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         backgroundColor: p.surface,
-        title: Text('Keluar dari akun?',
-            style: AppText.headline(context)),
-        content: Text('Anda perlu masuk lagi untuk memantau lahan.',
-            style: AppText.body(context)),
+        title: Text('Keluar dari akun?', style: AppText.headline(context)),
+        content: Text(
+          'Anda perlu masuk lagi untuk memantau lahan.',
+          style: AppText.body(context),
+        ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx),
-            child: Text('Batal',
-                style: AppText.subtitle(context, color: p.subtitle)
-                    .copyWith(fontWeight: FontWeight.w600)),
+            child: Text(
+              'Batal',
+              style: AppText.subtitle(
+                context,
+                color: p.subtitle,
+              ).copyWith(fontWeight: FontWeight.w600),
+            ),
           ),
           TextButton(
             onPressed: () async {
@@ -608,8 +606,10 @@ class _AkunScreenState extends State<AkunScreen> {
                 );
               }
             },
-            child:
-                Text('Keluar', style: AppText.subtitle(context, color: p.error)),
+            child: Text(
+              'Keluar',
+              style: AppText.subtitle(context, color: p.error),
+            ),
           ),
         ],
       ),
@@ -626,16 +626,20 @@ class _AkunScreenState extends State<AkunScreen> {
           children: [
             Icon(Icons.psychology_outlined, size: 16, color: p.icon),
             const SizedBox(width: 6),
-            Text('CAPSEE PRECISION AGRI',
-                style: AppText.overline(context, color: p.icon)),
+            Text(
+              'CAPSEE PRECISION AGRI',
+              style: AppText.overline(context, color: p.icon),
+            ),
           ],
         ),
         const SizedBox(height: 4),
         Text(
           'Versi 2.4.0 (Build 2024.11) • Sistem Terenkripsi',
           textAlign: TextAlign.center,
-          style: AppText.bodySm(context,
-              color: p.subtitle.withValues(alpha: 0.8)),
+          style: AppText.bodySm(
+            context,
+            color: p.subtitle.withValues(alpha: 0.8),
+          ),
         ),
       ],
     );
@@ -671,13 +675,18 @@ class _MenuTile extends StatelessWidget {
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
                 children: [
-                  Text(item.title,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.subtitle(context)
-                          .copyWith(fontWeight: FontWeight.w600)),
-                  Text(item.subtitle,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.bodySm(context)),
+                  Text(
+                    item.title,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.subtitle(
+                      context,
+                    ).copyWith(fontWeight: FontWeight.w600),
+                  ),
+                  Text(
+                    item.subtitle,
+                    overflow: TextOverflow.ellipsis,
+                    style: AppText.bodySm(context),
+                  ),
                 ],
               ),
             ),

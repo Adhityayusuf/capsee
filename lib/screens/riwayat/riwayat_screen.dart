@@ -1,5 +1,7 @@
 import 'package:capsee/core/app_text.dart';
 import 'package:capsee/core/app_theme.dart';
+import 'package:capsee/core/dashboard_style.dart';
+import 'package:capsee/widgets/dashboard_header.dart';
 import 'package:capsee/widgets/ui_kit.dart';
 import 'package:flutter/material.dart';
 
@@ -81,17 +83,14 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
     return Scaffold(
-      backgroundColor: p.background,
-      appBar: AppBar(
-        backgroundColor: p.surface,
-        elevation: 0,
-        title: Text(
-          'Riwayat Aktivitas',
-          style: AppText.headline(context),
+      backgroundColor: dashboardBackgroundColor(context),
+      appBar: PreferredSize(
+        preferredSize: const Size.fromHeight(54),
+        child: SafeArea(
+          bottom: false,
+          child: DashboardHeader(title: 'Riwayat Aktivitas'),
         ),
-        centerTitle: false,
       ),
       body: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -109,13 +108,19 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
   Widget _buildFilterSection() {
     return Container(
       padding: const EdgeInsets.symmetric(
-          horizontal: AppSpace.page, vertical: 12),
+        horizontal: AppSpace.page,
+        vertical: 12,
+      ),
       child: Row(
         children: [
           Expanded(
             child: _buildDropdown(
               value: _selectedLahan,
-              items: ['Semua Lahan', 'Petak Cabai Rawit Blok A', 'Lahan Samping Rumah'],
+              items: [
+                'Semua Lahan',
+                'Petak Cabai Rawit Blok A',
+                'Lahan Samping Rumah',
+              ],
               icon: Icons.landscape_rounded,
               onChanged: (val) => setState(() => _selectedLahan = val!),
             ),
@@ -164,8 +169,10 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                   Expanded(
                     child: Text(
                       item,
-                      style: AppText.bodySm(context, color: p.title)
-                          .copyWith(fontWeight: FontWeight.w600),
+                      style: AppText.bodySm(
+                        context,
+                        color: p.title,
+                      ).copyWith(fontWeight: FontWeight.w600),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -210,10 +217,10 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
         break;
       case 'siram':
         itemIcon = Icons.water_drop_rounded;
-        iconBgColor =
-            isDark ? const Color(0xFF0F2A3A) : const Color(0xFFE3F2FD);
-        iconColor =
-            isDark ? const Color(0xFF7DD3FC) : const Color(0xFF1976D2);
+        iconBgColor = isDark
+            ? const Color(0xFF0F2A3A)
+            : const Color(0xFFE3F2FD);
+        iconColor = isDark ? const Color(0xFF7DD3FC) : const Color(0xFF1976D2);
         break;
       case 'pupuk':
         itemIcon = Icons.eco_rounded;
@@ -235,8 +242,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
             height: 48,
             decoration: BoxDecoration(
               color: iconBgColor,
-              borderRadius:
-                  BorderRadius.circular(AppSpace.radiusTile),
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             ),
             child: Icon(itemIcon, color: iconColor, size: 24),
           ),
@@ -249,10 +255,7 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     Expanded(
-                      child: Text(
-                        item.judul,
-                        style: AppText.subtitle(context),
-                      ),
+                      child: Text(item.judul, style: AppText.subtitle(context)),
                     ),
                     Text(
                       _formatDate(item.waktu),
@@ -263,14 +266,13 @@ class _RiwayatScreenState extends State<RiwayatScreen> {
                 const SizedBox(height: 4),
                 Text(
                   item.namaLahan,
-                  style: AppText.bodySm(context, color: p.accent)
-                      .copyWith(fontWeight: FontWeight.w600),
+                  style: AppText.bodySm(
+                    context,
+                    color: p.accent,
+                  ).copyWith(fontWeight: FontWeight.w600),
                 ),
                 const SizedBox(height: 8),
-                Text(
-                  item.deskripsi,
-                  style: AppText.bodySm(context),
-                ),
+                Text(item.deskripsi, style: AppText.bodySm(context)),
               ],
             ),
           ),
