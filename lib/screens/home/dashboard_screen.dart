@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
+import '../../core/dashboard_style.dart';
 import '../../core/theme_mode_scope.dart';
 import '../../models/land_data.dart';
 import '../../widgets/popup_notifikasi.dart';
@@ -14,10 +15,10 @@ import '../lahan/tambah_lahan_page.dart';
 import '../notifikasi/notifikasi_screen.dart';
 import '../scan/riwayat_scan_screen.dart';
 import '../../services/services.dart';
-import '../../widgets/brand_logo.dart';
+import '../../widgets/dashboard_header.dart';
 
 const _dashboardLightPalette = AppPalette(
-  background: Color(0xFFF6FBF8),
+  background: dashboardLightBackground,
   surface: Color(0xFFFFFFFF),
   surfaceAlt: Color(0xFFEAF5EF),
   border: Color(0xFFE3EEE8),
@@ -35,7 +36,7 @@ const _dashboardLightPalette = AppPalette(
 );
 
 const _dashboardDarkPalette = AppPalette(
-  background: Color(0xFF06110D),
+  background: dashboardDarkBackground,
   surface: Color(0xFF111F19),
   surfaceAlt: Color(0xFF1A2B23),
   border: Color(0xFF263B31),
@@ -360,79 +361,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _header() {
     final p = context.palette;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
-      child: Row(
-        children: [
-          const CapseeMark(size: 36),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Capsee',
-                style: AppText.subtitle(
-                  context,
-                  color: p.title,
-                ).copyWith(fontSize: 17, fontWeight: FontWeight.w800),
-              ),
-              Text(
-                'Kebun cabai',
-                style: AppText.micro(context, color: p.subtitle),
-              ),
-            ],
-          ),
-          const Spacer(),
-          _headerAction(
-            tooltip: 'Buka notifikasi',
-            icon: Icons.notifications_rounded,
-            onPressed: () => setState(() => _tab = 3),
-            backgroundColor: p.surfaceAlt,
-            foregroundColor: p.accent,
-          ),
-          const SizedBox(width: 5),
-          _themeToggle(),
-          const SizedBox(width: 5),
-          _headerAction(
-            tooltip: 'Buka akun dan pengaturan',
-            icon: Icons.settings_rounded,
-            onPressed: () => setState(() => _tab = 4),
-            backgroundColor: p.surfaceAlt,
-            foregroundColor: p.accent,
-          ),
-        ],
-      ),
+    return DashboardHeader(
+      title: 'Kebun cabai',
+      actions: [
+        DashboardHeaderAction(
+          tooltip: 'Buka notifikasi',
+          icon: Icons.notifications_rounded,
+          onPressed: () => setState(() => _tab = 3),
+          backgroundColor: p.surfaceAlt,
+          foregroundColor: p.accent,
+        ),
+        _themeToggle(),
+        DashboardHeaderAction(
+          tooltip: 'Buka akun dan pengaturan',
+          icon: Icons.settings_rounded,
+          onPressed: () => setState(() => _tab = 4),
+          backgroundColor: p.surfaceAlt,
+          foregroundColor: p.accent,
+        ),
+      ],
     );
   }
-
-  Widget _headerAction({
-    required String tooltip,
-    required IconData icon,
-    required VoidCallback onPressed,
-    required Color backgroundColor,
-    required Color foregroundColor,
-  }) => Tooltip(
-    message: tooltip,
-    child: Material(
-      color: backgroundColor,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onPressed,
-        child: SizedBox(
-          width: 32,
-          height: 32,
-          child: Icon(icon, color: foregroundColor, size: 18),
-        ),
-      ),
-    ),
-  );
 
   Widget _themeToggle() {
     final themeMode = ThemeModeScope.maybeOf(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return _headerAction(
+    return DashboardHeaderAction(
       tooltip: isDark ? 'Ganti ke mode terang' : 'Ganti ke mode gelap',
       icon: isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
       onPressed: () {
