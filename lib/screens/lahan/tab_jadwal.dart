@@ -352,7 +352,20 @@ class _TabJadwalState extends State<TabJadwal> {
             ),
           ),
           if (onSelesai != null)
-            TextButton(onPressed: onSelesai, child: const Text('Selesai'))
+            FilledButton.tonalIcon(
+              onPressed: onSelesai,
+              style: FilledButton.styleFrom(
+                backgroundColor: p.accentSoft,
+                foregroundColor: p.onAccentSoft,
+                minimumSize: const Size(0, 38),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+                ),
+              ),
+              icon: const Icon(Icons.check_rounded, size: 16),
+              label: const Text('Selesai'),
+            )
           else
             const StatusBadge(label: 'Selesai', kind: BadgeKind.success),
         ],
@@ -488,20 +501,25 @@ class _TabJadwalState extends State<TabJadwal> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SectionHeader(
+              SectionHeader(
                 icon: Icons.water_drop,
                 title: 'Jadwal Mingguan',
-              ),
-              const Divider(height: 20, thickness: 1),
-              Align(
-                alignment: Alignment.centerRight,
-                child: IconButton(
-                  tooltip: 'Tambah jadwal tambahan',
-                  visualDensity: VisualDensity.compact,
-                  icon: const Icon(Icons.add, color: AppColors.primary),
+                trailing: FilledButton.icon(
                   onPressed: _showAddScheduleDialog,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: context.palette.primary,
+                    foregroundColor: context.palette.onPrimary,
+                    minimumSize: const Size(0, 40),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+                    ),
+                  ),
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: const Text('Tambah Jadwal'),
                 ),
               ),
+              const Divider(height: 20, thickness: 1),
               for (var index = 0; index < scheduleDetails.length; index++)
                 _scheduleRow(
                   scheduledDate: weekStart.add(Duration(days: index)),
@@ -576,32 +594,36 @@ class _TabJadwalState extends State<TabJadwal> {
                   ),
                 ],
                 if (schedule.id != null && !isDone) ...[
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
-                      TextButton(
-                        style: TextButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                        ),
-                        onPressed: () => _selesaikanKegiatan(schedule.id!),
-                        child: Text(
-                          'Selesai',
-                          style: AppText.caption(context, color: p.primary),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: p.primary,
+                            side: BorderSide(color: p.primary),
+                            minimumSize: const Size.fromHeight(38),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                          ),
+                          onPressed: () => _selesaikanKegiatan(schedule.id!),
+                          icon: const Icon(Icons.check_rounded, size: 16),
+                          label: const Text('Selesai'),
                         ),
                       ),
-                      TextButton(
-                        style: TextButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                        ),
-                        onPressed: () => _hapusKegiatan(schedule.id!),
-                        child: Text(
-                          'Hapus',
-                          style: AppText.caption(
-                            context,
-                            color: context.palette.error,
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: p.error,
+                            side: BorderSide(
+                              color: p.error.withValues(alpha: 0.4),
+                            ),
+                            minimumSize: const Size.fromHeight(38),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
                           ),
+                          onPressed: () => _hapusKegiatan(schedule.id!),
+                          icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                          label: const Text('Hapus'),
                         ),
                       ),
                     ],
@@ -869,6 +891,7 @@ class _TabJadwalState extends State<TabJadwal> {
   }
 
   Widget _actions() {
+    final p = context.palette;
     return Column(
       children: [
         SizedBox(
@@ -887,35 +910,39 @@ class _TabJadwalState extends State<TabJadwal> {
                   : 'Catat Realisasi Pupuk / Siram',
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: context.palette.primary,
-              foregroundColor: context.palette.onPrimary,
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              backgroundColor: p.primary,
+              foregroundColor: p.onPrimary,
+              minimumSize: const Size.fromHeight(48),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: syncing
-                    ? null
-                    : () async {
-                        setState(() => syncing = true);
-                        await Future.delayed(const Duration(milliseconds: 900));
-                        if (mounted) setState(() => syncing = false);
-                      },
-                icon: syncing
-                    ? const SizedBox(
-                        width: 17,
-                        height: 17,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.cloud_sync),
-                label: const Text('Sinkronkan Ulang BMKG'),
-              ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: syncing
+                ? null
+                : () async {
+                    setState(() => syncing = true);
+                    await Future.delayed(const Duration(milliseconds: 900));
+                    if (mounted) setState(() => syncing = false);
+                  },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: p.title,
+              side: BorderSide(color: p.border),
+              minimumSize: const Size.fromHeight(48),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             ),
-          ],
+            icon: syncing
+                ? const SizedBox(
+                    width: 17,
+                    height: 17,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.cloud_sync),
+            label: const Text('Sinkronkan Ulang BMKG'),
+          ),
         ),
       ],
     );
@@ -1048,3 +1075,4 @@ class _AddScheduleDialogState extends State<_AddScheduleDialog> {
     );
   }
 }
+

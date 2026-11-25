@@ -74,11 +74,16 @@ class DaftarLahanScreen extends StatelessWidget {
     ),
     child: SectionHeader(
       icon: Icons.grass_rounded,
-      title: 'Lahan Anda',
+      title: 'Kelola Lahan',
+      subtitle: 'Tambah, ubah, atau pindai lahan Anda',
       trailing: FilledButton.icon(
         onPressed: onAdd,
-        icon: const Icon(Icons.add, size: 18),
-        label: const Text('Tambah'),
+        icon: const Icon(Icons.add_rounded, size: 18),
+        label: const Text('Tambah Lahan'),
+        style: FilledButton.styleFrom(
+          minimumSize: const Size(0, 44),
+          padding: const EdgeInsets.symmetric(horizontal: 14),
+        ),
       ),
     ),
   );
