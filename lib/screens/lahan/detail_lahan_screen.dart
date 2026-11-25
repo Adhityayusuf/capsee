@@ -526,7 +526,20 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
           _scanResult = null;
           _scanKeterangan = null;
         });
-        await _showNotChiliPlantSheet();
+        if (!mounted) return;
+        await Navigator.of(context).push(MaterialPageRoute(
+          builder: (_) => ScanValidasiGagalScreen(
+            kind: _bagianTanaman == 'daun'
+                ? ScanProblemKind.invalidLeaf
+                : ScanProblemKind.invalidFruit,
+            customMessage:
+                'Capsee hanya dapat memeriksa daun atau buah cabai. '
+                'Ambil gambar tanaman cabai dan pastikan bagian tersebut '
+                'terlihat jelas di dalam bingkai.',
+            onAmbilUlang: _openScanCamera,
+            onPilihLain: _pickFromGallery,
+          ),
+        ));
         return;
       }
 
