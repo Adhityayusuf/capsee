@@ -1,7 +1,4 @@
-<<<<<<< HEAD
 import com.android.build.api.dsl.LibraryExtension
-=======
->>>>>>> 08bcb321c7e9f8902757913b74af70a7a016865c
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -23,16 +20,13 @@ subprojects {
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
 
-<<<<<<< HEAD
 // Paksa target JVM Kotlin di seluruh modul plugin ke Java 17.
 //
 // Plugin tflite_flutter 0.11.0 mengompilasi Java-nya ke 1.8, sementara
 // Kotlin (mengikuti JDK yang dipakai Gradle) memakai target yang lebih baru
 // (JDK 25 → target 25) sehingga build rilis gagal:
 //   Inconsistent JVM-target compatibility ... (1.8) and ... (25)
-// Kotlin dipaksa ke 17 agar bytecode-nya didukung D8/Android. Selisih
-// dengan Java 1.8 milik plugin hanya memicu validasi Gradle, sehingga
-// validasi tersebut dibuat "warning" di android/gradle.properties.
+// Kotlin dipaksa ke 17 agar bytecode-nya didukung D8/Android.
 subprojects {
     afterEvaluate {
         // tflite_flutter 0.11.0 masih menetapkan compileSdk 31, sedangkan
@@ -61,8 +55,6 @@ subprojects {
         exclude(group = "org.tensorflow", module = "tensorflow-lite-api")
     }
 }
-=======
->>>>>>> 08bcb321c7e9f8902757913b74af70a7a016865c
 subprojects {
     project.evaluationDependsOn(":app")
 

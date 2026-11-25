@@ -32,14 +32,10 @@ Future<Map<String, dynamic>> uploadScan({
   required XFile file,
   required String idLahan,
   required String bagianTanaman, // 'daun' atau 'buah'
-<<<<<<< HEAD
-  required String namaKelas,     // hasil inferensi TFLite
-  required double skorKeyakinan, // confidence persen (0–100)
-=======
+  String? namaKelas,     // hasil inferensi TFLite
   String? statusHasil,
   String? labelHasil,
-  double? skorKeyakinan,
->>>>>>> 08bcb321c7e9f8902757913b74af70a7a016865c
+  double? skorKeyakinan, // confidence persen (0–100)
 }) async {
   final headers = await headerAuthMultipart();
   final uri = Uri.parse('$baseUrl/api/pemindaian');
@@ -47,14 +43,18 @@ Future<Map<String, dynamic>> uploadScan({
   final request = http.MultipartRequest('POST', uri)
     ..headers.addAll(headers)
     ..fields['id_lahan'] = idLahan
-    ..fields['bagian_tanaman'] = bagianTanaman
-    ..fields['nama_kelas'] = namaKelas
-    ..fields['skor_keyakinan'] = skorKeyakinan.toStringAsFixed(2);
+    ..fields['bagian_tanaman'] = bagianTanaman;
 
-  if (statusHasil != null) request.fields['status_hasil'] = statusHasil;
-  if (labelHasil != null) request.fields['label_hasil'] = labelHasil;
+  final finalNama = namaKelas ?? labelHasil;
+  if (finalNama != null && finalNama.isNotEmpty) {
+    request.fields['nama_kelas'] = finalNama;
+    request.fields['label_hasil'] = finalNama;
+  }
+  if (statusHasil != null && statusHasil.isNotEmpty) {
+    request.fields['status_hasil'] = statusHasil;
+  }
   if (skorKeyakinan != null) {
-    request.fields['skor_keyakinan'] = skorKeyakinan.toString();
+    request.fields['skor_keyakinan'] = skorKeyakinan.toStringAsFixed(2);
   }
 
   // Membaca bytes secara langsung memungkinkan upload dari Flutter Web (browser)

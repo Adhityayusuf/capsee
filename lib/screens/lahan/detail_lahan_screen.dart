@@ -408,15 +408,6 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
           return;
         }
 
-        // ── Upload gambar + hasil inferensi ke backend (background) ─────
-        // Tidak di-await di sini agar UI result screen langsung muncul.
-        // Error upload tidak memblokir user melihat hasil.
-        _uploadKeBackend(
-          file: image,
-          namaKelas: leafResult.className,
-          skorKeyakinan: leafResult.confidencePercent,
-        );
-
         if (!mounted) return;
         setState(() {
           _isAnalyzing = false;
@@ -468,7 +459,6 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
           return;
         }
 
-<<<<<<< HEAD
         // Gerbang plausibilitas opsional (nonaktif secara default).
         final topFruitConfidence = fruitResult.detections
             .map((d) => d.confidence)
@@ -489,30 +479,12 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
           return;
         }
 
-        // ── Upload gambar + hasil inferensi ke backend (background) ─────
-        // Pilih deteksi dengan confidence tertinggi sebagai representasi hasil.
-        final topDetection = fruitResult.detections.reduce(
-          (a, b) => a.confidence >= b.confidence ? a : b,
-        );
-        _uploadKeBackend(
-          file: image,
-          namaKelas: topDetection.className,
-          skorKeyakinan: topDetection.confidencePercent,
-        );
-
-        await Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => ScanBuahResultScreen(
-            imageBytes: bytes,
-            result: fruitResult,
-            imageWidth: fruitResult.imageWidth,
-            imageHeight: fruitResult.imageHeight,
-            onScanUlang: _openScanCamera,
-=======
         final labels = fruitResult.detections
             .map((detection) => detection.className)
             .toSet()
             .join(', ');
         setState(() {
+          _isAnalyzing = false;
           _hasilStatusModel =
               fruitResult.detections.every((detection) => detection.isHealthy)
               ? 'sehat'
@@ -528,12 +500,11 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
             builder: (_) => ScanBuahResultScreen(
               imageBytes: bytes,
               result: fruitResult,
-              imageWidth: origW,
-              imageHeight: origH,
+              imageWidth: fruitResult.imageWidth,
+              imageHeight: fruitResult.imageHeight,
               onScanUlang: _openScanCamera,
               onSimpan: _simpanHasilScan,
             ),
->>>>>>> 08bcb321c7e9f8902757913b74af70a7a016865c
           ),
         );
         if (saved == true && mounted) {
@@ -547,7 +518,6 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
     } catch (e) {
       if (!mounted) return;
       setState(() => _isAnalyzing = false);
-<<<<<<< HEAD
 
       // Penolakan dari backend (bila jalur API dipakai kembali) untuk gambar
       // yang bukan tanaman cabai.
@@ -559,8 +529,6 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         await _showNotChiliPlantSheet();
         return;
       }
-=======
->>>>>>> f0b03d5640d8557e52f1d0b9ea777e20b18effc5
 
       // Bedakan gagal memuat model dengan kegagalan inference lainnya.
       final errorMsg = e.toString();
@@ -610,44 +578,6 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       });
     } catch (e) {
       if (mounted) _showError('Gagal membuka galeri: $e');
-<<<<<<< HEAD
-    }
-  }
-
-  /// Upload gambar + hasil inferensi TFLite ke backend secara background.
-  ///
-  /// Dipanggil setelah inferensi lokal berhasil. Error upload ditangkap
-  /// secara senyap — user sudah bisa melihat hasil di layar, dan kegagalan
-  /// sinkronisasi tidak perlu memblokir pengalaman mereka.
-  Future<void> _uploadKeBackend({
-    required XFile file,
-    required String namaKelas,
-    required double skorKeyakinan,
-  }) async {
-    final idLahan = (_land.id ?? '').trim();
-    if (idLahan.isEmpty) return;
-    try {
-      await uploadScan(
-        file: file,
-        idLahan: idLahan,
-        bagianTanaman: _bagianTanaman,
-        namaKelas: namaKelas,
-        skorKeyakinan: skorKeyakinan,
-      );
-    } catch (e) {
-      // Gagal simpan ke backend: tampilkan snackbar ringan, jangan crash.
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: Text(
-              'Hasil scan tidak tersimpan ke riwayat: ${pesanError(e)}',
-            ),
-            duration: const Duration(seconds: 4),
-          ),
-        );
-      }
-=======
->>>>>>> f0b03d5640d8557e52f1d0b9ea777e20b18effc5
     }
   }
 
