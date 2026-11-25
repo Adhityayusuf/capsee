@@ -190,8 +190,8 @@ class AppTheme {
     ).apply(
       bodyColor: p.title,
       displayColor: p.title,
-      fontSizeFactor: fontScale,
     );
+    final scaledTextTheme = _scaleTextTheme(baseTextTheme, fontScale);
 
     final buttonTextStyle = GoogleFonts.plusJakartaSans(
       fontSize: 14 * fontScale,
@@ -205,7 +205,7 @@ class AppTheme {
       scaffoldBackgroundColor: p.background,
       canvasColor: p.surface, // latar menu dropdown
       iconTheme: IconThemeData(color: p.icon),
-      textTheme: baseTextTheme,
+      textTheme: scaledTextTheme,
       dividerTheme: DividerThemeData(color: p.border),
 
       // Tombol: ukuran teks ikut skala font global
@@ -289,6 +289,36 @@ class AppTheme {
       ),
 
       extensions: [p],
+    );
+  }
+
+  /// Scales only styles that have an explicit font size. Flutter's
+  /// [TextTheme.apply] asserts when a non-default factor is used with styles
+  /// whose font size is null.
+  static TextTheme _scaleTextTheme(TextTheme theme, double scale) {
+    TextStyle? scaleStyle(TextStyle? style) {
+      if (style == null || style.fontSize == null || scale == 1.0) {
+        return style;
+      }
+      return style.copyWith(fontSize: style.fontSize! * scale);
+    }
+
+    return theme.copyWith(
+      displayLarge: scaleStyle(theme.displayLarge),
+      displayMedium: scaleStyle(theme.displayMedium),
+      displaySmall: scaleStyle(theme.displaySmall),
+      headlineLarge: scaleStyle(theme.headlineLarge),
+      headlineMedium: scaleStyle(theme.headlineMedium),
+      headlineSmall: scaleStyle(theme.headlineSmall),
+      titleLarge: scaleStyle(theme.titleLarge),
+      titleMedium: scaleStyle(theme.titleMedium),
+      titleSmall: scaleStyle(theme.titleSmall),
+      bodyLarge: scaleStyle(theme.bodyLarge),
+      bodyMedium: scaleStyle(theme.bodyMedium),
+      bodySmall: scaleStyle(theme.bodySmall),
+      labelLarge: scaleStyle(theme.labelLarge),
+      labelMedium: scaleStyle(theme.labelMedium),
+      labelSmall: scaleStyle(theme.labelSmall),
     );
   }
 }
