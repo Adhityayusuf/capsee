@@ -1,14 +1,15 @@
 import 'package:flutter/material.dart';
 
+import '../../core/dashboard_style.dart';
 import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import '../../models/land_data.dart';
 import '../../services/services.dart';
 import '../../widgets/popup_notifikasi.dart';
+import '../../widgets/dashboard_header.dart';
 import '../../widgets/ui_kit.dart';
 import 'detail_lahan_screen.dart';
 import 'tambah_lahan_page.dart';
-import '../../widgets/brand_logo.dart';
 
 // ───────────────────────── Warna & Tema ─────────────────────────
 class LahanColors {
@@ -341,14 +342,22 @@ class _LahanPageState extends State<LahanPage> {
     final dummy = _filtered;
     final useReal = _lahanList != null;
     return Scaffold(
-      backgroundColor: p.background,
+      backgroundColor: dashboardBackgroundColor(context),
       body: SafeArea(
         bottom: false,
         child: Column(
           children: [
-            _LahanHeader(
-              palette: p,
-              onAdd: _openAddLand,
+            DashboardHeader(
+              title: 'Lahan',
+              actions: [
+                DashboardHeaderAction(
+                  icon: Icons.add,
+                  tooltip: 'Tambah lahan',
+                  onPressed: _openAddLand,
+                  backgroundColor: p.primary,
+                  foregroundColor: p.onPrimary,
+                ),
+              ],
             ),
             Expanded(
               child: RefreshIndicator(
@@ -388,7 +397,8 @@ class _LahanPageState extends State<LahanPage> {
                         padding: EdgeInsets.symmetric(vertical: 40),
                         child: Center(child: CircularProgressIndicator()),
                       )
-                    else if (_error != null && (_lahanList == null || _lahanList!.isEmpty)) ...[
+                    else if (_error != null &&
+                        (_lahanList == null || _lahanList!.isEmpty)) ...[
                       Padding(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         child: Text(
@@ -410,7 +420,8 @@ class _LahanPageState extends State<LahanPage> {
                       EmptyState(
                         icon: Icons.eco_outlined,
                         title: 'Belum ada lahan.',
-                        message: 'Tambah lahan pertama Anda untuk mulai '
+                        message:
+                            'Tambah lahan pertama Anda untuk mulai '
                             'memantau kebun.',
                         actionLabel: 'Tambah Lahan',
                         onAction: _openAddLand,
@@ -468,8 +479,7 @@ class _RealLahanCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final nama = (land['nama'] ?? 'Lahan').toString();
-    final lokasi =
-        '${land['kecamatan'] ?? ''}, ${land['kota'] ?? ''}'.trim();
+    final lokasi = '${land['kecamatan'] ?? ''}, ${land['kota'] ?? ''}'.trim();
     final umur = (land['umur_tanaman_bulan'] ?? '-').toString();
     return CapseeCard(
       child: Column(
@@ -485,11 +495,7 @@ class _RealLahanCard extends StatelessWidget {
                   color: palette.accentSoft,
                   borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                 ),
-                child: Icon(
-                  Icons.eco,
-                  color: palette.accent,
-                  size: 30,
-                ),
+                child: Icon(Icons.eco, color: palette.accent, size: 30),
               ),
               const SizedBox(width: 10),
               Expanded(
@@ -518,7 +524,9 @@ class _RealLahanCard extends StatelessWidget {
                       color: palette.surfaceAlt,
                       borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                       child: InkWell(
-                        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+                        borderRadius: BorderRadius.circular(
+                          AppSpace.radiusTile,
+                        ),
                         onTap: onEdit,
                         child: SizedBox(
                           width: 38,
@@ -539,7 +547,9 @@ class _RealLahanCard extends StatelessWidget {
                       color: palette.error.withAlpha(26),
                       borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                       child: InkWell(
-                        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+                        borderRadius: BorderRadius.circular(
+                          AppSpace.radiusTile,
+                        ),
                         onTap: onDelete,
                         child: SizedBox(
                           width: 38,
@@ -598,50 +608,6 @@ class _RealLahanCard extends StatelessWidget {
   }
 }
 
-// ───────────────────────── Header (1 baris, ikut gaya Dashboard) ─────────────────────────
-class _LahanHeader extends StatelessWidget {
-  final AppPalette p;
-  final VoidCallback onAdd;
-
-  const _LahanHeader({required AppPalette palette, required this.onAdd})
-      : p = palette;
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.fromLTRB(AppSpace.page, 12, AppSpace.page, 12),
-      decoration: BoxDecoration(
-        color: p.surface,
-        boxShadow: [
-          BoxShadow(color: p.shadow, blurRadius: 8, offset: const Offset(0, 1)),
-        ],
-      ),
-      child: Row(
-        children: [
-          const CapseeMark(size: 36),
-          const SizedBox(width: 8),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text('CAPSEE', style: AppText.overline(context, color: p.accent)),
-                Text('Lahan', style: AppText.headline(context)),
-              ],
-            ),
-          ),
-          _CircleButton(
-            icon: Icons.add,
-            bg: p.primary,
-            fg: p.onPrimary,
-            tooltip: 'Tambah lahan',
-            onTap: onAdd,
-          ),
-        ],
-      ),
-    );
-  }
-}
-
 // ───────────────────────── Baris jumlah petak ─────────────────────────
 class _LahanCountRow extends StatelessWidget {
   final AppPalette palette;
@@ -662,48 +628,8 @@ class _LahanCountRow extends StatelessWidget {
           ),
         ),
         const SizedBox(width: 8),
-        Expanded(
-          child: Text(countText, style: AppText.bodySm(context)),
-        ),
+        Expanded(child: Text(countText, style: AppText.bodySm(context))),
       ],
-    );
-  }
-}
-
-class _CircleButton extends StatelessWidget {
-  final IconData icon;
-  final Color bg;
-  final Color fg;
-  final double size;
-  final String? tooltip;
-  final VoidCallback onTap;
-
-  const _CircleButton({
-    required this.icon,
-    required this.bg,
-    required this.fg,
-    required this.onTap,
-    this.size = 46,
-    this.tooltip,
-  });
-
-  @override
-  Widget build(BuildContext context) {
-    return Tooltip(
-      message: tooltip ?? '',
-      child: Material(
-        color: bg,
-        shape: const CircleBorder(),
-        child: InkWell(
-          customBorder: const CircleBorder(),
-          onTap: onTap,
-          child: SizedBox(
-            width: size,
-            height: size,
-            child: Icon(icon, color: fg, size: 24),
-          ),
-        ),
-      ),
     );
   }
 }
@@ -856,10 +782,7 @@ class _PlotListCard extends StatelessWidget {
                       plot.block.toUpperCase(),
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
-                      style: AppText.overline(
-                        context,
-                        color: palette.accent,
-                      ),
+                      style: AppText.overline(context, color: palette.accent),
                     ),
                     const SizedBox(height: 3),
                     Text(
@@ -1097,9 +1020,7 @@ class PlotCard extends StatelessWidget {
                     '${plot.score}%',
                     style: AppText.headline(
                       context,
-                      color: isWarning
-                          ? const Color(0xFF8A4B00)
-                          : p.primary,
+                      color: isWarning ? const Color(0xFF8A4B00) : p.primary,
                     ),
                   ),
                   Text('Skor Vitalitas', style: AppText.bodySm(context)),
@@ -1142,11 +1063,7 @@ class PlotCard extends StatelessWidget {
                 children: [
                   Padding(
                     padding: const EdgeInsets.only(top: 2),
-                    child: Icon(
-                      Icons.error_outline,
-                      size: 18,
-                      color: p.error,
-                    ),
+                    child: Icon(Icons.error_outline, size: 18, color: p.error),
                   ),
                   const SizedBox(width: 10),
                   Expanded(
@@ -1215,11 +1132,7 @@ class PlotCard extends StatelessWidget {
                       style: AppText.body(context, color: p.title),
                     ),
                   ),
-                  Icon(
-                    Icons.chevron_right,
-                    size: 20,
-                    color: p.subtitle,
-                  ),
+                  Icon(Icons.chevron_right, size: 20, color: p.subtitle),
                 ],
               ),
             ),

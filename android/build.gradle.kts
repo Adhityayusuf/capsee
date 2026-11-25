@@ -1,4 +1,7 @@
+<<<<<<< HEAD
 import com.android.build.api.dsl.LibraryExtension
+=======
+>>>>>>> 08bcb321c7e9f8902757913b74af70a7a016865c
 import org.jetbrains.kotlin.gradle.dsl.JvmTarget
 import org.jetbrains.kotlin.gradle.tasks.KotlinCompile
 
@@ -20,6 +23,7 @@ subprojects {
     project.layout.buildDirectory.value(newSubprojectBuildDir)
 }
 
+<<<<<<< HEAD
 // Paksa target JVM Kotlin di seluruh modul plugin ke Java 17.
 //
 // Plugin tflite_flutter 0.11.0 mengompilasi Java-nya ke 1.8, sementara
@@ -57,8 +61,15 @@ subprojects {
         exclude(group = "org.tensorflow", module = "tensorflow-lite-api")
     }
 }
+=======
+>>>>>>> 08bcb321c7e9f8902757913b74af70a7a016865c
 subprojects {
     project.evaluationDependsOn(":app")
+
+    // Keep Kotlin bytecode consistent with the app's Java 17 target.
+    tasks.withType<KotlinCompile>().configureEach {
+        compilerOptions.jvmTarget.set(JvmTarget.JVM_17)
+    }
 }
 
 tasks.register<Delete>("clean") {

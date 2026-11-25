@@ -29,8 +29,16 @@ import '../../widgets/in_app_scan_camera.dart';
 class LandDetailScreen extends StatefulWidget {
   final LandData land;
   final int initialTab;
+  final VoidCallback? onBack;
+  final Future<void> Function()? onScanSaved;
 
-  const LandDetailScreen({super.key, required this.land, this.initialTab = 2});
+  const LandDetailScreen({
+    super.key,
+    required this.land,
+    this.initialTab = 2,
+    this.onBack,
+    this.onScanSaved,
+  });
 
   @override
   State<LandDetailScreen> createState() => _LandDetailScreenState();
@@ -50,6 +58,9 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   XFile? _selectedImage;
   Uint8List? _selectedImageBytes;
   String _bagianTanaman = 'buah';
+  String? _hasilStatusModel;
+  String? _hasilLabelModel;
+  double? _hasilSkorModel;
   String _selectedPetak = 'A';
   final TextEditingController _catatanController = TextEditingController();
   final PageController _bagianController = PageController(
@@ -261,6 +272,9 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       _cameraOpen = false;
       _scanResult = null;
       _scanKeterangan = null;
+      _hasilStatusModel = null;
+      _hasilLabelModel = null;
+      _hasilSkorModel = null;
     });
     WidgetsBinding.instance.addPostFrameCallback((_) {
       if (!mounted) return;
@@ -270,6 +284,40 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
 
   void _closeScanCamera() {
     if (mounted) setState(() => _cameraOpen = false);
+  }
+
+  Future<bool> _simpanHasilScan() async {
+    final idLahan = (_land.id ?? '').trim();
+    final image = _selectedImage;
+    if (idLahan.isEmpty || image == null) {
+      if (mounted) {
+        await showErrorPopup(
+          context,
+          'Lahan dan gambar scan harus tersedia sebelum disimpan.',
+        );
+      }
+      return false;
+    }
+
+    try {
+      await uploadScan(
+        file: image,
+        idLahan: idLahan,
+        bagianTanaman: _bagianTanaman,
+        statusHasil: _hasilStatusModel,
+        labelHasil: _hasilLabelModel,
+        skorKeyakinan: _hasilSkorModel,
+      );
+      return true;
+    } catch (e) {
+      if (mounted) {
+        await showErrorPopup(
+          context,
+          'Hasil scan gagal disimpan.\n${pesanError(e)}',
+        );
+      }
+      return false;
+    }
   }
 
   Future<void> _handleAnalyze() async {
@@ -302,14 +350,16 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       if (!qualityResult.isValid) {
         if (!mounted) return;
         setState(() => _isAnalyzing = false);
-        await Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => ScanValidasiGagalScreen(
-            kind: ScanProblemKind.imageTechnical,
-            customMessage: qualityResult.reason,
-            onAmbilUlang: _openScanCamera,
-            onPilihLain: () => _pickFromGallery(),
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ScanValidasiGagalScreen(
+              kind: ScanProblemKind.imageTechnical,
+              customMessage: qualityResult.reason,
+              onAmbilUlang: _openScanCamera,
+              onPilihLain: () => _pickFromGallery(),
+            ),
           ),
-        ));
+        );
         return;
       }
 
@@ -319,16 +369,18 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       if (!chiResult.isValid) {
         if (!mounted) return;
         setState(() => _isAnalyzing = false);
-        await Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => ScanValidasiGagalScreen(
-            kind: bagian == 'daun'
-                ? ScanProblemKind.invalidLeaf
-                : ScanProblemKind.invalidFruit,
-            customMessage: chiResult.reason,
-            onAmbilUlang: _openScanCamera,
-            onPilihLain: () => _pickFromGallery(),
+        await Navigator.of(context).push(
+          MaterialPageRoute(
+            builder: (_) => ScanValidasiGagalScreen(
+              kind: bagian == 'daun'
+                  ? ScanProblemKind.invalidLeaf
+                  : ScanProblemKind.invalidFruit,
+              customMessage: chiResult.reason,
+              onAmbilUlang: _openScanCamera,
+              onPilihLain: () => _pickFromGallery(),
+            ),
           ),
-        ));
+        );
         return;
       }
 
@@ -366,15 +418,29 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         );
 
         if (!mounted) return;
-        setState(() => _isAnalyzing = false);
+        setState(() {
+          _isAnalyzing = false;
+          _hasilStatusModel = leafResult.isHealthy ? 'sehat' : 'tidak_sehat';
+          _hasilLabelModel = leafResult.className;
+          _hasilSkorModel = leafResult.confidencePercent;
+        });
 
-        await Navigator.of(context).push(MaterialPageRoute(
-          builder: (_) => ScanDaunResultScreen(
-            imageBytes: bytes,
-            result: leafResult,
-            onScanUlang: _openScanCamera,
+        final saved = await Navigator.of(context).push<bool>(
+          MaterialPageRoute(
+            builder: (_) => ScanDaunResultScreen(
+              imageBytes: bytes,
+              result: leafResult,
+              onScanUlang: _openScanCamera,
+              onSimpan: _simpanHasilScan,
+            ),
           ),
-        ));
+        );
+        if (saved == true && mounted) {
+          await widget.onScanSaved?.call();
+          if (mounted) {
+            await showSuccessPopup(context, 'Hasil scan disimpan ke riwayat.');
+          }
+        }
         return;
       }
 
@@ -387,19 +453,22 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
 
         // Jika tidak ada deteksi sama sekali, navigasi ke screen gagal
         if (fruitResult.isEmpty) {
-          await Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => ScanValidasiGagalScreen(
-              kind: ScanProblemKind.invalidFruit,
-              customMessage:
-                  'Belum ditemukan objek buah cabai yang dapat dikenali. '
-                  'Silakan ambil gambar ulang.',
-              onAmbilUlang: _openScanCamera,
-              onPilihLain: () => _pickFromGallery(),
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => ScanValidasiGagalScreen(
+                kind: ScanProblemKind.invalidFruit,
+                customMessage:
+                    'Belum ditemukan objek buah cabai yang dapat dikenali. '
+                    'Silakan ambil gambar ulang.',
+                onAmbilUlang: _openScanCamera,
+                onPilihLain: () => _pickFromGallery(),
+              ),
             ),
-          ));
+          );
           return;
         }
 
+<<<<<<< HEAD
         // Gerbang plausibilitas opsional (nonaktif secara default).
         final topFruitConfidence = fruitResult.detections
             .map((d) => d.confidence)
@@ -438,8 +507,41 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
             imageWidth: fruitResult.imageWidth,
             imageHeight: fruitResult.imageHeight,
             onScanUlang: _openScanCamera,
+=======
+        final labels = fruitResult.detections
+            .map((detection) => detection.className)
+            .toSet()
+            .join(', ');
+        setState(() {
+          _hasilStatusModel =
+              fruitResult.detections.every((detection) => detection.isHealthy)
+              ? 'sehat'
+              : 'tidak_sehat';
+          _hasilLabelModel = labels;
+          _hasilSkorModel = fruitResult.detections
+              .map((detection) => detection.confidencePercent)
+              .reduce((a, b) => a > b ? a : b);
+        });
+
+        final saved = await Navigator.of(context).push<bool>(
+          MaterialPageRoute(
+            builder: (_) => ScanBuahResultScreen(
+              imageBytes: bytes,
+              result: fruitResult,
+              imageWidth: origW,
+              imageHeight: origH,
+              onScanUlang: _openScanCamera,
+              onSimpan: _simpanHasilScan,
+            ),
+>>>>>>> 08bcb321c7e9f8902757913b74af70a7a016865c
           ),
-        ));
+        );
+        if (saved == true && mounted) {
+          await widget.onScanSaved?.call();
+          if (mounted) {
+            await showSuccessPopup(context, 'Hasil scan disimpan ke riwayat.');
+          }
+        }
         return;
       }
     } catch (e) {
@@ -1131,7 +1233,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       titleSpacing: 0,
       leading: IconButton(
         icon: Icon(Icons.arrow_back_rounded, color: p.title),
-        onPressed: () => Navigator.of(context).pop(),
+        onPressed: widget.onBack ?? () => Navigator.of(context).pop(),
       ),
       title: Text(
         'Detail Lahan ${_land.name}',

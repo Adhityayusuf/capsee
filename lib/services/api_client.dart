@@ -5,7 +5,11 @@ import 'package:http/http.dart' as http;
 import 'package:shared_preferences/shared_preferences.dart';
 
 const _buildBaseUrl = String.fromEnvironment('BASE_URL');
+<<<<<<< HEAD
 const _defaultLanBaseUrl = 'http://10.72.151.35:8000';
+=======
+const _defaultLanBaseUrl = 'http://192.168.138.150:8000';
+>>>>>>> 08bcb321c7e9f8902757913b74af70a7a016865c
 const String apiCodeNotChiliPlant = 'not_chili_plant';
 
 /// Alamat default backend untuk perangkat di jaringan lokal yang sama.

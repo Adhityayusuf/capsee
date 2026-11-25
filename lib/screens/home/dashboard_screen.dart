@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../../core/app_colors.dart';
 import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
+import '../../core/dashboard_style.dart';
 import '../../core/theme_mode_scope.dart';
 import '../../models/land_data.dart';
 import '../../widgets/popup_notifikasi.dart';
@@ -14,10 +15,10 @@ import '../lahan/tambah_lahan_page.dart';
 import '../notifikasi/notifikasi_screen.dart';
 import '../scan/riwayat_scan_screen.dart';
 import '../../services/services.dart';
-import '../../widgets/brand_logo.dart';
+import '../../widgets/dashboard_header.dart';
 
 const _dashboardLightPalette = AppPalette(
-  background: Color(0xFFF6FBF8),
+  background: dashboardLightBackground,
   surface: Color(0xFFFFFFFF),
   surfaceAlt: Color(0xFFEAF5EF),
   border: Color(0xFFE3EEE8),
@@ -35,7 +36,7 @@ const _dashboardLightPalette = AppPalette(
 );
 
 const _dashboardDarkPalette = AppPalette(
-  background: Color(0xFF06110D),
+  background: dashboardDarkBackground,
   surface: Color(0xFF111F19),
   surfaceAlt: Color(0xFF1A2B23),
   border: Color(0xFF263B31),
@@ -139,6 +140,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 idLahan: id,
                 urlGambar: (s['url_gambar'] ?? '').toString(),
                 statusHasil: (s['status_hasil'] ?? '').toString(),
+                labelHasil: (s['label_hasil'] ?? '').toString(),
               ),
             );
           }
@@ -218,6 +220,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                 idLahan: id,
                 urlGambar: (s['url_gambar'] ?? '').toString(),
                 statusHasil: (s['status_hasil'] ?? '').toString(),
+                labelHasil: (s['label_hasil'] ?? '').toString(),
               ),
             );
           }
@@ -274,6 +277,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           land: _activeScanLand!,
           initialTab: 0,
           onBack: _closeActiveScan,
+          onScanSaved: _muatUlangLahan,
         ),
     ];
 
@@ -324,10 +328,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         const SizedBox(height: 12),
                         _addLandPrompt(),
                         const SizedBox(height: 20),
-                        _sectionHeading('Menu Cepat', trailing: '4 fitur'),
-                        const SizedBox(height: 10),
-                        _quickActions(),
-                        const SizedBox(height: 18),
                         _summaryCard(),
                         const SizedBox(height: 20),
                         _sectionHeading(
@@ -366,79 +366,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
 
   Widget _header() {
     final p = context.palette;
-
-    return Container(
-      padding: const EdgeInsets.fromLTRB(16, 10, 16, 8),
-      child: Row(
-        children: [
-          const CapseeMark(size: 36),
-          const SizedBox(width: 8),
-          Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Text(
-                'Capsee',
-                style: AppText.subtitle(
-                  context,
-                  color: p.title,
-                ).copyWith(fontSize: 17, fontWeight: FontWeight.w800),
-              ),
-              Text(
-                'Kebun cabai',
-                style: AppText.micro(context, color: p.subtitle),
-              ),
-            ],
-          ),
-          const Spacer(),
-          _headerAction(
-            tooltip: 'Buka notifikasi',
-            icon: Icons.notifications_rounded,
-            onPressed: () => setState(() => _tab = 3),
-            backgroundColor: p.surfaceAlt,
-            foregroundColor: p.accent,
-          ),
-          const SizedBox(width: 5),
-          _themeToggle(),
-          const SizedBox(width: 5),
-          _headerAction(
-            tooltip: 'Buka akun dan pengaturan',
-            icon: Icons.settings_rounded,
-            onPressed: () => setState(() => _tab = 4),
-            backgroundColor: p.surfaceAlt,
-            foregroundColor: p.accent,
-          ),
-        ],
-      ),
+    return DashboardHeader(
+      title: 'Kebun cabai',
+      actions: [
+        DashboardHeaderAction(
+          tooltip: 'Buka notifikasi',
+          icon: Icons.notifications_rounded,
+          onPressed: () => setState(() => _tab = 3),
+          backgroundColor: p.surfaceAlt,
+          foregroundColor: p.accent,
+        ),
+        _themeToggle(),
+        DashboardHeaderAction(
+          tooltip: 'Buka akun dan pengaturan',
+          icon: Icons.settings_rounded,
+          onPressed: () => setState(() => _tab = 4),
+          backgroundColor: p.surfaceAlt,
+          foregroundColor: p.accent,
+        ),
+      ],
     );
   }
-
-  Widget _headerAction({
-    required String tooltip,
-    required IconData icon,
-    required VoidCallback onPressed,
-    required Color backgroundColor,
-    required Color foregroundColor,
-  }) => Tooltip(
-    message: tooltip,
-    child: Material(
-      color: backgroundColor,
-      shape: const CircleBorder(),
-      child: InkWell(
-        customBorder: const CircleBorder(),
-        onTap: onPressed,
-        child: SizedBox(
-          width: 32,
-          height: 32,
-          child: Icon(icon, color: foregroundColor, size: 18),
-        ),
-      ),
-    ),
-  );
 
   Widget _themeToggle() {
     final themeMode = ThemeModeScope.maybeOf(context);
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    return _headerAction(
+    return DashboardHeaderAction(
       tooltip: isDark ? 'Ganti ke mode terang' : 'Ganti ke mode gelap',
       icon: isDark ? Icons.light_mode_rounded : Icons.dark_mode_rounded,
       onPressed: () {
@@ -529,88 +482,6 @@ class _DashboardScreenState extends State<DashboardScreen> {
             ),
           ),
         ],
-      ),
-    );
-  }
-
-  Widget _quickActions() {
-    final p = context.palette;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 12),
-      decoration: BoxDecoration(
-        color: p.surface,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: p.border.withValues(alpha: .75)),
-      ),
-      child: Row(
-        children: [
-          _quickAction(
-            Icons.document_scanner_rounded,
-            'Scan',
-            const Color(0xFF35D5A2),
-            _openScan,
-          ),
-          _quickAction(
-            Icons.history_rounded,
-            'Riwayat',
-            const Color(0xFF55A8FF),
-            () => setState(() => _tab = 1),
-          ),
-          _quickAction(
-            Icons.eco_rounded,
-            'Lahan',
-            const Color(0xFFFFC857),
-            () => setState(() => _tab = 2),
-          ),
-          _quickAction(
-            Icons.notifications_active_rounded,
-            'Notifikasi',
-            const Color(0xFFB88CFF),
-            () => setState(() => _tab = 3),
-          ),
-        ],
-      ),
-    );
-  }
-
-  Widget _quickAction(
-    IconData icon,
-    String label,
-    Color color,
-    VoidCallback onTap,
-  ) {
-    final p = context.palette;
-    return Expanded(
-      child: InkWell(
-        onTap: onTap,
-        borderRadius: BorderRadius.circular(14),
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 2),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Container(
-                width: 42,
-                height: 42,
-                decoration: BoxDecoration(
-                  color: color.withValues(alpha: .14),
-                  borderRadius: BorderRadius.circular(14),
-                ),
-                child: Icon(icon, color: color, size: 21),
-              ),
-              const SizedBox(height: 6),
-              Text(
-                label,
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
-                style: AppText.micro(
-                  context,
-                  color: p.subtitle,
-                ).copyWith(fontWeight: FontWeight.w700),
-              ),
-            ],
-          ),
-        ),
       ),
     );
   }

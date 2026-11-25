@@ -2,9 +2,11 @@ import 'dart:io';
 
 import 'package:flutter/material.dart';
 
+import '../../core/dashboard_style.dart';
 import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import 'scan_detail_screen.dart';
+import '../../widgets/dashboard_header.dart';
 import '../../widgets/ui_kit.dart';
 
 class ScanHistoryItem {
@@ -16,6 +18,7 @@ class ScanHistoryItem {
   final String? idLahan;
   final String? urlGambar;
   final String? statusHasil;
+  final String? labelHasil;
 
   const ScanHistoryItem({
     required this.imagePath,
@@ -24,6 +27,7 @@ class ScanHistoryItem {
     this.idLahan,
     this.urlGambar,
     this.statusHasil,
+    this.labelHasil,
   });
 }
 
@@ -147,58 +151,62 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
     final isFiltering =
         _selectedWaktu != 'Semua Waktu' || _customDateRange != null;
 
-    return SafeArea(
-      bottom: false,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          _header(p, filtered.length, isFiltering),
-          if (widget.items.isNotEmpty) _filterSection(p),
-          Expanded(
-            child: widget.items.isEmpty
-                ? EmptyState(
-                    icon: Icons.history_rounded,
-                    title: 'Riwayat masih kosong',
-                    message:
-                        'Hasil pindai daun akan tampil di sini setelah Anda mengambil foto dengan kamera.',
-                    actionLabel: 'Scan Sekarang',
-                    onAction: widget.onScan,
-                  )
-                : filtered.isEmpty
-                    ? EmptyState(
-                        icon: Icons.search_off_rounded,
-                        title: 'Tidak ada hasil',
-                        message:
-                            'Tidak ada pindaian pada rentang "$_labelWaktu".',
-                        actionLabel: 'Reset Filter',
-                        onAction: _resetFilter,
-                      )
-                    : _list(p, filtered),
-          ),
-        ],
+    return ColoredBox(
+      color: dashboardBackgroundColor(context),
+      child: SafeArea(
+        bottom: false,
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _header(filtered.length, isFiltering),
+            if (widget.items.isNotEmpty) _filterSection(p),
+            Expanded(
+              child: widget.items.isEmpty
+                  ? EmptyState(
+                      icon: Icons.history_rounded,
+                      title: 'Riwayat masih kosong',
+                      message:
+                          'Hasil pindai daun akan tampil di sini setelah Anda mengambil foto dengan kamera.',
+                      actionLabel: 'Scan Sekarang',
+                      onAction: widget.onScan,
+                    )
+                  : filtered.isEmpty
+                  ? EmptyState(
+                      icon: Icons.search_off_rounded,
+                      title: 'Tidak ada hasil',
+                      message:
+                          'Tidak ada pindaian pada rentang "$_labelWaktu".',
+                      actionLabel: 'Reset Filter',
+                      onAction: _resetFilter,
+                    )
+                  : _list(p, filtered),
+            ),
+          ],
+        ),
       ),
     );
   }
 
-  Widget _header(AppPalette p, int count, bool isFiltering) => Padding(
-        padding: const EdgeInsets.fromLTRB(
-            AppSpace.page, 16, AppSpace.page, 8),
-        child: Column(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Text('Riwayat Scan', style: AppText.headline(context)),
-            const SizedBox(height: 3),
-            Text(
-              widget.items.isEmpty
-                  ? 'Belum ada foto yang dipindai'
-                  : isFiltering
-                      ? '$count dari ${widget.items.length} foto (filter: $_labelWaktu)'
-                      : '$count foto hasil pindai sesi ini',
-              style: AppText.bodySm(context),
-            ),
-          ],
+  Widget _header(int count, bool isFiltering) => Padding(
+    padding: const EdgeInsets.only(bottom: 8),
+    child: Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        DashboardHeader(title: 'Riwayat Scan'),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: AppSpace.page),
+          child: Text(
+            widget.items.isEmpty
+                ? 'Belum ada foto yang dipindai'
+                : isFiltering
+                ? '$count dari ${widget.items.length} foto (filter: $_labelWaktu)'
+                : '$count foto hasil pindai sesi ini',
+            style: AppText.bodySm(context),
+          ),
         ),
-      );
+      ],
+    ),
+  );
 
   Widget _filterSection(AppPalette p) {
     return Container(
@@ -244,8 +252,10 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
                   Expanded(
                     child: Text(
                       displayValue,
-                      style: AppText.bodySm(context, color: p.title)
-                          .copyWith(fontWeight: FontWeight.w600),
+                      style: AppText.bodySm(
+                        context,
+                        color: p.title,
+                      ).copyWith(fontWeight: FontWeight.w600),
                       overflow: TextOverflow.ellipsis,
                     ),
                   ),
@@ -258,8 +268,10 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
               value: item,
               child: Text(
                 item,
-                style: AppText.bodySm(context, color: p.title)
-                    .copyWith(fontWeight: FontWeight.w500),
+                style: AppText.bodySm(
+                  context,
+                  color: p.title,
+                ).copyWith(fontWeight: FontWeight.w500),
               ),
             );
           }).toList(),
@@ -269,20 +281,27 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
     );
   }
 
-  Widget _list(AppPalette p, List<ScanHistoryItem> items) =>
-      ListView.separated(
-        padding: const EdgeInsets.fromLTRB(AppSpace.page, 4, AppSpace.page, 24),
-        itemCount: items.length,
-        separatorBuilder: (_, _) => const SizedBox(height: 10),
-        itemBuilder: (context, index) => _card(items[index], p),
-      );
+  Widget _list(AppPalette p, List<ScanHistoryItem> items) => ListView.separated(
+    padding: const EdgeInsets.fromLTRB(AppSpace.page, 4, AppSpace.page, 24),
+    itemCount: items.length,
+    separatorBuilder: (_, _) => const SizedBox(height: 10),
+    itemBuilder: (context, index) => _card(items[index], p),
+  );
 
   Widget _card(ScanHistoryItem item, AppPalette p) {
     final hasUrl = (item.urlGambar ?? '').isNotEmpty;
     final file = File(item.imagePath);
     final status = (item.statusHasil ?? '').toLowerCase();
-    final isSehat = status == 'sehat';
-    final isTidakSehat = status == 'tidak_sehat';
+    final diagnosis = (item.labelHasil ?? '').trim();
+    final diagnosisLower = diagnosis.toLowerCase();
+    final isSehat =
+        status == 'sehat' ||
+        (status.isEmpty && diagnosisLower.contains('healthy'));
+    final isTidakSehat =
+        status == 'tidak_sehat' || (!isSehat && diagnosis.isNotEmpty);
+    final diagnosisLabel = diagnosis.isNotEmpty
+        ? diagnosis
+        : (isSehat ? 'Sehat' : 'Tidak sehat');
     final bisaDibuka = (item.idScan ?? '').isNotEmpty;
     return InkWell(
       borderRadius: BorderRadius.circular(AppSpace.radiusCard),
@@ -296,18 +315,30 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
               );
             },
       child: CapseeCard(
-      padding: const EdgeInsets.all(10),
-      child: Row(
-        children: [
-          ClipRRect(
-            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
-            child: hasUrl
-                ? Image.network(
-                    item.urlGambar!,
-                    width: 56,
-                    height: 56,
-                    fit: BoxFit.cover,
-                    errorBuilder: (_, _, _) => Container(
+        padding: const EdgeInsets.all(10),
+        child: Row(
+          children: [
+            ClipRRect(
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+              child: hasUrl
+                  ? Image.network(
+                      item.urlGambar!,
+                      width: 56,
+                      height: 56,
+                      fit: BoxFit.cover,
+                      errorBuilder: (_, _, _) => Container(
+                        width: 56,
+                        height: 56,
+                        color: p.surfaceAlt,
+                        child: Icon(
+                          Icons.image_not_supported_outlined,
+                          color: p.icon,
+                        ),
+                      ),
+                    )
+                  : file.existsSync()
+                  ? Image.file(file, width: 56, height: 56, fit: BoxFit.cover)
+                  : Container(
                       width: 56,
                       height: 56,
                       color: p.surfaceAlt,
@@ -316,65 +347,53 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
                         color: p.icon,
                       ),
                     ),
-                  )
-                : file.existsSync()
-                ? Image.file(
-                    file,
-                    width: 56,
-                    height: 56,
-                    fit: BoxFit.cover,
-                  )
-                : Container(
-                    width: 56,
-                    height: 56,
-                    color: p.surfaceAlt,
-                    child: Icon(
-                      Icons.image_not_supported_outlined,
-                      color: p.icon,
-                    ),
-                  ),
-          ),
-          const SizedBox(width: 12),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    Expanded(
-                      child: Text(
-                        'Foto Daun',
-                        style: AppText.body(context, color: p.title)
-                            .copyWith(fontWeight: FontWeight.w700),
-                      ),
-                    ),
-                    if (bisaDibuka)
-                      Icon(Icons.chevron_right_rounded,
-                          size: 18, color: p.icon),
-                  ],
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  _format(item.scannedAt),
-                  style: AppText.caption(context),
-                ),
-              ],
             ),
-          ),
-          StatusBadge(
-            label: isSehat
-                ? 'Sehat'
-                : isTidakSehat
-                    ? 'Tidak sehat'
-                    : 'Menunggu analisis',
-            kind: isSehat
-                ? BadgeKind.success
-                : isTidakSehat
-                    ? BadgeKind.error
-                    : BadgeKind.info,
-          ),
-        ],
-      ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Expanded(
+                        child: Text(
+                          diagnosisLabel,
+                          style: AppText.body(
+                            context,
+                            color: p.title,
+                          ).copyWith(fontWeight: FontWeight.w700),
+                        ),
+                      ),
+                      if (bisaDibuka)
+                        Icon(
+                          Icons.chevron_right_rounded,
+                          size: 18,
+                          color: p.icon,
+                        ),
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    _format(item.scannedAt),
+                    style: AppText.caption(context),
+                  ),
+                ],
+              ),
+            ),
+            StatusBadge(
+              label: isSehat
+                  ? 'Sehat'
+                  : isTidakSehat
+                  ? diagnosisLabel
+                  : 'Menunggu analisis',
+              kind: isSehat
+                  ? BadgeKind.success
+                  : isTidakSehat
+                  ? BadgeKind.error
+                  : BadgeKind.info,
+            ),
+          ],
+        ),
       ),
     );
   }
