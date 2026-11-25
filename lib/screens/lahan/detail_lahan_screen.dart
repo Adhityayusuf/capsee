@@ -11,6 +11,7 @@ import '../../core/ml/fruit_detector.dart';
 import '../../core/ml/image_quality_validator.dart';
 import '../../core/ml/inference_result.dart';
 import '../../core/ml/leaf_classifier.dart';
+import '../../core/ml/model_config.dart';
 import '../../core/ml/model_loader.dart';
 import '../../models/activity_log.dart';
 import '../../models/land_data.dart';
