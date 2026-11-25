@@ -327,7 +327,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                         _climateCard(),
                         const SizedBox(height: 12),
                         _addLandPrompt(),
-                        const SizedBox(height: 20),
+                        const SizedBox(height: 18),
                         _summaryCard(),
                         const SizedBox(height: 20),
                         _sectionHeading(
@@ -441,46 +441,138 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final p = context.palette;
     final hasLand = _lahanList?.isNotEmpty ?? false;
     return Container(
-      padding: const EdgeInsets.all(14),
+      padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
         color: p.surface,
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: p.border.withValues(alpha: .75)),
+        border: Border.all(
+          color: p.accent.withValues(alpha: .45),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: p.shadow,
+            blurRadius: 16,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: p.accent.withValues(alpha: .10),
+            blurRadius: 10,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Text(
-            hasLand ? 'Kebun cabai Anda' : 'Mulai pantau kebun cabai',
-            style: AppText.subtitle(
-              context,
-              color: p.title,
-            ).copyWith(fontWeight: FontWeight.w800),
-          ),
-          const SizedBox(height: 4),
-          Text(
-            hasLand
-                ? 'Kelola data lahan dan pantau kesehatan tanaman dalam satu tempat.'
-                : 'Tambahkan lahan pertama untuk mencatat perawatan dan memantau tanaman.',
-            style: AppText.caption(context, color: p.subtitle),
-          ),
-          const SizedBox(height: 12),
-          SizedBox(
-            width: double.infinity,
-            child: FilledButton.icon(
-              onPressed: _addLand,
-              icon: const Icon(Icons.add_rounded, size: 18),
-              label: Text(hasLand ? 'Tambah Lahan' : 'Tambah Lahan Pertama'),
-              style: FilledButton.styleFrom(
-                backgroundColor: p.primary,
-                foregroundColor: p.onPrimary,
-                padding: const EdgeInsets.symmetric(vertical: 11),
-                shape: RoundedRectangleBorder(
+          Row(
+            children: [
+              Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  color: p.accentSoft,
                   borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: p.accent.withValues(alpha: .35),
+                    width: 1.5,
+                  ),
+                ),
+                child: Icon(Icons.eco_rounded, color: p.accent, size: 24),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      hasLand ? 'Kebun cabai Anda' : 'Mulai pantau kebun cabai',
+                      style: AppText.subtitle(
+                        context,
+                        color: p.title,
+                      ).copyWith(
+                        fontWeight: FontWeight.w800,
+                        fontSize: 16,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      hasLand
+                          ? 'Kelola data lahan, jadwal perawatan, dan scan tanaman.'
+                          : 'Tambahkan lahan pertama untuk mencatat perawatan dan memantau tanaman.',
+                      style: AppText.caption(context, color: p.subtitle),
+                    ),
+                  ],
                 ),
               ),
-            ),
+            ],
           ),
+          const SizedBox(height: 14),
+          if (!hasLand)
+            SizedBox(
+              width: double.infinity,
+              child: FilledButton.icon(
+                onPressed: _addLand,
+                icon: const Icon(Icons.add_rounded, size: 19),
+                label: const Text('Tambah Lahan Pertama'),
+                style: FilledButton.styleFrom(
+                  backgroundColor: p.primary,
+                  foregroundColor: p.onPrimary,
+                  minimumSize: const Size.fromHeight(48),
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14),
+                  ),
+                ),
+              ),
+            )
+          else
+            Row(
+              children: [
+                Expanded(
+                  child: FilledButton.icon(
+                    onPressed: _addLand,
+                    icon: const Icon(Icons.add_rounded, size: 19),
+                    label: const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text('Tambah Lahan'),
+                    ),
+                    style: FilledButton.styleFrom(
+                      backgroundColor: p.primary,
+                      foregroundColor: p.onPrimary,
+                      minimumSize: const Size.fromHeight(48),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: OutlinedButton.icon(
+                    onPressed: () => setState(() => _tab = 2),
+                    icon: const Icon(Icons.grid_view_rounded, size: 19),
+                    label: const FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Text('Kelola Lahan'),
+                    ),
+                    style: OutlinedButton.styleFrom(
+                      foregroundColor: p.accent,
+                      backgroundColor: p.accentSoft.withValues(alpha: .35),
+                      side: BorderSide(
+                        color: p.accent.withValues(alpha: .5),
+                        width: 1.5,
+                      ),
+                      minimumSize: const Size.fromHeight(48),
+                      padding: const EdgeInsets.symmetric(horizontal: 10),
+                      shape: RoundedRectangleBorder(
+                        borderRadius: BorderRadius.circular(14),
+                      ),
+                    ),
+                  ),
+                ),
+              ],
+            ),
         ],
       ),
     );
@@ -930,50 +1022,100 @@ class _DashboardScreenState extends State<DashboardScreen> {
       (land['kota'] ?? '').toString(),
     ].where((s) => s.isNotEmpty).join(', ');
     final age = (land['umur_tanaman_bulan'] ?? 0).toString();
-    final notice =
-        'Siram tiap ${land['interval_siram_minggu'] ?? 1} minggu • Pupuk tiap ${land['interval_pupuk_minggu'] ?? 1} minggu';
 
     return Container(
-      padding: const EdgeInsets.all(13),
+      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: p.surface,
-        borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: p.border.withValues(alpha: .75)),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(
+          color: p.accent.withValues(alpha: .35),
+          width: 1.5,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: p.shadow,
+            blurRadius: 14,
+            offset: const Offset(0, 4),
+          ),
+          BoxShadow(
+            color: p.accent.withValues(alpha: .06),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
       ),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
+            crossAxisAlignment: CrossAxisAlignment.start,
             children: [
               Container(
-                width: 46,
-                height: 46,
+                width: 52,
+                height: 52,
                 decoration: BoxDecoration(
                   color: p.accentSoft,
-                  borderRadius: BorderRadius.circular(14),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: p.accent.withValues(alpha: .3),
+                    width: 1.5,
+                  ),
                 ),
-                child: Icon(Icons.eco_rounded, color: p.accent, size: 25),
+                child: Icon(Icons.eco_rounded, color: p.accent, size: 28),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
                       title,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: AppText.subtitle(
+                      style: AppText.headline(
                         context,
                         color: p.title,
-                      ).copyWith(fontWeight: FontWeight.w800),
-                    ),
-                    if (location.isNotEmpty)
-                      Text(
-                        location,
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                        style: AppText.caption(context, color: p.subtitle),
+                      ).copyWith(
+                        fontSize: 17,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.2,
+                        height: 1.25,
                       ),
+                    ),
+                    const SizedBox(height: 4),
+                    Row(
+                      children: [
+                        if (location.isNotEmpty) ...[
+                          Icon(
+                            Icons.location_on_outlined,
+                            size: 13,
+                            color: p.subtitle,
+                          ),
+                          const SizedBox(width: 3),
+                          Flexible(
+                            child: Text(
+                              location,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppText.caption(context, color: p.subtitle),
+                            ),
+                          ),
+                          const SizedBox(width: 8),
+                          Text(
+                            '•',
+                            style: AppText.caption(context, color: p.hint),
+                          ),
+                          const SizedBox(width: 8),
+                        ],
+                        Text(
+                          'Umur $age bln',
+                          style: AppText.caption(context, color: p.subtitle).copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
+                    ),
                   ],
                 ),
               ),
@@ -984,49 +1126,57 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ),
             ],
           ),
-          const SizedBox(height: 10),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-            decoration: BoxDecoration(
-              color: p.surfaceAlt,
-              borderRadius: BorderRadius.circular(12),
-            ),
-            child: Row(
-              children: [
-                Icon(Icons.event_available_rounded, color: p.accent, size: 16),
-                const SizedBox(width: 7),
-                Expanded(
-                  child: Text(
-                    'Tanam $age bulan • $notice',
-                    style: AppText.micro(context, color: p.subtitle),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 12),
           Row(
             children: [
               Expanded(
-                child: TextButton.icon(
+                child: OutlinedButton.icon(
                   onPressed: () => _openLandDetail(land),
                   icon: const Icon(Icons.open_in_new_rounded, size: 16),
-                  label: const Text('Detail'),
+                  label: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('Detail'),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: p.title,
+                    side: BorderSide(color: p.border),
+                    minimumSize: const Size.fromHeight(42),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                  ),
                 ),
               ),
+              const SizedBox(width: 8),
               Expanded(
-                child: FilledButton.icon(
-                  onPressed: () => _openScan(lahanTetap: land),
-                  icon: const Icon(Icons.document_scanner_rounded, size: 16),
-                  label: const Text('Scan'),
-                  style: FilledButton.styleFrom(
-                    backgroundColor: p.primary,
-                    foregroundColor: p.onPrimary,
-                    padding: const EdgeInsets.symmetric(vertical: 9),
+                child: OutlinedButton.icon(
+                  onPressed: () => _openLandDetail(land, initialTab: 1),
+                  icon: const Icon(Icons.event_note_rounded, size: 16),
+                  label: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('Jadwal'),
+                  ),
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: p.title,
+                    side: BorderSide(color: p.border),
+                    minimumSize: const Size.fromHeight(42),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                   ),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () => _openScan(lahanTetap: land),
+              icon: const Icon(Icons.document_scanner_rounded, size: 17),
+              label: const Text('Scan Tanaman'),
+              style: FilledButton.styleFrom(
+                backgroundColor: p.primary,
+                foregroundColor: p.onPrimary,
+                minimumSize: const Size.fromHeight(44),
+              ),
+            ),
           ),
         ],
       ),
@@ -1125,11 +1275,14 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
-  void _openLandDetail(Map<String, dynamic> land) {
+  void _openLandDetail(Map<String, dynamic> land, {int initialTab = 2}) {
     Navigator.of(context)
         .push(
           MaterialPageRoute(
-            builder: (_) => LandDetailScreen(land: _landDataFromMap(land)),
+            builder: (_) => LandDetailScreen(
+              land: _landDataFromMap(land),
+              initialTab: initialTab,
+            ),
           ),
         )
         .then((_) => _loadData()); // Muat ulang setelah kembali dari detail

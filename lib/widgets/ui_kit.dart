@@ -16,12 +16,18 @@ class CapseeCard extends StatelessWidget {
   final Widget child;
   final EdgeInsetsGeometry padding;
   final VoidCallback? onTap;
+  final BoxBorder? border;
+  final List<BoxShadow>? boxShadow;
+  final Color? color;
 
   const CapseeCard({
     super.key,
     required this.child,
     this.padding = const EdgeInsets.all(AppSpace.card),
     this.onTap,
+    this.border,
+    this.boxShadow,
+    this.color,
   });
 
   @override
@@ -31,10 +37,10 @@ class CapseeCard extends StatelessWidget {
       width: double.infinity,
       padding: padding,
       decoration: BoxDecoration(
-        color: p.surface,
+        color: color ?? p.surface,
         borderRadius: BorderRadius.circular(AppSpace.radiusCard),
-        border: Border.all(color: p.border.withValues(alpha: .6)),
-        boxShadow: [
+        border: border ?? Border.all(color: p.border.withValues(alpha: .6)),
+        boxShadow: boxShadow ?? [
           BoxShadow(color: p.shadow, blurRadius: 12, offset: const Offset(0, 4)),
         ],
       ),

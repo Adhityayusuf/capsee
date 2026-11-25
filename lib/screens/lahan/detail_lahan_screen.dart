@@ -9,7 +9,6 @@ import '../../core/app_theme.dart';
 import '../../core/ml/chili_object_validator.dart';
 import '../../core/ml/fruit_detector.dart';
 import '../../core/ml/image_quality_validator.dart';
-import '../../core/ml/inference_result.dart';
 import '../../core/ml/leaf_classifier.dart';
 import '../../models/activity_log.dart';
 import '../../models/land_data.dart';
@@ -626,11 +625,23 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   }
 
   Widget _buildPickImageButton() {
-    return OutlinedButton.icon(
-      onPressed: _isAnalyzing ? null : _openScanCamera,
-      icon: const Icon(Icons.photo_camera_rounded, size: 18),
-      label: Text(
-        _selectedImage == null ? 'Buka Kamera / Galeri' : 'Ganti Foto',
+    final p = context.palette;
+    return SizedBox(
+      width: double.infinity,
+      height: 48,
+      child: OutlinedButton.icon(
+        onPressed: _isAnalyzing ? null : _openScanCamera,
+        style: OutlinedButton.styleFrom(
+          foregroundColor: p.title,
+          side: BorderSide(color: p.primary),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+          ),
+        ),
+        icon: const Icon(Icons.photo_camera_rounded, size: 19),
+        label: Text(
+          _selectedImage == null ? 'Buka Kamera / Galeri' : 'Ganti Foto',
+        ),
       ),
     );
   }
@@ -828,15 +839,35 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   Widget _buildScanPlotCard() {
     final p = context.palette;
     return CapseeCard(
+      border: Border.all(
+        color: p.accent.withValues(alpha: .35),
+        width: 1.5,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: p.shadow,
+          blurRadius: 14,
+          offset: const Offset(0, 4),
+        ),
+        BoxShadow(
+          color: p.accent.withValues(alpha: .06),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
       padding: const EdgeInsets.all(14),
       child: Row(
         children: [
           Container(
-            width: 52,
-            height: 52,
+            width: 56,
+            height: 56,
             decoration: BoxDecoration(
               color: p.accentSoft,
-              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(
+                color: p.accent.withValues(alpha: .3),
+                width: 1.5,
+              ),
             ),
             child: Icon(
               Icons.local_florist_rounded,
@@ -844,12 +875,25 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
               size: 28,
             ),
           ),
-          const SizedBox(width: 12),
+          const SizedBox(width: 14),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(_land.name, style: AppText.subtitle(context)),
+                Text(
+                  _land.name,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.headline(
+                    context,
+                    color: p.title,
+                  ).copyWith(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    letterSpacing: -0.2,
+                    height: 1.25,
+                  ),
+                ),
                 const SizedBox(height: 3),
                 Text(
                   'Umur ${_land.plantAgeMonths} Bulan • '
@@ -1182,23 +1226,26 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                       color: _tabIndex == i ? p.primary : Colors.transparent,
                       borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                     ),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          tabs[i].$1,
-                          size: 17,
-                          color: _tabIndex == i ? p.onPrimary : p.icon,
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          tabs[i].$2,
-                          style: AppText.body(
-                            context,
-                            color: _tabIndex == i ? p.onPrimary : p.subtitle,
-                          ).copyWith(fontWeight: FontWeight.w700),
-                        ),
-                      ],
+                    child: FittedBox(
+                      fit: BoxFit.scaleDown,
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            tabs[i].$1,
+                            size: 17,
+                            color: _tabIndex == i ? p.onPrimary : p.icon,
+                          ),
+                          const SizedBox(width: 6),
+                          Text(
+                            tabs[i].$2,
+                            style: AppText.body(
+                              context,
+                              color: _tabIndex == i ? p.onPrimary : p.subtitle,
+                            ).copyWith(fontWeight: FontWeight.w700),
+                          ),
+                        ],
+                      ),
                     ),
                   ),
                 ),
@@ -1222,6 +1269,8 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
             child: Column(
               children: [
                 _buildLandHeaderCard(),
+                const SizedBox(height: 12),
+                _buildQuickLandActions(),
                 const SizedBox(height: 14),
                 _buildFilterChips(),
                 const SizedBox(height: 14),
@@ -1250,16 +1299,36 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
     final land = _land;
     final p = context.palette;
     return CapseeCard(
+      border: Border.all(
+        color: p.accent.withValues(alpha: .35),
+        width: 1.5,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: p.shadow,
+          blurRadius: 14,
+          offset: const Offset(0, 4),
+        ),
+        BoxShadow(
+          color: p.accent.withValues(alpha: .06),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
       child: Row(
         children: [
           Container(
-            width: 46,
-            height: 46,
+            width: 52,
+            height: 52,
             decoration: BoxDecoration(
               color: p.accentSoft,
               shape: BoxShape.circle,
+              border: Border.all(
+                color: p.accent.withValues(alpha: .3),
+                width: 1.5,
+              ),
             ),
-            child: Icon(Icons.eco_rounded, size: 24, color: p.primary),
+            child: Icon(Icons.eco_rounded, size: 28, color: p.primary),
           ),
           const SizedBox(width: 14),
           Expanded(
@@ -1271,9 +1340,17 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                     Expanded(
                       child: Text(
                         land.name,
-                        maxLines: 1,
+                        maxLines: 2,
                         overflow: TextOverflow.ellipsis,
-                        style: AppText.title(context),
+                        style: AppText.headline(
+                          context,
+                          color: p.title,
+                        ).copyWith(
+                          fontSize: 18,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: -0.2,
+                          height: 1.25,
+                        ),
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -1291,6 +1368,97 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
                 ),
               ],
             ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  // Kartu aksi cepat: Scan Tanaman, Buka Jadwal, Edit Lahan
+  Widget _buildQuickLandActions() {
+    final p = context.palette;
+    return CapseeCard(
+      padding: const EdgeInsets.all(14),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            'Aksi Cepat Lahan',
+            style: AppText.subtitle(
+              context,
+              color: p.title,
+            ).copyWith(fontWeight: FontWeight.w800),
+          ),
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: () {
+                setState(() {
+                  _tabIndex = 0;
+                  _cameraOpen = true;
+                });
+              },
+              style: FilledButton.styleFrom(
+                backgroundColor: p.primary,
+                foregroundColor: p.onPrimary,
+                minimumSize: const Size.fromHeight(46),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+                ),
+              ),
+              icon: const Icon(Icons.document_scanner_rounded, size: 18),
+              label: const Text('Scan Tanaman'),
+            ),
+          ),
+          const SizedBox(height: 8),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: () {
+                    setState(() {
+                      _tabIndex = 1;
+                      _cameraOpen = false;
+                    });
+                  },
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: p.title,
+                    side: BorderSide(color: p.border),
+                    minimumSize: const Size.fromHeight(44),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+                    ),
+                  ),
+                  icon: const Icon(Icons.event_note_rounded, size: 17),
+                  label: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('Buka Jadwal'),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: OutlinedButton.icon(
+                  onPressed: _openEditLahan,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: p.title,
+                    side: BorderSide(color: p.border),
+                    minimumSize: const Size.fromHeight(44),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+                    ),
+                  ),
+                  icon: const Icon(Icons.edit_outlined, size: 17),
+                  label: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('Edit Lahan'),
+                  ),
+                ),
+              ),
+            ],
           ),
         ],
       ),

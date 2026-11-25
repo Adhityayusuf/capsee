@@ -187,11 +187,12 @@ class _LahanPageState extends State<LahanPage> {
     }
   }
 
-  void _openDetail(Map<String, dynamic> land) {
+  void _openDetail(Map<String, dynamic> land, {int initialTab = 2}) {
     Navigator.of(context)
         .push(
           MaterialPageRoute(
             builder: (_) => LandDetailScreen(
+              initialTab: initialTab,
               land: LandData(
                 id: land['id'] as String?,
                 name: (land['nama'] ?? 'Lahan').toString(),
@@ -371,7 +372,12 @@ class _LahanPageState extends State<LahanPage> {
                           ? '${real.length} Petak Aktif'
                           : '${dummy.length} Petak (Contoh)',
                     ),
-                    const SizedBox(height: 18),
+                    const SizedBox(height: 12),
+                    _KelolaLahanBanner(
+                      palette: p,
+                      onAddLand: _openAddLand,
+                    ),
+                    const SizedBox(height: 14),
                     _SearchField(
                       palette: p,
                       onChanged: (v) => setState(() => _query = v),
@@ -431,7 +437,9 @@ class _LahanPageState extends State<LahanPage> {
                         _RealLahanCard(
                           land: land,
                           palette: context.palette,
-                          onDetail: () => _openDetail(land),
+                          onDetail: () => _openDetail(land, initialTab: 2),
+                          onJadwal: () => _openDetail(land, initialTab: 1),
+                          onScan: () => _openDetail(land, initialTab: 0),
                           onEdit: () => _openEdit(land),
                           onDelete: () => _hapus(land),
                         ),
@@ -465,6 +473,8 @@ class _RealLahanCard extends StatelessWidget {
   final Map<String, dynamic> land;
   final AppPalette palette;
   final VoidCallback onDetail;
+  final VoidCallback onJadwal;
+  final VoidCallback onScan;
   final VoidCallback onEdit;
   final VoidCallback onDelete;
 
@@ -472,6 +482,8 @@ class _RealLahanCard extends StatelessWidget {
     required this.land,
     required this.palette,
     required this.onDetail,
+    required this.onJadwal,
+    required this.onScan,
     required this.onEdit,
     required this.onDelete,
   });
@@ -482,6 +494,22 @@ class _RealLahanCard extends StatelessWidget {
     final lokasi = '${land['kecamatan'] ?? ''}, ${land['kota'] ?? ''}'.trim();
     final umur = (land['umur_tanaman_bulan'] ?? '-').toString();
     return CapseeCard(
+      border: Border.all(
+        color: palette.accent.withValues(alpha: .35),
+        width: 1.5,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: palette.shadow,
+          blurRadius: 14,
+          offset: const Offset(0, 4),
+        ),
+        BoxShadow(
+          color: palette.accent.withValues(alpha: .06),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -493,11 +521,15 @@ class _RealLahanCard extends StatelessWidget {
                 height: 62,
                 decoration: BoxDecoration(
                   color: palette.accentSoft,
-                  borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: palette.accent.withValues(alpha: .3),
+                    width: 1.5,
+                  ),
                 ),
                 child: Icon(Icons.eco, color: palette.accent, size: 30),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
@@ -506,12 +538,50 @@ class _RealLahanCard extends StatelessWidget {
                       nama,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: AppText.title(context),
+                      style: AppText.headline(context, color: palette.title).copyWith(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.2,
+                        height: 1.25,
+                      ),
                     ),
+                    if (lokasi.isNotEmpty) ...[
+                      const SizedBox(height: 4),
+                      Row(
+                        children: [
+                          Icon(
+                            Icons.location_on_outlined,
+                            size: 13,
+                            color: palette.subtitle,
+                          ),
+                          const SizedBox(width: 3),
+                          Expanded(
+                            child: Text(
+                              lokasi,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppText.caption(context, color: palette.subtitle),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                     const SizedBox(height: 2),
-                    Text(
-                      '$lokasi\nUmur $umur Bulan',
-                      style: AppText.bodySm(context).copyWith(height: 1.35),
+                    Row(
+                      children: [
+                        Icon(
+                          Icons.calendar_today_outlined,
+                          size: 12,
+                          color: palette.subtitle,
+                        ),
+                        const SizedBox(width: 4),
+                        Text(
+                          'Umur $umur Bulan',
+                          style: AppText.caption(context, color: palette.subtitle).copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
@@ -529,8 +599,8 @@ class _RealLahanCard extends StatelessWidget {
                         ),
                         onTap: onEdit,
                         child: SizedBox(
-                          width: 38,
-                          height: 38,
+                          width: 40,
+                          height: 40,
                           child: Icon(
                             Icons.edit_rounded,
                             color: palette.icon,
@@ -552,8 +622,8 @@ class _RealLahanCard extends StatelessWidget {
                         ),
                         onTap: onDelete,
                         child: SizedBox(
-                          width: 38,
-                          height: 38,
+                          width: 40,
+                          height: 40,
                           child: Icon(
                             Icons.delete_outline_rounded,
                             color: palette.error,
@@ -571,36 +641,136 @@ class _RealLahanCard extends StatelessWidget {
           Row(
             children: [
               Expanded(
-                child: OutlinedButton(
+                child: OutlinedButton.icon(
                   onPressed: onDetail,
                   style: OutlinedButton.styleFrom(
                     foregroundColor: palette.title,
                     side: BorderSide(color: palette.border),
-                    minimumSize: const Size.fromHeight(48),
+                    minimumSize: const Size.fromHeight(44),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                     ),
                   ),
-                  child: const Text('Lihat Detail'),
+                  icon: const Icon(Icons.info_outline_rounded, size: 17),
+                  label: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('Detail Lahan'),
+                  ),
                 ),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 8),
               Expanded(
-                child: FilledButton.icon(
-                  onPressed: onDetail,
-                  style: FilledButton.styleFrom(
-                    backgroundColor: palette.primary,
-                    foregroundColor: palette.onPrimary,
-                    minimumSize: const Size.fromHeight(48),
+                child: OutlinedButton.icon(
+                  onPressed: onJadwal,
+                  style: OutlinedButton.styleFrom(
+                    foregroundColor: palette.title,
+                    side: BorderSide(color: palette.border),
+                    minimumSize: const Size.fromHeight(44),
+                    padding: const EdgeInsets.symmetric(horizontal: 8),
                     shape: RoundedRectangleBorder(
                       borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                     ),
                   ),
-                  icon: const Icon(Icons.visibility_outlined, size: 19),
-                  label: const Text('Buka'),
+                  icon: const Icon(Icons.event_note_rounded, size: 17),
+                  label: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text('Jadwal'),
+                  ),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 8),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: onScan,
+              style: FilledButton.styleFrom(
+                backgroundColor: palette.primary,
+                foregroundColor: palette.onPrimary,
+                minimumSize: const Size.fromHeight(46),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+                ),
+              ),
+              icon: const Icon(Icons.photo_camera_rounded, size: 18),
+              label: const Text('Scan Tanaman'),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class _KelolaLahanBanner extends StatelessWidget {
+  final AppPalette palette;
+  final VoidCallback onAddLand;
+
+  const _KelolaLahanBanner({
+    required this.palette,
+    required this.onAddLand,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: palette.surface,
+        borderRadius: BorderRadius.circular(AppSpace.radiusCard),
+        border: Border.all(color: palette.border),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
+                width: 38,
+                height: 38,
+                decoration: BoxDecoration(
+                  color: palette.accentSoft,
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: Icon(Icons.grass_rounded, color: palette.accent, size: 20),
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      'Kelola Lahan',
+                      style: AppText.subtitle(context, color: palette.title)
+                          .copyWith(fontWeight: FontWeight.w800),
+                    ),
+                    Text(
+                      'Tambah lahan baru atau buka detail, jadwal, dan scan.',
+                      style: AppText.caption(context, color: palette.subtitle),
+                    ),
+                  ],
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          SizedBox(
+            width: double.infinity,
+            child: FilledButton.icon(
+              onPressed: onAddLand,
+              style: FilledButton.styleFrom(
+                backgroundColor: palette.primary,
+                foregroundColor: palette.onPrimary,
+                minimumSize: const Size.fromHeight(46),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+                ),
+              ),
+              icon: const Icon(Icons.add_rounded, size: 19),
+              label: const Text('Tambah Lahan'),
+            ),
           ),
         ],
       ),
@@ -714,26 +884,34 @@ class _FilterChips extends StatelessWidget {
                 ),
                 decoration: BoxDecoration(
                   color: selected == i
-                      ? items[i].$3
+                      ? (i == 1 ? palette.error : items[i].$3)
                       : (i == 1 ? items[i].$3 : palette.surface),
                   borderRadius: BorderRadius.circular(AppSpace.radiusPill),
                   border: Border.all(
-                    color: selected == i ? Colors.transparent : palette.border,
+                    color: selected == i
+                        ? Colors.transparent
+                        : (i == 1
+                              ? palette.error.withValues(alpha: 0.35)
+                              : palette.border),
                   ),
                 ),
                 child: Row(
                   children: [
                     if (items[i].$2 != null) ...[
-                      Icon(items[i].$2, size: 16, color: items[i].$4),
+                      Icon(
+                        items[i].$2,
+                        size: 16,
+                        color: selected == i ? Colors.white : items[i].$4,
+                      ),
                       const SizedBox(width: 6),
                     ],
                     Text(
                       items[i].$1,
                       style: AppText.subtitle(
                         context,
-                        color: selected == i || i == 1
-                            ? items[i].$4
-                            : palette.title,
+                        color: selected == i
+                            ? (i == 1 ? Colors.white : items[i].$4)
+                            : (i == 1 ? items[i].$4 : palette.title),
                       ).copyWith(fontWeight: FontWeight.w600),
                     ),
                   ],
@@ -758,6 +936,17 @@ class _PlotListCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return CapseeCard(
+      border: Border.all(
+        color: palette.accent.withValues(alpha: .35),
+        width: 1.5,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: palette.shadow,
+          blurRadius: 14,
+          offset: const Offset(0, 4),
+        ),
+      ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -769,27 +958,29 @@ class _PlotListCard extends StatelessWidget {
                 height: 62,
                 decoration: BoxDecoration(
                   color: palette.accentSoft,
-                  borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: palette.accent.withValues(alpha: .3),
+                    width: 1.5,
+                  ),
                 ),
                 child: Icon(plot.imageIcon, color: palette.accent, size: 30),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      plot.block.toUpperCase(),
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.overline(context, color: palette.accent),
-                    ),
-                    const SizedBox(height: 3),
-                    Text(
                       plot.name,
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: AppText.title(context).copyWith(height: 1.2),
+                      style: AppText.headline(context, color: palette.title).copyWith(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.2,
+                        height: 1.25,
+                      ),
                     ),
                     const SizedBox(height: 2),
                     Text(
@@ -858,35 +1049,6 @@ class _PlotListCard extends StatelessWidget {
               ],
             ),
           ),
-          if (plot.schedule != null) ...[
-            const SizedBox(height: 8),
-            Container(
-              width: double.infinity,
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
-              decoration: BoxDecoration(
-                color: palette.surfaceAlt,
-                borderRadius: BorderRadius.circular(AppSpace.radiusTile),
-              ),
-              child: Row(
-                children: [
-                  Icon(
-                    Icons.event_available_outlined,
-                    color: palette.accent,
-                    size: 19,
-                  ),
-                  const SizedBox(width: 9),
-                  Expanded(
-                    child: Text(
-                      plot.schedule!,
-                      maxLines: 1,
-                      overflow: TextOverflow.ellipsis,
-                      style: AppText.bodySm(context),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-          ],
           const SizedBox(height: 12),
           Row(
             children: [
@@ -1267,9 +1429,8 @@ class _PillButton extends StatelessWidget {
 // ───────────────────────── Card Dasar ─────────────────────────
 class _Card extends StatelessWidget {
   final Widget child;
-  final AppPalette? palette;
 
-  const _Card({required this.child, this.palette});
+  const _Card({required this.child});
 
   @override
   Widget build(BuildContext context) {

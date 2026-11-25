@@ -369,69 +369,6 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
         padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         child: Column(
           children: [
-            // Banner Kalibrasi Presisi ML
-            CapseeCard(
-              child: Column(
-                children: [
-                  Row(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Container(
-                        padding: const EdgeInsets.all(10),
-                        decoration: BoxDecoration(
-                          color: p.accentSoft,
-                          borderRadius: BorderRadius.circular(
-                            AppSpace.radiusTile,
-                          ),
-                        ),
-                        child: Icon(
-                          Icons.eco,
-                          color: p.accent,
-                          size: 26,
-                        ),
-                      ),
-                      const SizedBox(width: 12),
-                      Expanded(
-                        child: Column(
-                          crossAxisAlignment: CrossAxisAlignment.start,
-                          children: [
-                            Text(
-                              'Kalibrasi Presisi ML',
-                              style: AppText.title(context),
-                            ),
-                            const SizedBox(height: 4),
-                            Text(
-                              'Lengkapi parameter kebun untuk kalibrasi algoritma pemantauan tanaman cabai Anda secara akurat.',
-                              style: AppText.bodySm(context),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 12),
-                  const Divider(height: 1, thickness: 0.8),
-                  const SizedBox(height: 10),
-                  Row(
-                    children: [
-                      Icon(Icons.auto_awesome, color: p.accent, size: 18),
-                      const SizedBox(width: 6),
-                      Expanded(
-                        child: Text(
-                          'Akurasi deteksi patogen meningkat hingga 94.8%',
-                          style: AppText.bodySm(
-                            context,
-                            color: p.accent,
-                          ).copyWith(fontWeight: FontWeight.w600),
-                        ),
-                      ),
-                    ],
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 20),
-
             // Card 1: Identitas & Lokasi Kebun
             _buildCardWrapper(
               title: 'Identitas & Lokasi Kebun',
