@@ -43,8 +43,9 @@ class ModelConfig {
   static const int leafNumClasses = 6;
 
   /// Threshold confidence untuk model daun (0–1).
-  /// Jika confidence di bawah ini, tampilkan peringatan.
-  static double leafConfidenceThreshold = 0.60;
+  /// Jika confidence di bawah ini (< 0.80 atau 80%), dianggap bukan daun cabai yang valid
+  /// dan diarahkan ke layar gagal (ScanValidasiGagalScreen).
+  static double leafConfidenceThreshold = 0.80;
 
   // ──────────────────────────────────────────────────────────────────────────
   // Model Deteksi Buah – YOLOv5n

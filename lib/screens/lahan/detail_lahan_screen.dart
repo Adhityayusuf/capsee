@@ -389,22 +389,23 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         final classifier = LeafClassifier();
         final leafResult = await classifier.classify(bytes);
 
-        // Gerbang plausibilitas opsional (nonaktif secara default).
-        final leafPlausibility = chiValidator.evaluateConfidence(
-          scanType: 'daun',
-          topConfidence: leafResult.confidence,
-        );
-        if (!leafPlausibility.isValid) {
+        // Validasi: jika confidence di bawah 80% (0.80), anggap objek bukan daun cabai yang valid
+        // dan arahkan ke layar ScanValidasiGagalScreen (sama seperti buah ketika tidak terdeteksi).
+        if (leafResult.confidence < ModelConfig.leafConfidenceThreshold) {
           if (!mounted) return;
           setState(() => _isAnalyzing = false);
-          await Navigator.of(context).push(MaterialPageRoute(
-            builder: (_) => ScanValidasiGagalScreen(
-              kind: ScanProblemKind.invalidLeaf,
-              customMessage: leafPlausibility.reason,
-              onAmbilUlang: _openScanCamera,
-              onPilihLain: _pickFromGallery,
+          await Navigator.of(context).push(
+            MaterialPageRoute(
+              builder: (_) => ScanValidasiGagalScreen(
+                kind: ScanProblemKind.invalidLeaf,
+                customMessage:
+                    'Belum ditemukan objek daun cabai yang dapat dikenali. '
+                    'Silakan ambil gambar ulang.',
+                onAmbilUlang: _openScanCamera,
+                onPilihLain: () => _pickFromGallery(),
+              ),
             ),
-          ));
+          );
           return;
         }
 
