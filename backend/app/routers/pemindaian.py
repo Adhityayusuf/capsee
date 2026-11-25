@@ -21,27 +21,57 @@ _HEALTHY_LABELS = {"Healthy Leaf", "Healthy Fruit"}
 # Pemetaan nama kelas penyakit (dari Flutter) ke nama penyakit di tabel penyakit.
 # Kunci = className dari model TFLite, Nilai = nama di kolom `nama` tabel penyakit.
 _CLASS_TO_DISEASE_NAME: dict[str, str] = {
-    "Bacterial Spot":       "Bacterial Spot",
-    "Cercospora":           "Cercospora",
-    "Leaf Curl":            "Leaf Curl",
-    "Nutrition Deficiency": "Nutrition Deficiency",
-    "White Spot":           "White Spot",
-    "Anthracnose":          "Anthracnose",
-    "Fruit Fly":            "Fruit Fly",
-    "Fruit Rot":            "Fruit Rot",
+    "Bacterial Spot":       "Bercak Bakteri",
+    "Cercospora":           "Bercak Mata Kodok",
+    "Leaf Curl":            "Keriting Daun",
+    "Nutrition Deficiency": "Kekurangan Nutrisi",
+    "White Spot":           "Bercak Putih (Embun Tepung)",
+    "Anthracnose":          "Antraknosa",
+    "Fruit Fly":            "Lalat Buah",
+    "Fruit Rot":            "Busuk Buah",
 }
 
 
-def _resolve_id_penyakit(cur, nama_kelas: str | None) -> str | None:
-    """Cari id penyakit dari nama kelas model. Kembalikan None jika tidak ditemukan."""
-    if not nama_kelas:
+def _normalize_kelas(label: str) -> str:
+    """Normalisasi label model ML ke format snake_case untuk kolom `kelas`.
+    Contoh: 'Bacterial Spot' -> 'bacterial_spot'
+    """
+    return label.strip().lower().replace(" ", "_").replace("-", "_")
+
+
+def _resolve_id_penyakit(cur, label: str | None) -> str | None:
+    """Cari id penyakit dari nama kelas atau label model ML.
+    Mendukung pencarian via:
+    1. Kolom `kelas` (misal 'bacterial_spot', 'cercospora')
+    2. Kolom `nama` (misal 'Bercak Bakteri', 'Antraknosa')
+    3. Pemetaan dari nama kelas bahasa Inggris ke nama Indonesia
+    """
+    if not label:
         return None
-    disease_name = _CLASS_TO_DISEASE_NAME.get(nama_kelas)
-    if not disease_name:
-        return None
-    cur.execute("SELECT id FROM penyakit WHERE nama = %s LIMIT 1", (disease_name,))
+
+    kelas_norm = _normalize_kelas(label)
+
+    # 1. Prioritas: cocokkan dengan kolom `kelas` (label unik keluaran model)
+    cur.execute("SELECT id FROM penyakit WHERE LOWER(kelas) = %s LIMIT 1", (kelas_norm,))
     row = cur.fetchone()
-    return row[0] if row else None
+    if row:
+        return str(row[0])
+
+    # 2. Cocokkan dengan kolom `nama` secara langsung
+    cur.execute("SELECT id FROM penyakit WHERE LOWER(nama) = %s LIMIT 1", (label.strip().lower(),))
+    row = cur.fetchone()
+    if row:
+        return str(row[0])
+
+    # 3. Gunakan kamus terjemahan bahasa Inggris -> Indonesia
+    nama_indo = _CLASS_TO_DISEASE_NAME.get(label.strip())
+    if nama_indo:
+        cur.execute("SELECT id FROM penyakit WHERE LOWER(nama) = %s LIMIT 1", (nama_indo.lower(),))
+        row = cur.fetchone()
+        if row:
+            return str(row[0])
+
+    return None
 
 
 @router.post("", status_code=201)
