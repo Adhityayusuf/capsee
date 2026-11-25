@@ -187,6 +187,21 @@ class _ScanDetailScreenState extends State<ScanDetailScreen> {
             ],
           ),
         ),
+        if (penyakit != null && (penyakit['penanganan'] ?? '').toString().trim().isNotEmpty) ...[
+          const SizedBox(height: AppSpace.gapMd),
+          const SectionHeader(
+            icon: Icons.medical_services_outlined,
+            title: 'Penanganan Rekomendasi',
+          ),
+          const SizedBox(height: AppSpace.gapSm),
+          CapseeCard(
+            padding: const EdgeInsets.all(AppSpace.tile),
+            child: Text(
+              (penyakit['penanganan'] ?? '').toString().trim(),
+              style: AppText.body(context),
+            ),
+          ),
+        ],
         if (penanganan.isNotEmpty) ...[
           const SizedBox(height: AppSpace.gapMd),
           SectionHeader(
