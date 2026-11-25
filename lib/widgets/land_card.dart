@@ -57,6 +57,9 @@ class LandCard extends StatelessWidget {
     final statusDetail = warning
         ? 'Ada Indikasi Penyakit'
         : 'Data Tersinkronisasi';
+    final notice =
+        'Siram tiap ${land['interval_siram_minggu'] ?? 1} minggu • '
+        'Pupuk tiap ${land['interval_pupuk_minggu'] ?? 1} minggu.';
 
     final color = warning ? p.error : p.accent;
     return CapseeCard(
@@ -214,6 +217,33 @@ class LandCard extends StatelessWidget {
                   Text(
                     statusDetail,
                     style: AppText.micro(context, color: color),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 9),
+            Container(
+              padding: const EdgeInsets.all(9),
+              decoration: BoxDecoration(
+                color: p.surfaceAlt,
+                borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    warning
+                        ? Icons.notification_important_rounded
+                        : Icons.event_available_rounded,
+                    color: color,
+                    size: 17,
+                  ),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      notice,
+                      style: AppText.caption(context, color: p.title),
+                    ),
                   ),
                 ],
               ),

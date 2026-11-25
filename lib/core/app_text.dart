@@ -2,13 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 
 import 'app_theme.dart';
+import 'font_scale_scope.dart';
 
 /// Sistem tipografi tunggal Capsee.
 ///
 /// Semua layar WAJIB memakai helper ini agar font, ukuran, ketebalan,
-/// dan warna konsisten di mode terang maupun gelap.
+/// dan warna konsisten di mode terang maupun gelap, serta mengikuti
+/// pengaturan ukuran font global dari [FontScaleScope].
 ///
-/// Skala:
+/// Skala dasar (sebelum dikalikan fontScale):
 /// - display  : judul halaman (22, w800)
 /// - headline : judul seksi (18, w700)
 /// - title    : judul kartu (16, w700)
@@ -19,6 +21,14 @@ import 'app_theme.dart';
 class AppText {
   AppText._();
 
+  /// Faktor skala font aktif dari [FontScaleScope].
+  static double scaleOf(BuildContext context) => FontScaleScope.scaleOf(context);
+
+  /// Gunakan untuk ukuran khusus (mis. suhu cuaca/brand header) agar
+  /// tidak menulis angka fontSize statis secara langsung.
+  static double scaledSize(BuildContext context, double baseSize) =>
+      baseSize * scaleOf(context);
+
   static TextStyle _base(
     BuildContext context,
     double size,
@@ -28,7 +38,7 @@ class AppText {
     double? letterSpacing,
   }) =>
       GoogleFonts.plusJakartaSans(
-        fontSize: size,
+        fontSize: scaledSize(context, size),
         fontWeight: weight,
         color: color,
         height: height,

@@ -921,7 +921,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     Text(
                       suhu == null ? '--°C' : '$suhu°C',
                       style: AppText.display(context, color: p.title).copyWith(
-                        fontSize: 33,
+                        fontSize: AppText.scaledSize(context, 33),
                         height: 1,
                         fontWeight: FontWeight.w800,
                       ),
@@ -1465,7 +1465,7 @@ class _BottomNav extends StatelessWidget {
             child: SafeArea(
               top: false,
               child: SizedBox(
-                height: 64,
+                height: AppText.scaledSize(context, 64),
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
