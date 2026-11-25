@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import '../../core/dashboard_style.dart';
 import '../../core/app_text.dart';
@@ -7,6 +8,7 @@ import '../../models/land_data.dart';
 import '../../services/services.dart';
 import '../../widgets/popup_notifikasi.dart';
 import '../../widgets/dashboard_header.dart';
+import '../../widgets/feature_tour.dart';
 import '../../widgets/ui_kit.dart';
 import 'detail_lahan_screen.dart';
 import 'tambah_lahan_page.dart';
@@ -124,12 +126,20 @@ const plots = <Plot>[
 // ───────────────────────── Halaman Utama ─────────────────────────
 class LahanPage extends StatefulWidget {
   final bool isActive;
+  final String? tutorialPageRequest;
+  final int tutorialRequest;
 
   /// Dipanggil setelah data berubah (tambah/edit/hapus) agar induk
   /// (dashboard) bisa memuat ulang daftarnya juga.
   final VoidCallback? onChanged;
 
-  const LahanPage({super.key, this.isActive = false, this.onChanged});
+  const LahanPage({
+    super.key,
+    this.isActive = false,
+    this.tutorialPageRequest,
+    this.tutorialRequest = 0,
+    this.onChanged,
+  });
 
   @override
   State<LahanPage> createState() => _LahanPageState();
@@ -142,10 +152,14 @@ class _LahanPageState extends State<LahanPage> {
   List<Map<String, dynamic>>? _lahanList;
   bool _isLoading = true;
   String? _error;
+  final GlobalKey _addLandTourKey = GlobalKey();
+  final GlobalKey _landListTourKey = GlobalKey();
+  bool _lahanTourScheduled = false;
 
   @override
   void initState() {
     super.initState();
+    FeatureTour.register();
     _load();
   }
 
@@ -153,8 +167,26 @@ class _LahanPageState extends State<LahanPage> {
   void didUpdateWidget(LahanPage oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.isActive && !oldWidget.isActive) {
+      _lahanTourScheduled = false;
       _load();
     }
+    if (widget.tutorialRequest != oldWidget.tutorialRequest &&
+        widget.tutorialPageRequest == 'lahan' &&
+        widget.isActive) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _replayTutorial();
+      });
+    }
+  }
+
+  Future<void> _replayTutorial() async {
+    await FeatureTour.replay(
+      pageKey: 'lahan',
+      keys: [
+        _addLandTourKey,
+        if (_lahanList?.isNotEmpty ?? false) _landListTourKey,
+      ],
+    );
   }
 
   Future<void> _load() async {
@@ -167,6 +199,7 @@ class _LahanPageState extends State<LahanPage> {
         _error = null;
         _isLoading = false;
       });
+      _scheduleLahanTour();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -174,6 +207,21 @@ class _LahanPageState extends State<LahanPage> {
         _isLoading = false;
       });
     }
+  }
+
+  void _scheduleLahanTour() {
+    if (!widget.isActive || _lahanTourScheduled) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || !widget.isActive) return;
+      _lahanTourScheduled = true;
+      await FeatureTour.start(
+        pageKey: 'lahan',
+        keys: [
+          _addLandTourKey,
+          if (_lahanList?.isNotEmpty ?? false) _landListTourKey,
+        ],
+      );
+    });
   }
 
   Future<void> _openAddLand() async {
@@ -350,12 +398,18 @@ class _LahanPageState extends State<LahanPage> {
             DashboardHeader(
               title: 'Lahan',
               actions: [
-                DashboardHeaderAction(
-                  icon: Icons.add,
-                  tooltip: 'Tambah lahan',
-                  onPressed: _openAddLand,
-                  backgroundColor: p.primary,
-                  foregroundColor: p.onPrimary,
+                Showcase(
+                  key: _addLandTourKey,
+                  title: 'Tambah lahan',
+                  description:
+                      'Gunakan tombol ini untuk menambahkan petak lahan baru.',
+                  child: DashboardHeaderAction(
+                    icon: Icons.add,
+                    tooltip: 'Tambah lahan',
+                    onPressed: _openAddLand,
+                    backgroundColor: p.primary,
+                    foregroundColor: p.onPrimary,
+                  ),
                 ),
               ],
             ),
@@ -427,14 +481,28 @@ class _LahanPageState extends State<LahanPage> {
                         onAction: _openAddLand,
                       )
                     else if (useReal) ...[
-                      for (final land in real) ...[
-                        _RealLahanCard(
-                          land: land,
-                          palette: context.palette,
-                          onDetail: () => _openDetail(land),
-                          onEdit: () => _openEdit(land),
-                          onDelete: () => _hapus(land),
-                        ),
+                      for (var i = 0; i < real.length; i++) ...[
+                        i == 0
+                            ? Showcase(
+                                key: _landListTourKey,
+                                title: 'Daftar lahan',
+                                description:
+                                    'Pilih kartu lahan untuk melihat detail atau mengelola data kebun.',
+                                child: _RealLahanCard(
+                                  land: real[i],
+                                  palette: context.palette,
+                                  onDetail: () => _openDetail(real[i]),
+                                  onEdit: () => _openEdit(real[i]),
+                                  onDelete: () => _hapus(real[i]),
+                                ),
+                              )
+                            : _RealLahanCard(
+                                land: real[i],
+                                palette: context.palette,
+                                onDetail: () => _openDetail(real[i]),
+                                onEdit: () => _openEdit(real[i]),
+                                onDelete: () => _hapus(real[i]),
+                              ),
                         const SizedBox(height: 16),
                       ],
                     ] else ...[

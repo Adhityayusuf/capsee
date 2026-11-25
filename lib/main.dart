@@ -3,12 +3,14 @@ import 'package:flutter/material.dart';
 import 'core/app_theme.dart';
 import 'core/theme_mode_scope.dart';
 import 'screens/splash/splash_screen.dart';
+import 'widgets/feature_tour.dart';
 
 import 'services/api_client.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initBaseUrl();
+  FeatureTour.register();
   runApp(const CapseeApp());
 }
 

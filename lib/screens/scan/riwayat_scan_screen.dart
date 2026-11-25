@@ -1,12 +1,14 @@
 import 'dart:io';
 
 import 'package:flutter/material.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import '../../core/dashboard_style.dart';
 import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import 'scan_detail_screen.dart';
 import '../../widgets/dashboard_header.dart';
+import '../../widgets/feature_tour.dart';
 import '../../widgets/ui_kit.dart';
 
 class ScanHistoryItem {
@@ -34,11 +36,17 @@ class ScanHistoryItem {
 class RiwayatScanScreen extends StatefulWidget {
   final List<ScanHistoryItem> items;
   final VoidCallback onScan;
+  final bool isActive;
+  final String? tutorialPageRequest;
+  final int tutorialRequest;
 
   const RiwayatScanScreen({
     super.key,
     required this.items,
     required this.onScan,
+    this.isActive = true,
+    this.tutorialPageRequest,
+    this.tutorialRequest = 0,
   });
 
   @override
@@ -46,6 +54,11 @@ class RiwayatScanScreen extends StatefulWidget {
 }
 
 class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
+  final GlobalKey _headerTourKey = GlobalKey();
+  final GlobalKey _filterTourKey = GlobalKey();
+  final GlobalKey _itemTourKey = GlobalKey();
+  bool _tourScheduled = false;
+
   static const _waktuOptions = [
     'Semua Waktu',
     'Hari Ini',
@@ -56,6 +69,56 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
 
   String _selectedWaktu = 'Semua Waktu';
   DateTimeRange? _customDateRange;
+
+  @override
+  void initState() {
+    super.initState();
+    FeatureTour.register();
+    _scheduleTour();
+  }
+
+  @override
+  void didUpdateWidget(covariant RiwayatScanScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) {
+      _tourScheduled = false;
+      _scheduleTour();
+    }
+    if (widget.tutorialRequest != oldWidget.tutorialRequest &&
+        widget.tutorialPageRequest == 'riwayat_scan' &&
+        widget.isActive) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _replayTutorial();
+      });
+    }
+  }
+
+  Future<void> _replayTutorial() async {
+    await FeatureTour.replay(
+      pageKey: 'riwayat_scan',
+      keys: [
+        _headerTourKey,
+        if (widget.items.isNotEmpty) _filterTourKey,
+        if (widget.items.isNotEmpty) _itemTourKey,
+      ],
+    );
+  }
+
+  void _scheduleTour() {
+    if (!widget.isActive || _tourScheduled) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || !widget.isActive) return;
+      _tourScheduled = true;
+      await FeatureTour.start(
+        pageKey: 'riwayat_scan',
+        keys: [
+          _headerTourKey,
+          if (widget.items.isNotEmpty) _filterTourKey,
+          if (widget.items.isNotEmpty) _itemTourKey,
+        ],
+      );
+    });
+  }
 
   List<ScanHistoryItem> get _filteredItems {
     final now = DateTime.now();
@@ -158,8 +221,21 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
         child: Column(
           crossAxisAlignment: CrossAxisAlignment.start,
           children: [
-            _header(filtered.length, isFiltering),
-            if (widget.items.isNotEmpty) _filterSection(p),
+            Showcase(
+              key: _headerTourKey,
+              title: 'Riwayat scan',
+              description:
+                  'Lihat semua hasil pemindaian tanaman yang tersimpan di akun Anda.',
+              child: _header(filtered.length, isFiltering),
+            ),
+            if (widget.items.isNotEmpty)
+              Showcase(
+                key: _filterTourKey,
+                title: 'Filter waktu',
+                description:
+                    'Gunakan filter ini untuk mencari hasil scan berdasarkan waktu pemindaian.',
+                child: _filterSection(p),
+              ),
             Expanded(
               child: widget.items.isEmpty
                   ? EmptyState(
@@ -285,7 +361,18 @@ class _RiwayatScanScreenState extends State<RiwayatScanScreen> {
     padding: const EdgeInsets.fromLTRB(AppSpace.page, 4, AppSpace.page, 24),
     itemCount: items.length,
     separatorBuilder: (_, _) => const SizedBox(height: 10),
-    itemBuilder: (context, index) => _card(items[index], p),
+    itemBuilder: (context, index) {
+      final card = _card(items[index], p);
+      return index == 0
+          ? Showcase(
+              key: _itemTourKey,
+              title: 'Detail hasil scan',
+              description:
+                  'Ketuk kartu hasil scan untuk melihat diagnosis dan rekomendasi penanganan.',
+              child: card,
+            )
+          : card;
+    },
   );
 
   Widget _card(ScanHistoryItem item, AppPalette p) {

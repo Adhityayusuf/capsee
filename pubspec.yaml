@@ -39,6 +39,7 @@ dependencies:
   camera: 0.12.2
   http: ^1.2.2
   shared_preferences: ^2.3.2
+  showcaseview: ^5.0.0
 
   # TFLite & image processing untuk inferensi model ML on-device
   tflite_flutter: 0.12.1

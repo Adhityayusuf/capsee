@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import '../../core/app_colors.dart';
 import '../../core/app_text.dart';
@@ -16,6 +17,7 @@ import '../notifikasi/notifikasi_screen.dart';
 import '../scan/riwayat_scan_screen.dart';
 import '../../services/services.dart';
 import '../../widgets/dashboard_header.dart';
+import '../../widgets/feature_tour.dart';
 
 const _dashboardLightPalette = AppPalette(
   background: dashboardLightBackground,
@@ -84,6 +86,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
   List<ScanHistoryItem> _scanHistory = [];
   LandData? _activeScanLand;
   int _scanReturnTab = 0;
+  String? _tutorialPageRequest;
+  int _tutorialRequest = 0;
 
   Map<String, dynamic>? _profil;
   List<Map<String, dynamic>>? _lahanList;
@@ -92,10 +96,17 @@ class _DashboardScreenState extends State<DashboardScreen> {
   Map<String, dynamic>? _cuaca;
   bool _loadingCuaca = true;
   String? _cuacaError;
+  final GlobalKey _weatherTourKey = GlobalKey();
+  final GlobalKey _addLandTourKey = GlobalKey();
+  final GlobalKey _notificationTourKey = GlobalKey();
+  final GlobalKey _accountTourKey = GlobalKey();
+  final GlobalKey _bottomNavTourKey = GlobalKey();
+  bool _dashboardTourScheduled = false;
 
   @override
   void initState() {
     super.initState();
+    FeatureTour.register();
     _loadData();
   }
 
@@ -156,6 +167,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _scanHistory = history;
           _isLoading = false;
         });
+        _scheduleDashboardTour();
       }
       // Cuaca umum ikut identitas diri (bukan per lahan).
       try {
@@ -192,9 +204,28 @@ class _DashboardScreenState extends State<DashboardScreen> {
           _isLoading = false;
           _loadingCuaca = false;
         });
+        _scheduleDashboardTour();
         _message('Gagal memuat data: ${pesanError(e)}');
       }
     }
+  }
+
+  void _scheduleDashboardTour() {
+    if (_dashboardTourScheduled) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || _isLoading) return;
+      _dashboardTourScheduled = true;
+      await FeatureTour.start(
+        pageKey: 'dashboard',
+        keys: [
+          _weatherTourKey,
+          _addLandTourKey,
+          _notificationTourKey,
+          _accountTourKey,
+          _bottomNavTourKey,
+        ],
+      );
+    });
   }
 
   /// Refresh ringan daftar lahan + riwayat scan (tanpa sentuh profil/cuaca).
@@ -263,14 +294,70 @@ class _DashboardScreenState extends State<DashboardScreen> {
     }
   }
 
+  Future<void> _replayDashboardTutorial() async {
+    await FeatureTour.replay(
+      pageKey: 'dashboard',
+      keys: [
+        _weatherTourKey,
+        _addLandTourKey,
+        _notificationTourKey,
+        _accountTourKey,
+        _bottomNavTourKey,
+      ],
+    );
+  }
+
+  void _requestTutorial(String pageKey) {
+    final page = FeatureTourPageOption.fromKey(pageKey);
+    if (page == null) return;
+
+    if (page.tabIndex == 0) {
+      setState(() {
+        _activeScanLand = null;
+        _tab = 0;
+      });
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _replayDashboardTutorial();
+      });
+      return;
+    }
+
+    setState(() {
+      _activeScanLand = null;
+      _tab = page.tabIndex;
+      _tutorialPageRequest = page.pageKey;
+      _tutorialRequest++;
+    });
+  }
+
   @override
   Widget build(BuildContext context) {
     final pages = [
       _buildDashboard(),
-      RiwayatScanScreen(items: _scanHistory, onScan: () => _openScan()),
-      LahanPage(isActive: _tab == 2, onChanged: _muatUlangLahan),
-      const NotifikasiScreen(),
-      const AkunScreen(),
+      RiwayatScanScreen(
+        items: _scanHistory,
+        isActive: _tab == 1,
+        tutorialPageRequest: _tutorialPageRequest,
+        tutorialRequest: _tutorialRequest,
+        onScan: () => _openScan(),
+      ),
+      LahanPage(
+        isActive: _tab == 2,
+        tutorialPageRequest: _tutorialPageRequest,
+        tutorialRequest: _tutorialRequest,
+        onChanged: _muatUlangLahan,
+      ),
+      NotifikasiScreen(
+        isActive: _tab == 3,
+        tutorialPageRequest: _tutorialPageRequest,
+        tutorialRequest: _tutorialRequest,
+      ),
+      AkunScreen(
+        isActive: _tab == 4,
+        tutorialPageRequest: _tutorialPageRequest,
+        tutorialRequest: _tutorialRequest,
+        onTutorialPageSelected: _requestTutorial,
+      ),
       if (_activeScanLand != null)
         LandDetailScreen(
           key: ValueKey(_activeScanLand!.id),
@@ -286,19 +373,25 @@ class _DashboardScreenState extends State<DashboardScreen> {
       // Halaman scan dari menu cepat tampil sebagai halaman internal dashboard.
       // Bottom bar disembunyikan agar tidak ikut tampil saat kamera digunakan.
       bottomNavigationBar: _activeScanLand == null
-          ? _BottomNav(
-              selectedIndex: _tab == 4 ? 3 : (_tab < 3 ? _tab : -1),
-              onSelected: (index) {
-                final target = index == 3 ? 4 : index;
-                setState(() {
-                  _activeScanLand = null;
-                  _tab = target;
-                });
-                // Kembali ke dashboard → segarkan daftar agar tidak basi
-                // (mis. habis hapus lahan di tab lahan).
-                if (target == 0) _muatUlangLahan();
-              },
-              onScan: () => _openScan(),
+          ? Showcase(
+              key: _bottomNavTourKey,
+              title: 'Navigasi utama',
+              description:
+                  'Gunakan menu ini untuk berpindah antara Home, Riwayat, Lahan, Notifikasi, dan Akun.',
+              child: _BottomNav(
+                selectedIndex: _tab == 4 ? 3 : (_tab < 3 ? _tab : -1),
+                onSelected: (index) {
+                  final target = index == 3 ? 4 : index;
+                  setState(() {
+                    _activeScanLand = null;
+                    _tab = target;
+                  });
+                  // Kembali ke dashboard → segarkan daftar agar tidak basi
+                  // (mis. habis hapus lahan di tab lahan).
+                  if (target == 0) _muatUlangLahan();
+                },
+                onScan: () => _openScan(),
+              ),
             )
           : null,
     );
@@ -324,9 +417,21 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
                     sliver: SliverList(
                       delegate: SliverChildListDelegate([
-                        _climateCard(),
+                        Showcase(
+                          key: _weatherTourKey,
+                          title: 'Cuaca hari ini',
+                          description:
+                              'Lihat kondisi cuaca dan rekomendasi perawatan berdasarkan lokasi kebun.',
+                          child: _climateCard(),
+                        ),
                         const SizedBox(height: 12),
-                        _addLandPrompt(),
+                        Showcase(
+                          key: _addLandTourKey,
+                          title: 'Tambah lahan',
+                          description:
+                              'Gunakan tombol ini untuk menambahkan data lahan pertama atau lahan baru.',
+                          child: _addLandPrompt(),
+                        ),
                         const SizedBox(height: 20),
                         _summaryCard(),
                         const SizedBox(height: 20),
@@ -369,20 +474,32 @@ class _DashboardScreenState extends State<DashboardScreen> {
     return DashboardHeader(
       title: 'Kebun cabai',
       actions: [
-        DashboardHeaderAction(
-          tooltip: 'Buka notifikasi',
-          icon: Icons.notifications_rounded,
-          onPressed: () => setState(() => _tab = 3),
-          backgroundColor: p.surfaceAlt,
-          foregroundColor: p.accent,
+        Showcase(
+          key: _notificationTourKey,
+          title: 'Notifikasi',
+          description:
+              'Buka notifikasi untuk melihat pengingat cuaca dan kondisi tanaman.',
+          child: DashboardHeaderAction(
+            tooltip: 'Buka notifikasi',
+            icon: Icons.notifications_rounded,
+            onPressed: () => setState(() => _tab = 3),
+            backgroundColor: p.surfaceAlt,
+            foregroundColor: p.accent,
+          ),
         ),
         _themeToggle(),
-        DashboardHeaderAction(
-          tooltip: 'Buka akun dan pengaturan',
-          icon: Icons.settings_rounded,
-          onPressed: () => setState(() => _tab = 4),
-          backgroundColor: p.surfaceAlt,
-          foregroundColor: p.accent,
+        Showcase(
+          key: _accountTourKey,
+          title: 'Akun dan pengaturan',
+          description:
+              'Buka halaman ini untuk mengelola profil, bantuan, dan pengaturan aplikasi.',
+          child: DashboardHeaderAction(
+            tooltip: 'Buka akun dan pengaturan',
+            icon: Icons.settings_rounded,
+            onPressed: () => setState(() => _tab = 4),
+            backgroundColor: p.surfaceAlt,
+            foregroundColor: p.accent,
+          ),
         ),
       ],
     );

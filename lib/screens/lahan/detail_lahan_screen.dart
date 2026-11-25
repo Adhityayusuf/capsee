@@ -3,6 +3,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:image/image.dart' as img_lib;
 import 'package:image_picker/image_picker.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
@@ -24,6 +25,7 @@ import '../../services/services.dart';
 import '../../widgets/popup_notifikasi.dart';
 import '../../widgets/ui_kit.dart';
 import '../../widgets/in_app_scan_camera.dart';
+import '../../widgets/feature_tour.dart';
 
 class LandDetailScreen extends StatefulWidget {
   final LandData land;
@@ -74,13 +76,30 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   bool _cuacaLoading = true;
   bool _cuacaError = false;
   String _cuacaErrorMsg = '';
+  final GlobalKey _editLandTourKey = GlobalKey();
+  final GlobalKey _detailTabsTourKey = GlobalKey();
+  bool _detailTourScheduled = false;
 
   @override
   void initState() {
     super.initState();
+    FeatureTour.register();
     _tabIndex = widget.initialTab.clamp(0, 2).toInt();
     _cameraOpen = _tabIndex == 0;
     _loadCuaca();
+    _scheduleDetailTour();
+  }
+
+  void _scheduleDetailTour() {
+    if (_detailTourScheduled) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      _detailTourScheduled = true;
+      await FeatureTour.start(
+        pageKey: 'detail_lahan',
+        keys: [_editLandTourKey, _detailTabsTourKey],
+      );
+    });
   }
 
   @override
@@ -529,7 +548,13 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
       appBar: _buildAppBar(),
       body: Column(
         children: [
-          _buildTabSelector(),
+          Showcase(
+            key: _detailTabsTourKey,
+            title: 'Fitur detail lahan',
+            description:
+                'Gunakan tab Scan, Jadwal, dan Riwayat untuk memantau lahan secara lengkap.',
+            child: _buildTabSelector(),
+          ),
           Expanded(
             child: switch (_tabIndex) {
               0 => _buildScanTab(),
@@ -1113,10 +1138,16 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
         style: AppText.subtitle(context),
       ),
       actions: [
-        IconButton(
-          tooltip: 'Edit informasi lahan',
-          onPressed: _openEditLahan,
-          icon: Icon(Icons.edit_outlined, color: p.title),
+        Showcase(
+          key: _editLandTourKey,
+          title: 'Edit lahan',
+          description:
+              'Gunakan tombol ini untuk mengubah informasi lahan yang sedang dibuka.',
+          child: IconButton(
+            tooltip: 'Edit informasi lahan',
+            onPressed: _openEditLahan,
+            icon: Icon(Icons.edit_outlined, color: p.title),
+          ),
         ),
         IconButton(
           tooltip: 'Hapus lahan',
