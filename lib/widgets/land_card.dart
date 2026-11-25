@@ -58,7 +58,8 @@ class LandCard extends StatelessWidget {
     final statusDetail = warning
         ? 'Ada Indikasi Penyakit'
         : 'Data Tersinkronisasi';
-    final notice = 'Siram tiap ${land['interval_siram_minggu'] ?? 1} minggu • Pupuk tiap ${land['interval_pupuk_minggu']} minggu.';
+    final notice =
+        'Siram tiap ${land['interval_siram_minggu'] ?? 1} minggu • Pupuk tiap ${land['interval_pupuk_minggu'] ?? 1} minggu.';
 
     final color = warning ? p.error : p.accent;
     return CapseeCard(
@@ -100,128 +101,135 @@ class LandCard extends StatelessWidget {
                   ],
                 ),
               ),
-                if (onEdit != null || onDelete != null)
-                  PopupMenuButton<String>(
-                    tooltip: 'Opsi lahan',
-                    icon: Icon(
-                      Icons.more_vert,
-                      size: 20,
-                      color: p.icon,
-                    ),
-                    onSelected: (value) {
-                      if (value == 'edit') onEdit?.call();
-                      if (value == 'hapus') onDelete?.call();
-                    },
-                    itemBuilder: (_) => [
-                      if (onEdit != null)
-                        PopupMenuItem(
-                          value: 'edit',
-                          child: ListTile(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            leading: Icon(Icons.edit_outlined, size: 20),
-                            title: Text('Edit'),
+              if (onEdit != null || onDelete != null)
+                PopupMenuButton<String>(
+                  tooltip: 'Opsi lahan',
+                  icon: Icon(
+                    Icons.more_vert,
+                    size: 20,
+                    color: p.icon,
+                  ),
+                  onSelected: (value) {
+                    if (value == 'edit') onEdit?.call();
+                    if (value == 'hapus') onDelete?.call();
+                  },
+                  itemBuilder: (_) => [
+                    if (onEdit != null)
+                      const PopupMenuItem(
+                        value: 'edit',
+                        child: ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(Icons.edit_outlined, size: 20),
+                          title: Text('Edit'),
+                        ),
+                      ),
+                    if (onDelete != null)
+                      PopupMenuItem(
+                        value: 'hapus',
+                        child: ListTile(
+                          dense: true,
+                          contentPadding: EdgeInsets.zero,
+                          leading: Icon(
+                            Icons.delete_outline,
+                            size: 20,
+                            color: p.error,
+                          ),
+                          title: Text(
+                            'Hapus',
+                            style: AppText.body(context, color: p.error),
                           ),
                         ),
-                      if (onDelete != null)
-                        PopupMenuItem(
-                          value: 'hapus',
-                          child: ListTile(
-                            dense: true,
-                            contentPadding: EdgeInsets.zero,
-                            leading: Icon(
-                              Icons.delete_outline,
-                              size: 20,
-                              color: p.error,
-                            ),
-                            title: Text(
-                              'Hapus',
-                              style: AppText.body(context, color: p.error),
-                            ),
-                          ),
-                        ),
-                    ],
-                  ),
-              ],
+                      ),
+                  ],
+                ),
+            ],
+          ),
+          const SizedBox(height: 11),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+            decoration: BoxDecoration(
+              color: warning
+                  ? p.error.withValues(alpha: 0.12)
+                  : p.accentSoft,
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
             ),
-            const SizedBox(height: 11),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-              decoration: BoxDecoration(
-                color: warning
-                    ? p.error.withValues(alpha: 0.12)
-                    : p.accentSoft,
-                borderRadius: BorderRadius.circular(AppSpace.radiusTile),
-              ),
-              child: Row(
-                children: [
-                  Icon(Icons.verified_rounded, color: color, size: 19),
-                  const SizedBox(width: 7),
-                  Expanded(
-                    child: Text(
-                      status,
-                      style: AppText.bodySm(
-                        context,
-                        color: color,
-                      ).copyWith(fontWeight: FontWeight.w700),
-                    ),
-                  ),
-                  const SizedBox(width: 8),
-                  Flexible(
-                    child: Text(
-                      statusDetail,
-                      textAlign: TextAlign.end,
-                      style: AppText.micro(context, color: color),
-                    ),
-                  ),
-            const SizedBox(height: 9),
-            Container(
-              padding: const EdgeInsets.all(9),
-              decoration: BoxDecoration(
-                color: p.surfaceAlt,
-                borderRadius: BorderRadius.circular(AppSpace.radiusTile),
-              ),
-              child: Row(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Icon(
-                    warning
-                        ? Icons.notification_important_rounded
-                        : Icons.event_available_rounded,
-                    color: color,
-                    size: 17,
-                  ),
-                  const SizedBox(width: 7),
-                  Expanded(
-                    child: Text(
-                      notice,
-                      style: AppText.caption(context, color: p.title),
-                    ),
-                  ),
-                ],
-              ),
-            ),
-            const SizedBox(height: 11),
-            Row(
+            child: Row(
               children: [
+                Icon(Icons.verified_rounded, color: color, size: 19),
+                const SizedBox(width: 7),
                 Expanded(
-                  child: OutlinedButton(
-                    onPressed: onDetail,
-                    child: const Text('Lihat Detail'),
+                  child: Text(
+                    status,
+                    style: AppText.bodySm(
+                      context,
+                      color: color,
+                    ).copyWith(fontWeight: FontWeight.w700),
                   ),
                 ),
                 const SizedBox(width: 8),
-                Expanded(
-                  child: FilledButton.icon(
-                    onPressed: onScan,
-                    icon: const Icon(Icons.photo_camera_rounded, size: 17),
-                    label: Text(warning ? 'Pindai Ulang' : 'Pindai Daun'),
+                Flexible(
+                  child: Text(
+                    statusDetail,
+                    textAlign: TextAlign.end,
+                    style: AppText.micro(context, color: color),
                   ),
                 ),
               ],
             ),
-          ],
-        ),
-      );
+          ),
+          const SizedBox(height: 9),
+          Container(
+            padding: const EdgeInsets.all(9),
+            decoration: BoxDecoration(
+              color: p.surfaceAlt,
+              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+            ),
+            child: Row(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Icon(
+                  warning
+                      ? Icons.notification_important_rounded
+                      : Icons.event_available_rounded,
+                  color: color,
+                  size: 17,
+                ),
+                const SizedBox(width: 7),
+                Expanded(
+                  child: Text(
+                    notice,
+                    style: AppText.caption(context, color: p.title),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 11),
+          Row(
+            children: [
+              Expanded(
+                child: OutlinedButton(
+                  onPressed: onDetail,
+                  child: const Text('Lihat Detail'),
+                ),
+              ),
+              const SizedBox(width: 8),
+              Expanded(
+                child: FilledButton.icon(
+                  onPressed: onScan,
+                  icon: const Icon(Icons.photo_camera_rounded, size: 17),
+                  label: Text(
+                    warning ? 'Pindai Ulang' : 'Pindai Daun',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 }
