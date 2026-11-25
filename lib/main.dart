@@ -5,10 +5,12 @@ import 'core/font_scale_scope.dart';
 import 'core/theme_mode_scope.dart';
 import 'screens/splash/splash_screen.dart';
 import 'services/api_client.dart';
+import 'widgets/feature_tour.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
   await initBaseUrl();
+  FeatureTour.register();
   runApp(const CapseeApp());
 }
 
@@ -20,7 +22,6 @@ class CapseeApp extends StatefulWidget {
 }
 
 class _CapseeAppState extends State<CapseeApp> {
-  // Awal terang. Ganti ke ThemeMode.system kalau ingin mengikuti pengaturan HP.
   final ValueNotifier<ThemeMode> _themeMode = ValueNotifier(ThemeMode.light);
   final ValueNotifier<AppFontSize> _fontSize = ValueNotifier(
     AppFontSize.normal,

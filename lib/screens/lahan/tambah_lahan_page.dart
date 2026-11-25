@@ -1,11 +1,13 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import '../../models/land_data.dart';
 import '../../services/services.dart';
 import '../../widgets/popup_notifikasi.dart';
+import '../../widgets/feature_tour.dart';
 import '../../widgets/ui_kit.dart';
 
 class TambahLahanPage extends StatefulWidget {
@@ -20,6 +22,11 @@ class TambahLahanPage extends StatefulWidget {
 }
 
 class _TambahLahanPageState extends State<TambahLahanPage> {
+  final GlobalKey _identityTourKey = GlobalKey();
+  final GlobalKey _scheduleTourKey = GlobalKey();
+  final GlobalKey _saveTourKey = GlobalKey();
+  bool _tourScheduled = false;
+
   bool get _isEdit => widget.initial != null || widget.idLahan != null;
 
   // Controller input
@@ -54,6 +61,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
   @override
   void initState() {
     super.initState();
+    FeatureTour.register();
     final initial = widget.initial;
     _namaLahanController = TextEditingController(
       text: initial?.name ?? '',
@@ -74,6 +82,14 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
     );
     _selectedAgeMonth = (initial?.plantAgeMonths ?? 3).clamp(1, 5).toInt();
     _loadProvinsi();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || _tourScheduled) return;
+      _tourScheduled = true;
+      await FeatureTour.start(
+        pageKey: 'tambah_lahan',
+        keys: [_identityTourKey, _scheduleTourKey, _saveTourKey],
+      );
+    });
   }
 
   /// Data lama tersimpan sebagai kode (jabar/kbb/...) → tampilkan nama lengkap.
@@ -370,10 +386,15 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
         child: Column(
           children: [
             // Banner Kalibrasi Presisi ML
-            CapseeCard(
-              child: Column(
-                children: [
-                  Row(
+            Showcase(
+              key: _identityTourKey,
+              title: 'Identitas lahan',
+              description:
+                  'Isi nama dan lokasi lahan agar data kebun dapat dipantau dengan benar.',
+              child: CapseeCard(
+                child: Column(
+                  children: [
+                    Row(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       Container(
@@ -429,6 +450,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                   ),
                 ],
               ),
+            ),
             ),
             const SizedBox(height: 20),
 
@@ -664,9 +686,15 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                   ),
                 ),
                 const SizedBox(height: 16),
-                _buildFieldLabel(
-                  icon: Icons.water_drop_outlined,
-                  label: 'Tanggal Terakhir Siram (opsional)',
+                Showcase(
+                  key: _scheduleTourKey,
+                  title: 'Jadwal perawatan',
+                  description:
+                      'Atur tanggal terakhir dan interval penyiraman serta pemupukan lahan.',
+                  child: _buildFieldLabel(
+                    icon: Icons.water_drop_outlined,
+                    label: 'Tanggal Terakhir Siram (opsional)',
+                  ),
                 ),
                 const SizedBox(height: 8),
                 _buildDatePicker(
@@ -714,10 +742,15 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
             const SizedBox(height: 24),
 
             // Tombol Aksi
-            SizedBox(
-              width: double.infinity,
-              height: 52,
-              child: ElevatedButton.icon(
+            Showcase(
+              key: _saveTourKey,
+              title: 'Simpan data lahan',
+              description:
+                  'Setelah semua data lengkap, tekan tombol ini untuk menyimpan lahan.',
+              child: SizedBox(
+                width: double.infinity,
+                height: 52,
+                child: ElevatedButton.icon(
                 onPressed: _isLoading ? null : _simpanData,
                 icon: _isLoading
                     ? SizedBox(
@@ -740,6 +773,7 @@ class _TambahLahanPageState extends State<TambahLahanPage> {
                   elevation: 2,
                 ),
               ),
+            ),
             ),
             const SizedBox(height: 12),
             SizedBox(

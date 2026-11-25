@@ -50,7 +50,6 @@ class LandCard extends StatelessWidget {
     final title = land['nama'] ?? 'Petak Lahan';
     final location = '${land['kecamatan'] ?? ''}, ${land['kota'] ?? ''}'.trim();
     final phase = '${land['umur_tanaman_bulan'] ?? 0} Bulan';
-    const category = 'BLOK HORTIKULTURA';
 
     // Status mengikuti hasil pemindaian terakhir lahan.
     final warning = land['status_kesehatan'] == 'tidak_sehat';
@@ -59,10 +58,27 @@ class LandCard extends StatelessWidget {
         ? 'Ada Indikasi Penyakit'
         : 'Data Tersinkronisasi';
     final notice =
-        'Siram tiap ${land['interval_siram_minggu'] ?? 1} minggu • Pupuk tiap ${land['interval_pupuk_minggu'] ?? 1} minggu.';
+        'Siram tiap ${land['interval_siram_minggu'] ?? 1} minggu • '
+        'Pupuk tiap ${land['interval_pupuk_minggu'] ?? 1} minggu.';
 
     final color = warning ? p.error : p.accent;
     return CapseeCard(
+      border: Border.all(
+        color: color.withValues(alpha: .35),
+        width: 1.5,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: p.shadow,
+          blurRadius: 14,
+          offset: const Offset(0, 4),
+        ),
+        BoxShadow(
+          color: color.withValues(alpha: .06),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -76,160 +92,183 @@ class LandCard extends StatelessWidget {
                   color: warning
                       ? p.error.withValues(alpha: 0.12)
                       : p.accentSoft,
-                  borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: color.withValues(alpha: 0.3),
+                    width: 1.5,
+                  ),
                 ),
                 child: Icon(Icons.eco_rounded, color: color, size: 30),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(category, style: AppText.overline(context, color: color)),
-                    const SizedBox(height: 3),
                     Text(
                       title,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: AppText.subtitle(context),
+                      style: AppText.headline(context, color: p.title).copyWith(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.2,
+                        height: 1.25,
+                      ),
                     ),
-                    Text(location, style: AppText.caption(context)),
-                    Text(
-                      phase,
-                      style: AppText.caption(context, color: p.title),
+                    const SizedBox(height: 3),
+                    if (location.isNotEmpty)
+                      Row(
+                        children: [
+                          Icon(Icons.location_on_outlined, size: 13, color: p.subtitle),
+                          const SizedBox(width: 3),
+                          Expanded(
+                            child: Text(
+                              location,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppText.caption(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Icon(Icons.calendar_today_outlined, size: 12, color: p.subtitle),
+                        const SizedBox(width: 4),
+                        Text(
+                          phase,
+                          style: AppText.caption(context, color: p.title).copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),
               ),
-              if (onEdit != null || onDelete != null)
-                PopupMenuButton<String>(
-                  tooltip: 'Opsi lahan',
-                  icon: Icon(
-                    Icons.more_vert,
-                    size: 20,
-                    color: p.icon,
+                if (onEdit != null || onDelete != null)
+                  PopupMenuButton<String>(
+                    tooltip: 'Opsi lahan',
+                    icon: Icon(
+                      Icons.more_vert,
+                      size: 20,
+                      color: p.icon,
+                    ),
+                    onSelected: (value) {
+                      if (value == 'edit') onEdit?.call();
+                      if (value == 'hapus') onDelete?.call();
+                    },
+                    itemBuilder: (_) => [
+                      if (onEdit != null)
+                        PopupMenuItem(
+                          value: 'edit',
+                          child: ListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            leading: Icon(Icons.edit_outlined, size: 20),
+                            title: Text('Edit'),
+                          ),
+                        ),
+                      if (onDelete != null)
+                        PopupMenuItem(
+                          value: 'hapus',
+                          child: ListTile(
+                            dense: true,
+                            contentPadding: EdgeInsets.zero,
+                            leading: Icon(
+                              Icons.delete_outline,
+                              size: 20,
+                              color: p.error,
+                            ),
+                            title: Text(
+                              'Hapus',
+                              style: AppText.body(context, color: p.error),
+                            ),
+                          ),
+                        ),
+                    ],
                   ),
-                  onSelected: (value) {
-                    if (value == 'edit') onEdit?.call();
-                    if (value == 'hapus') onDelete?.call();
-                  },
-                  itemBuilder: (_) => [
-                    if (onEdit != null)
-                      const PopupMenuItem(
-                        value: 'edit',
-                        child: ListTile(
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                          leading: Icon(Icons.edit_outlined, size: 20),
-                          title: Text('Edit'),
-                        ),
-                      ),
-                    if (onDelete != null)
-                      PopupMenuItem(
-                        value: 'hapus',
-                        child: ListTile(
-                          dense: true,
-                          contentPadding: EdgeInsets.zero,
-                          leading: Icon(
-                            Icons.delete_outline,
-                            size: 20,
-                            color: p.error,
-                          ),
-                          title: Text(
-                            'Hapus',
-                            style: AppText.body(context, color: p.error),
-                          ),
-                        ),
-                      ),
-                  ],
-                ),
-            ],
-          ),
-          const SizedBox(height: 11),
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
-            decoration: BoxDecoration(
-              color: warning
-                  ? p.error.withValues(alpha: 0.12)
-                  : p.accentSoft,
-              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+              ],
             ),
-            child: Row(
+            const SizedBox(height: 11),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
+              decoration: BoxDecoration(
+                color: warning
+                    ? p.error.withValues(alpha: 0.12)
+                    : p.accentSoft,
+                borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+              ),
+              child: Row(
+                children: [
+                  Icon(Icons.verified_rounded, color: color, size: 19),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      status,
+                      style: AppText.bodySm(
+                        context,
+                        color: color,
+                      ).copyWith(fontWeight: FontWeight.w700),
+                    ),
+                  ),
+                  Text(
+                    statusDetail,
+                    style: AppText.micro(context, color: color),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 9),
+            Container(
+              padding: const EdgeInsets.all(9),
+              decoration: BoxDecoration(
+                color: p.surfaceAlt,
+                borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+              ),
+              child: Row(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Icon(
+                    warning
+                        ? Icons.notification_important_rounded
+                        : Icons.event_available_rounded,
+                    color: color,
+                    size: 17,
+                  ),
+                  const SizedBox(width: 7),
+                  Expanded(
+                    child: Text(
+                      notice,
+                      style: AppText.caption(context, color: p.title),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(height: 11),
+            Row(
               children: [
-                Icon(Icons.verified_rounded, color: color, size: 19),
-                const SizedBox(width: 7),
                 Expanded(
-                  child: Text(
-                    status,
-                    style: AppText.bodySm(
-                      context,
-                      color: color,
-                    ).copyWith(fontWeight: FontWeight.w700),
+                  child: OutlinedButton(
+                    onPressed: onDetail,
+                    child: const Text('Lihat Detail'),
                   ),
                 ),
                 const SizedBox(width: 8),
-                Flexible(
-                  child: Text(
-                    statusDetail,
-                    textAlign: TextAlign.end,
-                    style: AppText.micro(context, color: color),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const SizedBox(height: 9),
-          Container(
-            padding: const EdgeInsets.all(9),
-            decoration: BoxDecoration(
-              color: p.surfaceAlt,
-              borderRadius: BorderRadius.circular(AppSpace.radiusTile),
-            ),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Icon(
-                  warning
-                      ? Icons.notification_important_rounded
-                      : Icons.event_available_rounded,
-                  color: color,
-                  size: 17,
-                ),
-                const SizedBox(width: 7),
                 Expanded(
-                  child: Text(
-                    notice,
-                    style: AppText.caption(context, color: p.title),
+                  child: FilledButton.icon(
+                    onPressed: onScan,
+                    icon: const Icon(Icons.photo_camera_rounded, size: 17),
+                    label: Text(warning ? 'Pindai Ulang' : 'Pindai Daun'),
                   ),
                 ),
               ],
             ),
-          ),
-          const SizedBox(height: 11),
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton(
-                  onPressed: onDetail,
-                  child: const Text('Lihat Detail'),
-                ),
-              ),
-              const SizedBox(width: 8),
-              Expanded(
-                child: FilledButton.icon(
-                  onPressed: onScan,
-                  icon: const Icon(Icons.photo_camera_rounded, size: 17),
-                  label: Text(
-                    warning ? 'Pindai Ulang' : 'Pindai Daun',
-                    maxLines: 1,
-                    overflow: TextOverflow.ellipsis,
-                  ),
-                ),
-              ),
-            ],
-          ),
-        ],
-      ),
-    );
+          ],
+        ),
+      );
   }
 }

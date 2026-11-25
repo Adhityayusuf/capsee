@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
+import 'package:showcaseview/showcaseview.dart';
 import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import '../../widgets/ui_kit.dart';
-import 'panduan_screen.dart';
+import '../../widgets/feature_tour.dart';
 
 class BantuanFaqScreen extends StatefulWidget {
   const BantuanFaqScreen({super.key});
@@ -12,6 +13,10 @@ class BantuanFaqScreen extends StatefulWidget {
 }
 
 class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
+  final GlobalKey _searchTourKey = GlobalKey();
+  final GlobalKey _faqTourKey = GlobalKey();
+  bool _tourScheduled = false;
+
   String _searchQuery = '';
   String _selectedCategory = 'Semua';
 
@@ -62,6 +67,20 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
     },
   ];
 
+  @override
+  void initState() {
+    super.initState();
+    FeatureTour.register();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || _tourScheduled) return;
+      _tourScheduled = true;
+      await FeatureTour.start(
+        pageKey: 'bantuan_faq',
+        keys: [_searchTourKey, _faqTourKey],
+      );
+    });
+  }
+
   List<Map<String, dynamic>> get _filteredFaqs {
     return _faqs.where((faq) {
       final matchesCategory =
@@ -104,8 +123,13 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
         padding: const EdgeInsets.all(AppSpace.page),
         children: [
           // Search Bar
-          Container(
-            padding: const EdgeInsets.symmetric(horizontal: AppSpace.page),
+          Showcase(
+            key: _searchTourKey,
+            title: 'Cari bantuan',
+            description:
+                'Ketik kata kunci untuk menemukan jawaban tentang fitur Capsee.',
+            child: Container(
+              padding: const EdgeInsets.symmetric(horizontal: AppSpace.page),
             decoration: BoxDecoration(
               color: p.surfaceAlt,
               borderRadius: BorderRadius.circular(AppSpace.radiusTile),
@@ -120,6 +144,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
                 border: InputBorder.none,
               ),
             ),
+          ),
           ),
           const SizedBox(height: AppSpace.gapLg),
 
@@ -153,51 +178,6 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
           ),
           const SizedBox(height: AppSpace.gapLg),
 
-          // Panduan Cepat Banner
-          CapseeCard(
-            onTap: () {
-              Navigator.of(context).push(
-                MaterialPageRoute(builder: (_) => const PanduanScreen()),
-              );
-            },
-            child: Row(
-              children: [
-                Container(
-                  width: 48,
-                  height: 48,
-                  decoration: BoxDecoration(
-                    color: p.accentSoft,
-                    borderRadius: BorderRadius.circular(AppSpace.radiusTile),
-                  ),
-                  child: Icon(Icons.psychology_alt, color: p.onAccentSoft, size: 26),
-                ),
-                const SizedBox(width: AppSpace.page),
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        'PANDUAN CEPAT CAPSEE',
-                        style: AppText.overline(context, color: p.accent),
-                      ),
-                      Text(
-                        'Solusi Tani Cerdas',
-                        style: AppText.title(context),
-                      ),
-                      Text(
-                        'Temukan jawaban akurat seputar kecerdasan buatan & kesehatan cabai Anda.',
-                        style: AppText.bodySm(context),
-                        maxLines: 1,
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                    ],
-                  ),
-                )
-              ],
-            ),
-          ),
-          const SizedBox(height: AppSpace.gapLg),
-
           // FAQ List
           if (_filteredFaqs.isEmpty)
             const EmptyState(
@@ -206,7 +186,18 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
               message: 'Coba kata kunci lain atau pilih kategori berbeda.',
             )
           else
-            ..._filteredFaqs.map((faq) => _buildFaqItem(faq)),
+            ..._filteredFaqs.asMap().entries.map((entry) {
+              final item = _buildFaqItem(entry.value);
+              return entry.key == 0
+                  ? Showcase(
+                      key: _faqTourKey,
+                      title: 'Pertanyaan FAQ',
+                      description:
+                          'Buka pertanyaan untuk membaca penjelasan dan langkah yang disarankan.',
+                      child: item,
+                    )
+                  : item;
+            }),
 
           const SizedBox(height: AppSpace.gapXl),
           _buildContactSection(),

@@ -5,8 +5,9 @@
 //
 // Pemakaian: home: const AkunScreen()
 
-import 'dart:ui' show ImageFilter;
 import 'package:flutter/material.dart';
+import 'package:showcaseview/showcaseview.dart';
+import 'dart:ui' show ImageFilter;
 
 import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
@@ -15,6 +16,7 @@ import '../../core/font_scale_scope.dart';
 import '../../core/theme_mode_scope.dart';
 import '../../services/services.dart';
 import '../../widgets/dashboard_header.dart';
+import '../../widgets/feature_tour.dart';
 import '../../widgets/ui_kit.dart';
 import '../auth/login_screen.dart';
 import '../bantuan/bantuan_faq_screen.dart';
@@ -43,20 +45,113 @@ class _MenuItem {
 }
 
 class AkunScreen extends StatefulWidget {
-  const AkunScreen({super.key});
+  final bool isActive;
+  final ValueChanged<String>? onTutorialPageSelected;
+  final String? tutorialPageRequest;
+  final int tutorialRequest;
+
+  const AkunScreen({
+    super.key,
+    this.isActive = true,
+    this.onTutorialPageSelected,
+    this.tutorialPageRequest,
+    this.tutorialRequest = 0,
+  });
 
   @override
   State<AkunScreen> createState() => _AkunScreenState();
 }
 
 class _AkunScreenState extends State<AkunScreen> {
+  final GlobalKey _profileTourKey = GlobalKey();
+  final GlobalKey _accountSettingsTourKey = GlobalKey();
+  final GlobalKey _helpTourKey = GlobalKey();
+  final GlobalKey _logoutTourKey = GlobalKey();
+  bool _tourScheduled = false;
+
   Map<String, dynamic>? _profil;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    FeatureTour.register();
     _loadProfil();
+  }
+
+  @override
+  void didUpdateWidget(covariant AkunScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) {
+      _tourScheduled = false;
+      _scheduleTour();
+    }
+    if (widget.tutorialRequest != oldWidget.tutorialRequest &&
+        widget.tutorialPageRequest == 'akun' &&
+        widget.isActive) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _openInteractiveTutorial();
+      });
+    }
+  }
+
+  List<GlobalKey> get _tutorialKeys => [
+    _profileTourKey,
+    _accountSettingsTourKey,
+    _helpTourKey,
+    _logoutTourKey,
+  ];
+  void _scheduleTour() {
+    if (!widget.isActive || _tourScheduled) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || !widget.isActive || _isLoading) return;
+      _tourScheduled = true;
+      await FeatureTour.start(
+        pageKey: 'akun',
+        keys: _tutorialKeys,
+      );
+    });
+  }
+
+  Future<void> _openInteractiveTutorial() async {
+    if (!mounted) return;
+    await FeatureTour.replay(pageKey: 'akun', keys: _tutorialKeys);
+  }
+
+  Future<void> _showTutorialPicker() async {
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+              child: Text(
+                'Pilih halaman tutorial',
+                style: AppText.title(sheetContext),
+              ),
+            ),
+            for (final page in FeatureTourPageOption.mainPages)
+              ListTile(
+                leading: Icon(page.icon),
+                title: Text(page.title),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => Navigator.of(sheetContext).pop(page.pageKey),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (!mounted || selected == null) return;
+    if (widget.onTutorialPageSelected != null) {
+      widget.onTutorialPageSelected!(selected);
+    } else if (selected == 'akun') {
+      await _openInteractiveTutorial();
+    }
   }
 
   Future<void> _loadProfil() async {
@@ -67,6 +162,7 @@ class _AkunScreenState extends State<AkunScreen> {
           _profil = profil;
           _isLoading = false;
         });
+        _scheduleTour();
       }
     } catch (_) {
       if (mounted) setState(() => _isLoading = false);
@@ -292,6 +388,15 @@ class _AkunScreenState extends State<AkunScreen> {
 
     return [
       _MenuItem(
+        icon: Icons.auto_awesome,
+        iconColor: p.accent,
+        title: 'Lihat Tutorial',
+        subtitle: 'Buka kembali panduan utama Capsee kapan saja',
+        onTap: () {
+          _showTutorialPicker();
+        },
+      ),
+      _MenuItem(
         icon: Icons.menu_book,
         iconColor: isDark ? const Color(0xFF7DD3FC) : const Color(0xFF005B8C),
         title: 'Panduan & FAQ Petani',
@@ -363,23 +468,50 @@ class _AkunScreenState extends State<AkunScreen> {
           AppSpace.gapXl,
         ),
         children: [
-          _buildProfileCard(),
-          const SizedBox(height: 24),
-          _buildSection(
-            'Pengaturan Akun',
-            'Preferensi',
-            p.subtitle,
-            _getAccountItems(context),
+          _buildGreeting(),
+          const SizedBox(height: 16),
+          Showcase(
+            key: _profileTourKey,
+            title: 'Profil Anda',
+            description:
+                'Lihat ringkasan profil dan lokasi kebun yang digunakan aplikasi.',
+            child: _buildProfileCard(),
           ),
           const SizedBox(height: 24),
-          _buildSection(
-            'Bantuan & Informasi',
-            'Dukungan Lapangan',
-            p.accent,
-            _getHelpItems(context),
+          _buildSensorBanner(),
+          const SizedBox(height: 24),
+          Showcase(
+            key: _accountSettingsTourKey,
+            title: 'Pengaturan akun',
+            description:
+                'Kelola profil, kata sandi, dan pengaturan akun dari bagian ini.',
+            child: _buildSection(
+              'Pengaturan Akun',
+              'Preferensi',
+              p.subtitle,
+              _getAccountItems(context),
+            ),
           ),
           const SizedBox(height: 24),
-          _buildLogout(context),
+          Showcase(
+            key: _helpTourKey,
+            title: 'Bantuan dan informasi',
+            description:
+                'Buka panduan, FAQ, syarat layanan, atau kebijakan privasi di sini.',
+            child: _buildSection(
+              'Bantuan & Informasi',
+              'Dukungan Lapangan',
+              p.accent,
+              _getHelpItems(context),
+            ),
+          ),
+          const SizedBox(height: 24),
+          Showcase(
+            key: _logoutTourKey,
+            title: 'Keluar akun',
+            description: 'Gunakan tombol ini jika ingin keluar dari akun Capsee.',
+            child: _buildLogout(context),
+          ),
           const SizedBox(height: 24),
           _buildBuildInfo(),
         ],
@@ -400,6 +532,10 @@ class _AkunScreenState extends State<AkunScreen> {
       ),
     );
   }
+
+  Widget _buildGreeting() => const SizedBox.shrink();
+
+  Widget _buildSensorBanner() => const SizedBox.shrink();
 
   Widget _buildProfileCard() {
     final p = context.palette;
