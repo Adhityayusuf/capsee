@@ -166,13 +166,14 @@ class LandCard extends StatelessWidget {
                       ).copyWith(fontWeight: FontWeight.w700),
                     ),
                   ),
-                  Text(
-                    statusDetail,
-                    style: AppText.micro(context, color: color),
+                  const SizedBox(width: 8),
+                  Flexible(
+                    child: Text(
+                      statusDetail,
+                      textAlign: TextAlign.end,
+                      style: AppText.micro(context, color: color),
+                    ),
                   ),
-                ],
-              ),
-            ),
             const SizedBox(height: 9),
             Container(
               padding: const EdgeInsets.all(9),
