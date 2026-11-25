@@ -1194,10 +1194,8 @@ class _BottomNav extends StatelessWidget {
             ),
             child: SafeArea(
               top: false,
-             child: ConstrainedBox(
-              constraints: BoxConstraints(
-                minHeight: AppText.scaledSize(context, 64),
-                ),
+              child: SizedBox(
+                height: AppText.scaledSize(context, 64),
                 child: Stack(
                   clipBehavior: Clip.none,
                   children: [
