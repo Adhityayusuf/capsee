@@ -32,6 +32,9 @@ CREATE TABLE IF NOT EXISTS penyakit (
   nama_latin VARCHAR
 );
 
+ALTER TABLE penyakit ADD COLUMN IF NOT EXISTS kelas VARCHAR;
+ALTER TABLE penyakit ADD COLUMN IF NOT EXISTS penanganan TEXT;
+
 -- ── Lahan ────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS lahan (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),

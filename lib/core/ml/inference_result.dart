@@ -104,6 +104,10 @@ class FruitInferenceResult {
   /// True jika tidak ada deteksi sama sekali setelah NMS.
   bool get isEmpty => detections.isEmpty;
 
+  /// True jika semua deteksi sehat (tidak ada penyakit terdeteksi).
+  bool get isHealthy =>
+      detections.isNotEmpty && detections.every((d) => d.isHealthy);
+
   /// True jika semua deteksi berkeyakinan tinggi.
   bool get allHighConfidence =>
       detections.isNotEmpty && detections.every((d) => d.isHighConfidence);

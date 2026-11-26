@@ -1,3 +1,4 @@
+import 'dart:math' as math;
 import 'dart:typed_data';
 import 'dart:ui' as ui;
 
@@ -5,9 +6,12 @@ import 'package:flutter/material.dart';
 
 import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
+import '../../core/ml/disease_data.dart';
 import '../../core/ml/inference_result.dart';
 import '../../core/ml/model_config.dart';
+import '../../models/treatment_recommendation.dart';
 import '../../widgets/ui_kit.dart';
+import 'treatment_recommendation_screen.dart';
 
 /// Halaman hasil inferensi model deteksi buah (YOLOv5n).
 ///
@@ -88,6 +92,10 @@ class ScanBuahResultScreen extends StatelessWidget {
             ],
             const SizedBox(height: AppSpace.gapMd),
             _buildDetectionList(context, p),
+            if (!result.isHealthy) ...[
+              const SizedBox(height: AppSpace.gapMd),
+              _buildTreatmentCard(context, p),
+            ],
             const SizedBox(height: AppSpace.gapMd),
             _buildCountByClassCard(context, p),
           ],
@@ -429,6 +437,155 @@ class ScanBuahResultScreen extends StatelessWidget {
           label: '$count objek',
           kind: isHealthy ? BadgeKind.success : BadgeKind.error,
         ),
+      ],
+    );
+  }
+
+  // ── Deskripsi Penyakit & Tombol Rekomendasi Penanganan (dari Database) ───
+
+  Widget _buildTreatmentCard(BuildContext context, AppPalette p) {
+    final diseaseClasses = result.detections
+        .map((d) => d.className)
+        .where((name) => !name.toLowerCase().contains('healthy'))
+        .toSet()
+        .toList();
+
+    if (diseaseClasses.isEmpty) return const SizedBox.shrink();
+
+    return Column(
+      children: [
+        for (final cls in diseaseClasses) ...[
+          FutureBuilder<DiseaseInfo?>(
+            future: fetchDiseaseInfo(cls),
+            builder: (context, snapshot) {
+              if (snapshot.connectionState == ConnectionState.waiting) {
+                return CapseeCard(
+                  child: Padding(
+                    padding: const EdgeInsets.all(AppSpace.cardPadding),
+                    child: Row(
+                      children: [
+                        const SizedBox(
+                          width: 18,
+                          height: 18,
+                          child: CircularProgressIndicator(strokeWidth: 2),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: Text(
+                            'Memuat data penyakit $cls dari database...',
+                            style: AppText.caption(context),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                );
+              }
+
+              final info = snapshot.data;
+              if (info == null) return const SizedBox.shrink();
+
+              final nama = info.name;
+              final namaLatin = info.latinName ?? '';
+              final deskripsi = info.description;
+              final penanganan = info.treatment;
+
+              return CapseeCard(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    SectionHeader(
+                      icon: Icons.description_outlined,
+                      title: 'Deskripsi Penyakit',
+                      subtitle: nama,
+                    ),
+                    const SizedBox(height: AppSpace.gapMd),
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(AppSpace.tile),
+                      decoration: BoxDecoration(
+                        color: p.error.withValues(alpha: 0.08),
+                        borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+                        border: Border.all(color: p.error.withValues(alpha: 0.2)),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            nama,
+                            style: AppText.subtitle(context, color: p.error),
+                          ),
+                          if (namaLatin.isNotEmpty) ...[
+                            const SizedBox(height: 2),
+                            Text(
+                              namaLatin,
+                              style: AppText.caption(context).copyWith(
+                                fontStyle: FontStyle.italic,
+                                color: p.subtitle,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                    if (deskripsi.isNotEmpty) ...[
+                      const SizedBox(height: AppSpace.gapMd),
+                      Text(
+                        'Ciri-Ciri Gejala (Database):',
+                        style: AppText.caption(context).copyWith(
+                          fontWeight: FontWeight.w700,
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        deskripsi,
+                        style: AppText.body(context),
+                      ),
+                    ],
+                    const SizedBox(height: AppSpace.gapMd),
+                    SizedBox(
+                      width: double.infinity,
+                      height: 48,
+                      child: FilledButton.icon(
+                        style: FilledButton.styleFrom(
+                          backgroundColor: p.primary,
+                          foregroundColor: p.onPrimary,
+                        ),
+                        onPressed: () {
+                          final topConf = result.detections.isNotEmpty
+                              ? (result.detections.map((d) => d.confidence).reduce(math.max) * 100).toInt()
+                              : 85;
+                          Navigator.of(context).push(
+                            MaterialPageRoute(
+                              builder: (_) => TreatmentRecommendationScreen(
+                                diagnosis: DiagnosisSummary(
+                                  diagnosisId: '#CPS-${DateTime.now().millisecondsSinceEpoch % 10000}',
+                                  plantName: 'Tanaman Cabai (Buah)',
+                                  statusLabel: 'Penyakit Terdeteksi',
+                                  diseaseName: nama,
+                                  latinName: namaLatin,
+                                  dateTime: 'Hari ini',
+                                  severityLabel: 'Perlu Penanganan',
+                                  severityProgress: 0.65,
+                                  aiAccuracyPercent: topConf,
+                                ),
+                                treatmentText: penanganan,
+                                descriptionText: deskripsi,
+                              ),
+                            ),
+                          );
+                        },
+                        icon: const Icon(Icons.medical_services_outlined, size: 20),
+                        label: const Text('Rekomendasi Penanganan'),
+                      ),
+                    ),
+                  ],
+                ),
+              );
+            },
+          ),
+          const SizedBox(height: AppSpace.gapSm),
+        ],
       ],
     );
   }

@@ -10,10 +10,14 @@ import '../../widgets/ui_kit.dart';
 
 class TreatmentRecommendationScreen extends StatefulWidget {
   final DiagnosisSummary diagnosis;
+  final String? treatmentText;
+  final String? descriptionText;
 
   const TreatmentRecommendationScreen({
     super.key,
     this.diagnosis = sampleDiagnosisSummary,
+    this.treatmentText,
+    this.descriptionText,
   });
 
   @override
@@ -103,6 +107,10 @@ class _TreatmentRecommendationScreenState
                       ),
                     ],
                   ),
+                  if (widget.treatmentText != null && widget.treatmentText!.trim().isNotEmpty) ...[
+                    const SizedBox(height: 22),
+                    _buildDatabaseTreatmentSection(p),
+                  ],
                   const SizedBox(height: 22),
                   _buildImmediateActionSection(),
                   const SizedBox(height: 22),
@@ -279,6 +287,65 @@ class _TreatmentRecommendationScreenState
           ),
         ],
       ),
+    );
+  }
+
+  // ---------------------------------------------------------------
+  // Seksi "Rekomendasi Penanganan (Database)"
+  // ---------------------------------------------------------------
+  Widget _buildDatabaseTreatmentSection(AppPalette p) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        const SectionHeader(
+          icon: Icons.medical_services_outlined,
+          title: 'Rekomendasi Penanganan',
+          trailing: StatusBadge(label: 'Database', kind: BadgeKind.success),
+        ),
+        const SizedBox(height: 12),
+        CapseeCard(
+          padding: const EdgeInsets.all(AppSpace.tile),
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                widget.diagnosis.diseaseName,
+                style: AppText.subtitle(context, color: p.error),
+              ),
+              if (widget.diagnosis.latinName.isNotEmpty) ...[
+                const SizedBox(height: 2),
+                Text(
+                  widget.diagnosis.latinName,
+                  style: AppText.caption(context).copyWith(
+                    fontStyle: FontStyle.italic,
+                    color: p.subtitle,
+                  ),
+                ),
+              ],
+              const SizedBox(height: AppSpace.gapMd),
+              Text(
+                widget.treatmentText!,
+                style: AppText.body(context),
+              ),
+              if (widget.descriptionText != null &&
+                  widget.descriptionText!.trim().isNotEmpty) ...[
+                const Divider(height: 24),
+                Text(
+                  'Ciri-Ciri Gejala:',
+                  style: AppText.caption(context).copyWith(
+                    fontWeight: FontWeight.w700,
+                  ),
+                ),
+                const SizedBox(height: 6),
+                Text(
+                  widget.descriptionText!,
+                  style: AppText.bodySm(context).copyWith(color: p.subtitle),
+                ),
+              ],
+            ],
+          ),
+        ),
+      ],
     );
   }
 

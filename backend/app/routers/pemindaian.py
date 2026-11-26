@@ -42,34 +42,59 @@ def _normalize_kelas(label: str) -> str:
 def _resolve_id_penyakit(cur, label: str | None) -> str | None:
     """Cari id penyakit dari nama kelas atau label model ML.
     Mendukung pencarian via:
-    1. Kolom `kelas` (misal 'bacterial_spot', 'cercospora')
-    2. Kolom `nama` (misal 'Bercak Bakteri', 'Antraknosa')
-    3. Pemetaan dari nama kelas bahasa Inggris ke nama Indonesia
+    1. Kolom `nama` (misal 'Bercak Bakteri', 'Antraknosa')
+    2. Pemetaan dari nama kelas bahasa Inggris ke nama Indonesia
+    3. Kolom `kelas` (jika ada di tabel)
+    4. Pencarian parsial (ILIKE)
     """
     if not label:
         return None
 
-    kelas_norm = _normalize_kelas(label)
+    clean_label = label.strip()
+    kelas_norm = _normalize_kelas(clean_label)
 
-    # 1. Prioritas: cocokkan dengan kolom `kelas` (label unik keluaran model)
-    cur.execute("SELECT id FROM penyakit WHERE LOWER(kelas) = %s LIMIT 1", (kelas_norm,))
+    # 1. Cocokkan dengan kolom `nama` secara langsung
+    cur.execute("SELECT id FROM penyakit WHERE LOWER(nama) = %s LIMIT 1", (clean_label.lower(),))
     row = cur.fetchone()
     if row:
         return str(row[0])
 
-    # 2. Cocokkan dengan kolom `nama` secara langsung
-    cur.execute("SELECT id FROM penyakit WHERE LOWER(nama) = %s LIMIT 1", (label.strip().lower(),))
-    row = cur.fetchone()
-    if row:
-        return str(row[0])
+    # 2. Gunakan kamus terjemahan bahasa Inggris -> Indonesia
+    nama_indo = _CLASS_TO_DISEASE_NAME.get(clean_label)
+    if not nama_indo:
+        for k, v in _CLASS_TO_DISEASE_NAME.items():
+            if _normalize_kelas(k) == kelas_norm:
+                nama_indo = v
+                break
 
-    # 3. Gunakan kamus terjemahan bahasa Inggris -> Indonesia
-    nama_indo = _CLASS_TO_DISEASE_NAME.get(label.strip())
     if nama_indo:
         cur.execute("SELECT id FROM penyakit WHERE LOWER(nama) = %s LIMIT 1", (nama_indo.lower(),))
         row = cur.fetchone()
         if row:
             return str(row[0])
+        cur.execute("SELECT id FROM penyakit WHERE nama ILIKE %s LIMIT 1", (f"%{nama_indo}%",))
+        row = cur.fetchone()
+        if row:
+            return str(row[0])
+
+    # 3. Cocokkan dengan kolom `kelas` jika kolom tersebut ada di tabel
+    try:
+        cur.execute(
+            "SELECT 1 FROM information_schema.columns WHERE table_name = 'penyakit' AND column_name = 'kelas' LIMIT 1"
+        )
+        if cur.fetchone():
+            cur.execute("SELECT id FROM penyakit WHERE LOWER(kelas) = %s LIMIT 1", (kelas_norm,))
+            row = cur.fetchone()
+            if row:
+                return str(row[0])
+    except Exception:
+        pass
+
+    # 4. Fallback ILIKE
+    cur.execute("SELECT id FROM penyakit WHERE nama ILIKE %s LIMIT 1", (f"%{clean_label}%",))
+    row = cur.fetchone()
+    if row:
+        return str(row[0])
 
     return None
 
@@ -204,6 +229,62 @@ async def buat_pemindaian(
             "langkah_tindakan": langkah_tindakan,
             "pencegahan": pencegahan,
         }
+
+
+@router.get("/penyakit")
+def ambil_semua_penyakit():
+    """Ambil seluruh daftar penyakit dari tabel penyakit."""
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        cur.execute("SELECT * FROM penyakit ORDER BY nama ASC")
+        return rows_to_dicts(cur)
+
+
+@router.get("/penyakit/{nama_atau_kelas}")
+def ambil_info_penyakit(nama_atau_kelas: str):
+    """Ambil data penyakit (nama, nama_latin, deskripsi, penanganan) langsung dari tabel penyakit."""
+    with get_db_connection() as conn:
+        cur = conn.cursor()
+        id_penyakit = _resolve_id_penyakit(cur, nama_atau_kelas)
+        if not id_penyakit:
+            raise HTTPException(status_code=404, detail=f"Penyakit '{nama_atau_kelas}' tidak ditemukan")
+
+        cur.execute("SELECT * FROM penyakit WHERE id = %s", (id_penyakit,))
+        row = cur.fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="Penyakit tidak ditemukan")
+
+        data = row_to_dict(cur, row)
+
+        # Ambil penanganan terkait dari tabel penanganan jika ada
+        cur.execute("SELECT * FROM penanganan WHERE id_penyakit = %s", (id_penyakit,))
+        data["daftar_penanganan"] = rows_to_dicts(cur)
+
+        # Jika penanganan di tabel penyakit belum terisi tapi ada di tabel penanganan, rangkai jadi teks
+        if not data.get("penanganan") and data["daftar_penanganan"]:
+            lines = []
+            for item in data["daftar_penanganan"]:
+                prod = item.get("nama_produk", "")
+                dosis = item.get("dosis", "")
+                cara = item.get("cara_pakai", "")
+                line = f"- {prod}"
+                if dosis:
+                    line += f" ({dosis})"
+                if cara:
+                    line += f": {cara}"
+                lines.append(line)
+            data["penanganan"] = "\n".join(lines)
+
+        cur.execute(
+            "SELECT * FROM langkah_tindakan WHERE id_penyakit = %s ORDER BY urutan ASC",
+            (id_penyakit,),
+        )
+        data["langkah_tindakan"] = rows_to_dicts(cur)
+
+        cur.execute("SELECT * FROM pencegahan WHERE id_penyakit = %s", (id_penyakit,))
+        data["pencegahan"] = rows_to_dicts(cur)
+
+        return data
 
 
 @router.get("/lahan/{id_lahan}")

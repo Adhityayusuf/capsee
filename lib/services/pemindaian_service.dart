@@ -87,3 +87,28 @@ Future<Map<String, dynamic>> getDetailScan(String idScan) async {
   );
   return parseResponse(res);
 }
+
+/// Ambil data penyakit (deskripsi dan penanganan) langsung dari tabel penyakit database.
+Future<Map<String, dynamic>?> getPenyakitInfo(String namaKelas) async {
+  try {
+    final encoded = Uri.encodeComponent(namaKelas.trim());
+    final res = await apiGet('/api/pemindaian/penyakit/$encoded');
+    return parseResponse(res);
+  } catch (_) {
+    return null;
+  }
+}
+
+/// Ambil semua daftar penyakit langsung dari tabel penyakit database.
+Future<List<Map<String, dynamic>>> getAllPenyakit() async {
+  try {
+    final res = await apiGet('/api/pemindaian/penyakit');
+    final data = parseResponse(res);
+    if (data is List) {
+      return List<Map<String, dynamic>>.from(data);
+    }
+    return [];
+  } catch (_) {
+    return [];
+  }
+}
