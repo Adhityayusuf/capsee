@@ -502,80 +502,114 @@ class _LengkapiIdentitasScreenState extends State<LengkapiIdentitasScreen> {
     required List<Wilayah> items,
     required ValueChanged<Wilayah> onSelect,
   }) async {
-    final query = TextEditingController();
-    List<Wilayah> filtered = items;
     final picked = await showDialog<Wilayah>(
       context: context,
-      builder: (ctx) => StatefulBuilder(
-        builder: (ctx, setD) => AlertDialog(
-          title: Text('Pilih $label', style: AppText.title(ctx)),
-          content: SizedBox(
-            width: double.maxFinite,
-            height: 420,
-            child: Column(
-              children: [
-                TextField(
-                  controller: query,
-                  autofocus: true,
-                  decoration: InputDecoration(
-                    hintText: 'Cari $label...',
-                    prefixIcon: const Icon(Icons.search),
-                    border: const OutlineInputBorder(),
-                    contentPadding: const EdgeInsets.symmetric(
-                      horizontal: 12,
-                      vertical: 10,
-                    ),
-                  ),
-                  onChanged: (q) => setD(() {
-                    final s = q.trim().toLowerCase();
-                    filtered = s.isEmpty
-                        ? items
-                        : items
-                            .where((w) =>
-                                w.name.toLowerCase().contains(s))
-                            .toList();
-                  }),
+      builder: (_) => _WilayahPickerDialog(label: label, items: items),
+    );
+    if (!mounted || picked == null) return;
+    onSelect(picked);
+  }
+}
+
+/// Dialog pencarian wilayah dengan lifecycle controller yang aman.
+class _WilayahPickerDialog extends StatefulWidget {
+  final String label;
+  final List<Wilayah> items;
+
+  const _WilayahPickerDialog({
+    required this.label,
+    required this.items,
+  });
+
+  @override
+  State<_WilayahPickerDialog> createState() => _WilayahPickerDialogState();
+}
+
+class _WilayahPickerDialogState extends State<_WilayahPickerDialog> {
+  final TextEditingController _query = TextEditingController();
+  late List<Wilayah> _filtered = widget.items;
+
+  @override
+  void dispose() {
+    _query.dispose();
+    super.dispose();
+  }
+
+  void _filter(String value) {
+    final search = value.trim().toLowerCase();
+    setState(() {
+      _filtered = search.isEmpty
+          ? widget.items
+          : widget.items
+              .where((wilayah) =>
+                  wilayah.name.toLowerCase().contains(search))
+              .toList();
+    });
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    final availableHeight = MediaQuery.sizeOf(context).height * 0.55;
+    final dialogHeight = availableHeight.clamp(240.0, 420.0);
+
+    return AlertDialog(
+      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      title: Text('Pilih ${widget.label}', style: AppText.title(context)),
+      content: SizedBox(
+        width: double.maxFinite,
+        height: dialogHeight,
+        child: Column(
+          children: [
+            TextField(
+              controller: _query,
+              autofocus: true,
+              decoration: InputDecoration(
+                hintText: 'Cari ${widget.label}...',
+                prefixIcon: const Icon(Icons.search),
+                border: const OutlineInputBorder(),
+                contentPadding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 10,
                 ),
-                const SizedBox(height: 8),
-                Expanded(
-                  child: filtered.isEmpty
-                      ? Center(
-                          child: Text(
-                            'Tidak ditemukan.',
-                            style: AppText.bodySm(ctx),
-                          ),
-                        )
-                      : ListView.separated(
-                          shrinkWrap: true,
-                          itemCount: filtered.length,
-                          separatorBuilder: (_, _) =>
-                              const Divider(height: 1),
-                          itemBuilder: (_, i) {
-                            final w = filtered[i];
-                            return ListTile(
-                              dense: true,
-                              title: Text(
-                                w.name,
-                                style: AppText.body(ctx),
-                              ),
-                              onTap: () => Navigator.of(ctx).pop(w),
-                            );
-                          },
-                        ),
-                ),
-              ],
+              ),
+              onChanged: _filter,
             ),
-          ),
-          actions: [
-            TextButton(
-              onPressed: () => Navigator.of(ctx).pop(),
-              child: const Text('Batal'),
+            const SizedBox(height: 8),
+            Expanded(
+              child: _filtered.isEmpty
+                  ? Center(
+                      child: Text(
+                        'Tidak ditemukan.',
+                        style: AppText.bodySm(context),
+                      ),
+                    )
+                  : ListView.separated(
+                      itemCount: _filtered.length,
+                      separatorBuilder: (_, _) =>
+                          const Divider(height: 1),
+                      itemBuilder: (_, index) {
+                        final wilayah = _filtered[index];
+                        return ListTile(
+                          dense: true,
+                          title: Text(
+                            wilayah.name,
+                            style: AppText.body(context),
+                          ),
+                          onTap: () =>
+                              Navigator.of(context).pop(wilayah),
+                        );
+                      },
+                    ),
             ),
           ],
         ),
       ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.of(context).pop(),
+          child: const Text('Batal'),
+        ),
+      ],
     );
-    query.dispose();
-    if (picked != null) onSelect(picked);
   }
 }
