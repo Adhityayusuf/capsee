@@ -63,7 +63,8 @@ def tambah_lahan(data: TambahLahanRequest, id_pengguna: str = Depends(verifikasi
         lahan = row_to_dict(cur, cur.fetchone())
 
         # Auto-generate jadwal penyiraman 7 hari ke depan.
-        # TODO: ganti dengan prediksi hujan BMKG agar hari hujan otomatis dilewati.
+        # TODO: ganti dengan prakiraan hujan Open-Meteo agar hari hujan
+        # otomatis dilewati.
         cur.executemany(
             """
             INSERT INTO jadwal_penyiraman (id, id_lahan, tanggal_jadwal)

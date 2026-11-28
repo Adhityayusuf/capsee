@@ -83,4 +83,5 @@ setelah server jalan untuk daftar lengkap dan interaktif.
   endpoint scan perlu mengembalikan HTTP 422 dengan `detail` seperti:
   `{"code":"not_chili_plant","message":"Foto bukan daun atau buah cabai."}`.
   Aplikasi akan menampilkan dialog foto tidak sesuai dan meminta foto baru.
-- Integrasi BMKG untuk jadwal penyiraman otomatis.
+- Integrasikan prakiraan hujan Open-Meteo agar jadwal penyiraman
+  otomatis melewati hari hujan.

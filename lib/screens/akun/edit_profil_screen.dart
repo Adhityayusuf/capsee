@@ -393,7 +393,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'Lokasi domisili dipakai untuk cuaca BMKG di dashboard. Ubah di sini kalau Anda pindah domisili.',
+                          'Lokasi domisili dipakai untuk prakiraan cuaca di dashboard. Ubah di sini kalau Anda pindah domisili.',
                           style: AppText.bodySm(context),
                         ),
                       ),
@@ -472,7 +472,7 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
                     style: AppText.overline(context, color: p.error)),
               ],
             ),
-            const StatusBadge(label: 'Cuaca BMKG', kind: BadgeKind.info),
+            const StatusBadge(label: 'Prakiraan Cuaca', kind: BadgeKind.info),
           ],
         ),
         const SizedBox(height: 6),

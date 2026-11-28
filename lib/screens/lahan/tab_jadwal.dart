@@ -447,9 +447,9 @@ class _TabJadwalState extends State<TabJadwal> {
     ];
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bmkgBg = isDark ? const Color(0xFF0F2A3A) : AppColors.tertiaryFixed;
-    final bmkgTitle = isDark ? const Color(0xFF7DD3FC) : AppColors.tertiary;
-    final bmkgBody = isDark ? context.palette.title : const Color(0xFF1B2B34);
+    final weatherBg = isDark ? const Color(0xFF0F2A3A) : AppColors.tertiaryFixed;
+    final weatherTitle = isDark ? const Color(0xFF7DD3FC) : AppColors.tertiary;
+    final weatherBody = isDark ? context.palette.title : const Color(0xFF1B2B34);
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -458,34 +458,34 @@ class _TabJadwalState extends State<TabJadwal> {
         Container(
           padding: const EdgeInsets.all(AppSpace.tile),
           decoration: BoxDecoration(
-            color: bmkgBg,
+            color: weatherBg,
             borderRadius: BorderRadius.circular(AppSpace.radiusTile),
           ),
           child: Row(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Icon(Icons.cloud, color: bmkgTitle),
+              Icon(Icons.cloud, color: weatherTitle),
               const SizedBox(width: 10),
               Expanded(
                 child: Text.rich(
                   TextSpan(
                     children: [
                       TextSpan(
-                        text: 'SINKRONISASI BMKG AKTIF\n',
+                        text: 'PRAKIRAAN CUACA AKTIF\n',
                         style: AppText.bodySm(
                           context,
-                          color: bmkgTitle,
+                          color: weatherTitle,
                         ).copyWith(fontWeight: FontWeight.w800),
                       ),
                       TextSpan(
                         text: 'Hujan lebat diprediksi terjadi ',
-                        style: AppText.bodySm(context, color: bmkgBody),
+                        style: AppText.bodySm(context, color: weatherBody),
                       ),
                       TextSpan(
                         text: 'hari Rabu & Sabtu',
                         style: AppText.bodySm(
                           context,
-                          color: bmkgBody,
+                          color: weatherBody,
                         ).copyWith(fontWeight: FontWeight.w700),
                       ),
                     ],
@@ -941,7 +941,7 @@ class _TabJadwalState extends State<TabJadwal> {
                     child: CircularProgressIndicator(strokeWidth: 2),
                   )
                 : const Icon(Icons.cloud_sync),
-            label: const Text('Sinkronkan Ulang BMKG'),
+            label: const Text('Sinkronkan Ulang Cuaca'),
           ),
         ),
       ],

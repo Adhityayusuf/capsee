@@ -7,7 +7,7 @@ dari Let's Encrypt (domain `sslip.io` berbasis IP, tanpa beli domain).
 APK  ──HTTPS──>  Nginx (VM Azure)  ──>  Uvicorn 127.0.0.1:8000
                         ├── Neon Postgres
                         ├── Cloudinary
-                        └── BMKG / emsifa
+                        └── Open-Meteo (prakiraan cuaca)
 ```
 
 ## 1. Provision VM

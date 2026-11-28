@@ -730,7 +730,7 @@ class _Step3 extends StatelessWidget {
                             const SizedBox(width: 6),
                             Flexible(
                               child: Text(
-                                'Sinkron BMKG 28°C • Cerah Berawan',
+                                'Sinkron Cuaca 28°C • Cerah Berawan',
                                 overflow: TextOverflow.ellipsis,
                                 style: AppText.micro(context),
                               ),
@@ -1008,7 +1008,7 @@ class _Step4 extends StatelessWidget {
               _AlertTile(
                 color: context.palette.error,
                 icon: Icons.thunderstorm,
-                title: 'Peringatan Cuaca BMKG',
+                title: 'Peringatan Cuaca Ekstrem',
                 badge: 'Prioritas Tinggi',
                 badgeBg: context.palette.error.withValues(alpha: 0.12),
                 badgeFg: context.palette.error,
@@ -1131,7 +1131,7 @@ class _Step4 extends StatelessWidget {
             style: AppText.display(context)),
         const SizedBox(height: 8),
         Text(
-          'Dapatkan peringatan dini risiko hama penyakit, ramalan cuaca ekstrem dari BMKG, serta pengingat rutin pemupukan langsung di ponsel Anda.',
+          'Dapatkan peringatan dini risiko hama penyakit, ramalan cuaca ekstrem, serta pengingat rutin pemupukan langsung di ponsel Anda.',
           style: AppText.body(context),
         ),
         const SizedBox(height: 24),

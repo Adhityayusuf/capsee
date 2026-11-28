@@ -370,11 +370,11 @@ class _AkunScreenState extends State<AkunScreen> {
         icon: Icons.tune,
         iconColor: p.accent,
         title: 'Notifikasi & Sensor Lapangan',
-        subtitle: 'Preferensi peringatan cuaca BMKG dan irigasi',
+        subtitle: 'Preferensi peringatan cuaca dan irigasi',
         onTap: () {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text('Pengaturan notifikasi mengikuti data BMKG per lahan.'),
+              content: Text('Pengaturan notifikasi mengikuti prakiraan cuaca per lahan.'),
             ),
           );
         },

@@ -8,7 +8,7 @@ import 'api_client.dart';
 // ─────────────────────────────────────────────────────────
 // WILAYAH INDONESIA
 // Sumber utama: emsifa API wilayah Indonesia (38 provinsi lengkap,
-// sama dengan yang dipakai backend untuk lookup cuaca BMKG, jadi nama
+// sama dengan yang dipakai backend untuk lookup cuaca Open-Meteo, jadi nama
 // yang dipilih dijamin cocok saat cek cuaca).
 // Bila perangkat offline / API tidak terjangkau, daftar di bawah dipakai
 // sebagai cadangan agar form tambah lahan tetap bisa diisi.

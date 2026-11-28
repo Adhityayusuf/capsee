@@ -330,7 +330,7 @@ class HasilScanTidakSehatPage extends StatelessWidget {
             Icons.water_drop,
             'Kelembapan Udara',
             'Tercatat 82% berdasar data cuaca',
-            'API BMKG',
+            'Open-Meteo',
           ),
           _finding(
             context,

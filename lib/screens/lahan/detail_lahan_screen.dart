@@ -70,7 +70,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
   Map<String, dynamic>? _scanResult;
   Map<String, String>? _scanKeterangan;
 
-  // ── State cuaca BMKG ──
+  // ── State cuaca ──
   Map<String, dynamic>? _cuaca; // prakiraan[0]
   bool _cuacaLoading = true;
   bool _cuacaError = false;
@@ -135,7 +135,7 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
               : null;
           _cuacaLoading = false;
           _cuacaError = _cuaca == null;
-          if (_cuacaError) _cuacaErrorMsg = 'Data BMKG kosong.';
+          if (_cuacaError) _cuacaErrorMsg = 'Data cuaca kosong.';
         });
       }
     } catch (e) {
@@ -1079,9 +1079,9 @@ class _LandDetailScreenState extends State<LandDetailScreen> {
             children: [
               Text('Cuaca Lapangan', style: AppText.subtitle(context)),
               const Spacer(),
-              // Atribusi wajib BMKG
+              // Atribusi sumber data cuaca (Open-Meteo)
               Text(
-                'Sumber: BMKG',
+                'Sumber: ${_cuaca?['sumber'] ?? 'Open-Meteo'}',
                 style: AppText.micro(context, color: p.subtitle),
               ),
             ],

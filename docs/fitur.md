@@ -92,7 +92,7 @@ Endpoint terkait: `POST /pemindaian`, `GET /pemindaian/{id}`, `GET /pemindaian/l
 | --- | --- | --- |
 | Jadwal penyiraman | Jadwal penyiraman mingguan | UI + Backend |
 | Prediksi cuaca | Informasi prakiraan cuaca | UI + Backend |
-| Sinkronisasi BMKG | Simulasi data BMKG | Dummy |
+| Sinkronisasi cuaca | Simulasi data prakiraan cuaca | Dummy |
 | Jadwal pemupukan | Jadwal pemberian nutrisi | UI + Backend |
 | Rekomendasi formula | Saran formula pupuk | Dummy |
 | Sensor kelembapan | Data kelembapan tanah | Dummy |
