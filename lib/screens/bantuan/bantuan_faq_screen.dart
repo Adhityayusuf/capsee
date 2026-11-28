@@ -48,7 +48,7 @@ class _BantuanFaqScreenState extends State<BantuanFaqScreen> {
       'icon': Icons.calendar_month,
       'question': 'Bagaimana cara mengatur dan mengubah jadwal penyiraman serta pemupukan?',
       'answer':
-          'Masuk ke menu Jadwal Tani pada navigasi utama. Anda dapat menyesuaikan formulasi pupuk (NPK Mutiara, POC, atau Pupuk Kandang terfermentasi) serta menetapkan rotasi 7 hari atau 14 hari sekali.\n\nAlgoritma Capsee otomatis memundurkan pengingat penyiraman jika radar mikro BMKG mendeteksi anomali cuaca di koordinat kebun Anda.',
+          'Masuk ke menu Jadwal Tani pada navigasi utama. Anda dapat menyesuaikan formulasi pupuk (NPK Mutiara, POC, atau Pupuk Kandang terfermentasi) serta menetapkan rotasi 7 hari atau 14 hari sekali.\n\nAlgoritma Capsee otomatis memundurkan pengingat penyiraman jika prakiraan cuaca mendeteksi anomali di koordinat kebun Anda.',
     },
     {
       'category': 'Pemindaian Daun',

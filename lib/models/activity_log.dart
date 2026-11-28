@@ -117,7 +117,7 @@ final List<ActivityLog> sampleActivityLogs = [
     title: 'Penyiraman Pagi Selesai',
     description:
         'Volume 1.5 L/m² dikombinasikan sensor lengas tanah 69% → 78% '
-        'kapasitas lapang. Cuaca sejuk 23°C. Mode adaptif BMKG aktif.',
+        'kapasitas lapang. Cuaca sejuk 23°C. Mode adaptif cuaca aktif.',
     stats: [
       StatItem(Icons.thermostat_outlined, '23°C'),
       StatItem(Icons.water_outlined, 'Lengas 74%'),

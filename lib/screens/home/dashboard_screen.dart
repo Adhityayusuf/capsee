@@ -813,7 +813,8 @@ class _DashboardScreenState extends State<DashboardScreen> {
     if (_loadingCuaca) {
       return _weatherMessageCard(
         title: lokasiFallback.isEmpty ? 'Memuat lokasi...' : lokasiFallback,
-        message: 'Mengambil prakiraan cuaca BMKG...',
+        message: 'Mengambil prakiraan cuaca...',
+        sumber: _cuaca?['sumber']?.toString(),
         trailing: const SizedBox(
           width: 18,
           height: 18,
@@ -826,6 +827,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
       return _weatherMessageCard(
         title: lokasiFallback.isEmpty ? 'Cuaca belum tersedia' : lokasiFallback,
         message: 'Cuaca gagal dimuat: ${_cuacaError ?? 'data kosong'}',
+        sumber: _cuaca?['sumber']?.toString(),
         trailing: IconButton(
           tooltip: 'Muat ulang cuaca',
           onPressed: _muatUlangCuaca,
@@ -950,7 +952,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
                   Text(
                     hariIni['kemungkinan_hujan'] == true
                         ? 'Berpotensi hujan'
-                        : 'Pantauan BMKG',
+                        : 'Prakiraan terkini',
                     textAlign: TextAlign.end,
                     style: AppText.micro(
                       context,
@@ -1015,6 +1017,11 @@ class _DashboardScreenState extends State<DashboardScreen> {
               ],
             ),
           ),
+          const SizedBox(height: 8),
+          Text(
+            'Sumber: ${_cuaca!['sumber'] ?? 'Open-Meteo'}',
+            style: AppText.micro(context, color: p.hint),
+          ),
         ],
       ),
     );
@@ -1024,6 +1031,7 @@ class _DashboardScreenState extends State<DashboardScreen> {
     required String title,
     required String message,
     required Widget trailing,
+    String? sumber,
   }) {
     final p = context.palette;
     return Container(
@@ -1053,7 +1061,10 @@ class _DashboardScreenState extends State<DashboardScreen> {
           ),
           Text(message, style: AppText.caption(context, color: p.subtitle)),
           const SizedBox(height: 3),
-          Text('Sumber: BMKG', style: AppText.micro(context, color: p.hint)),
+          Text(
+            'Sumber: ${sumber ?? 'Open-Meteo'}',
+            style: AppText.micro(context, color: p.hint),
+          ),
         ],
       ),
     );

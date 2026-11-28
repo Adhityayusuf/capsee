@@ -347,7 +347,7 @@ class _PrivasiScreenState extends State<PrivasiScreen> {
         _dataItem(
           Icons.pin_drop_outlined,
           'Data Spasial & Agroklimat',
-          'Titik koordinat GPS bedengan lahan untuk kalibrasi cuaca mikro harian BMKG, kelembapan tanah, dan data sensor IoT kebun.',
+          'Titik koordinat GPS bedengan lahan untuk kalibrasi prakiraan cuaca harian, kelembapan tanah, dan data sensor IoT kebun.',
         ),
       ],
     );
