@@ -152,10 +152,17 @@ extension AppPaletteContext on BuildContext {
 class AppTheme {
   AppTheme._();
 
-  static ThemeData light() => _build(Brightness.light, AppPalette.light);
-  static ThemeData dark() => _build(Brightness.dark, AppPalette.dark);
+  static ThemeData light({double fontScale = 1.0}) =>
+      _build(Brightness.light, AppPalette.light, fontScale);
 
-  static ThemeData _build(Brightness brightness, AppPalette p) {
+  static ThemeData dark({double fontScale = 1.0}) =>
+      _build(Brightness.dark, AppPalette.dark, fontScale);
+
+  static ThemeData _build(
+    Brightness brightness,
+    AppPalette p,
+    double fontScale,
+  ) {
     final scheme = ColorScheme.fromSeed(
       seedColor: const Color(0xFF15803D),
       brightness: brightness,
@@ -178,6 +185,19 @@ class AppTheme {
       borderRadius: BorderRadius.circular(12),
     );
 
+    final baseTextTheme = GoogleFonts.plusJakartaSansTextTheme(
+      ThemeData(useMaterial3: true, brightness: brightness).textTheme,
+    ).apply(
+      bodyColor: p.title,
+      displayColor: p.title,
+    );
+    final scaledTextTheme = _scaleTextTheme(baseTextTheme, fontScale);
+
+    final buttonTextStyle = GoogleFonts.plusJakartaSans(
+      fontSize: 14 * fontScale,
+      fontWeight: FontWeight.w600,
+    );
+
     return ThemeData(
       useMaterial3: true,
       brightness: brightness,
@@ -185,18 +205,17 @@ class AppTheme {
       scaffoldBackgroundColor: p.background,
       canvasColor: p.surface, // latar menu dropdown
       iconTheme: IconThemeData(color: p.icon),
-      textTheme: GoogleFonts.plusJakartaSansTextTheme(
-        ThemeData(brightness: brightness).textTheme,
-      ).apply(bodyColor: p.title, displayColor: p.title),
+      textTheme: scaledTextTheme,
       dividerTheme: DividerThemeData(color: p.border),
 
-      // Tombol: ini yang memperbaiki tombol "Scan" yang terlihat pucat
+      // Tombol: ukuran teks ikut skala font global
       elevatedButtonTheme: ElevatedButtonThemeData(
         style: ElevatedButton.styleFrom(
           backgroundColor: p.primary,
           foregroundColor: p.onPrimary,
           disabledBackgroundColor: p.primary.withAlpha(110),
           disabledForegroundColor: p.onPrimary.withAlpha(180),
+          textStyle: buttonTextStyle,
           elevation: 0,
           shape: shape,
         ),
@@ -207,6 +226,7 @@ class AppTheme {
           foregroundColor: p.onPrimary,
           disabledBackgroundColor: p.primary.withAlpha(110),
           disabledForegroundColor: p.onPrimary.withAlpha(180),
+          textStyle: buttonTextStyle,
           shape: shape,
         ),
       ),
@@ -214,11 +234,15 @@ class AppTheme {
         style: OutlinedButton.styleFrom(
           foregroundColor: p.title,
           side: BorderSide(color: p.border),
+          textStyle: buttonTextStyle,
           shape: shape,
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(foregroundColor: p.accent),
+        style: TextButton.styleFrom(
+          foregroundColor: p.accent,
+          textStyle: buttonTextStyle,
+        ),
       ),
 
       checkboxTheme: CheckboxThemeData(
@@ -241,8 +265,8 @@ class AppTheme {
           ),
         ),
         labelTextStyle: WidgetStateProperty.resolveWith(
-          (states) => TextStyle(
-            fontSize: 12,
+          (states) => GoogleFonts.plusJakartaSans(
+            fontSize: 12 * fontScale,
             fontWeight: states.contains(WidgetState.selected)
                 ? FontWeight.w700
                 : FontWeight.w500,
@@ -254,9 +278,47 @@ class AppTheme {
         backgroundColor: p.surface,
         selectedItemColor: p.accent,
         unselectedItemColor: p.icon,
+        selectedLabelStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 12 * fontScale,
+          fontWeight: FontWeight.w700,
+        ),
+        unselectedLabelStyle: GoogleFonts.plusJakartaSans(
+          fontSize: 12 * fontScale,
+          fontWeight: FontWeight.w500,
+        ),
       ),
 
       extensions: [p],
+    );
+  }
+
+  /// Scales only styles that have an explicit font size. Flutter's
+  /// [TextTheme.apply] asserts when a non-default factor is used with styles
+  /// whose font size is null.
+  static TextTheme _scaleTextTheme(TextTheme theme, double scale) {
+    TextStyle? scaleStyle(TextStyle? style) {
+      if (style == null || style.fontSize == null || scale == 1.0) {
+        return style;
+      }
+      return style.copyWith(fontSize: style.fontSize! * scale);
+    }
+
+    return theme.copyWith(
+      displayLarge: scaleStyle(theme.displayLarge),
+      displayMedium: scaleStyle(theme.displayMedium),
+      displaySmall: scaleStyle(theme.displaySmall),
+      headlineLarge: scaleStyle(theme.headlineLarge),
+      headlineMedium: scaleStyle(theme.headlineMedium),
+      headlineSmall: scaleStyle(theme.headlineSmall),
+      titleLarge: scaleStyle(theme.titleLarge),
+      titleMedium: scaleStyle(theme.titleMedium),
+      titleSmall: scaleStyle(theme.titleSmall),
+      bodyLarge: scaleStyle(theme.bodyLarge),
+      bodyMedium: scaleStyle(theme.bodyMedium),
+      bodySmall: scaleStyle(theme.bodySmall),
+      labelLarge: scaleStyle(theme.labelLarge),
+      labelMedium: scaleStyle(theme.labelMedium),
+      labelSmall: scaleStyle(theme.labelSmall),
     );
   }
 }

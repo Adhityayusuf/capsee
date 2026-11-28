@@ -11,3 +11,4 @@ export 'pemindaian_service.dart';
 export 'notifikasi_service.dart';
 export 'cuaca_service.dart';
 export 'wilayah_service.dart';
+export 'feature_tour_service.dart';

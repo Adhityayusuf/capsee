@@ -6,12 +6,17 @@
 // Pemakaian: home: const AkunScreen()
 
 import 'package:flutter/material.dart';
+import 'package:showcaseview/showcaseview.dart';
 import 'dart:ui' show ImageFilter;
 
 import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import '../../core/dashboard_style.dart';
+import '../../core/font_scale_scope.dart';
+import '../../core/theme_mode_scope.dart';
+import '../../services/services.dart';
 import '../../widgets/dashboard_header.dart';
+import '../../widgets/feature_tour.dart';
 import '../../widgets/ui_kit.dart';
 import '../auth/login_screen.dart';
 import '../bantuan/bantuan_faq_screen.dart';
@@ -19,12 +24,10 @@ import '../legal/privasi_screen.dart';
 import '../legal/syarat_screen.dart';
 import 'edit_profil_screen.dart';
 import 'ubah_sandi.dart';
-import '../../services/services.dart';
 
 const String _kAvatarUrl =
     'https://lh3.googleusercontent.com/aida-public/AB6AXuD9yzTTPbdLCm8UF7S10zskIXze-Iztg7iXPtN_yLtbjMgVJFf622RK8iDPg3zs34Zgmvzr-3eP0M69khUrRTVIl0PLCMmM1y1hVGB97EpVLHtlnm82aGyadJeOmtF02lZKnvK7D8cMX_Sn0t7eztxJ_iNnt56NrCCmKmtRo6I9dCrBdhvfcfKio97cfmdKq9alKshbFGQ7_2HuXJzF7laagR4yJ4pcrcc-tUfgWobAUXnQP6OqSeusdg';
 
-// ─────────────────────────── Model menu ───────────────────────────
 class _MenuItem {
   final IconData icon;
   final Color iconColor;
@@ -41,22 +44,114 @@ class _MenuItem {
   });
 }
 
-// ─────────────────────────── Layar ───────────────────────────
 class AkunScreen extends StatefulWidget {
-  const AkunScreen({super.key});
+  final bool isActive;
+  final ValueChanged<String>? onTutorialPageSelected;
+  final String? tutorialPageRequest;
+  final int tutorialRequest;
+
+  const AkunScreen({
+    super.key,
+    this.isActive = true,
+    this.onTutorialPageSelected,
+    this.tutorialPageRequest,
+    this.tutorialRequest = 0,
+  });
 
   @override
   State<AkunScreen> createState() => _AkunScreenState();
 }
 
 class _AkunScreenState extends State<AkunScreen> {
+  final GlobalKey _profileTourKey = GlobalKey();
+  final GlobalKey _accountSettingsTourKey = GlobalKey();
+  final GlobalKey _helpTourKey = GlobalKey();
+  final GlobalKey _logoutTourKey = GlobalKey();
+  bool _tourScheduled = false;
+
   Map<String, dynamic>? _profil;
   bool _isLoading = true;
 
   @override
   void initState() {
     super.initState();
+    FeatureTour.register();
     _loadProfil();
+  }
+
+  @override
+  void didUpdateWidget(covariant AkunScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) {
+      _tourScheduled = false;
+      _scheduleTour();
+    }
+    if (widget.tutorialRequest != oldWidget.tutorialRequest &&
+        widget.tutorialPageRequest == 'akun' &&
+        widget.isActive) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _openInteractiveTutorial();
+      });
+    }
+  }
+
+  List<GlobalKey> get _tutorialKeys => [
+    _profileTourKey,
+    _accountSettingsTourKey,
+    _helpTourKey,
+    _logoutTourKey,
+  ];
+  void _scheduleTour() {
+    if (!widget.isActive || _tourScheduled) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || !widget.isActive || _isLoading) return;
+      _tourScheduled = true;
+      await FeatureTour.start(
+        pageKey: 'akun',
+        keys: _tutorialKeys,
+      );
+    });
+  }
+
+  Future<void> _openInteractiveTutorial() async {
+    if (!mounted) return;
+    await FeatureTour.replay(pageKey: 'akun', keys: _tutorialKeys);
+  }
+
+  Future<void> _showTutorialPicker() async {
+    final selected = await showModalBottomSheet<String>(
+      context: context,
+      showDragHandle: true,
+      builder: (sheetContext) => SafeArea(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Padding(
+              padding: const EdgeInsets.fromLTRB(20, 4, 20, 12),
+              child: Text(
+                'Pilih halaman tutorial',
+                style: AppText.title(sheetContext),
+              ),
+            ),
+            for (final page in FeatureTourPageOption.mainPages)
+              ListTile(
+                leading: Icon(page.icon),
+                title: Text(page.title),
+                trailing: const Icon(Icons.chevron_right_rounded),
+                onTap: () => Navigator.of(sheetContext).pop(page.pageKey),
+              ),
+            const SizedBox(height: 8),
+          ],
+        ),
+      ),
+    );
+
+    if (!mounted || selected == null) return;
+    if (widget.onTutorialPageSelected != null) {
+      widget.onTutorialPageSelected!(selected);
+    } else if (selected == 'akun') {
+      await _openInteractiveTutorial();
+    }
   }
 
   Future<void> _loadProfil() async {
@@ -67,13 +162,13 @@ class _AkunScreenState extends State<AkunScreen> {
           _profil = profil;
           _isLoading = false;
         });
+        _scheduleTour();
       }
-    } catch (e) {
+    } catch (_) {
       if (mounted) setState(() => _isLoading = false);
     }
   }
 
-  /// Lokasi singkat dari identitas diri (sinkron dengan cuaca dashboard).
   String _lokasiSingkat() {
     final kec = (_profil?['kecamatan'] ?? '').toString().trim();
     final kota = (_profil?['kota'] ?? '').toString().trim();
@@ -83,18 +178,181 @@ class _AkunScreenState extends State<AkunScreen> {
     return prov.isEmpty ? bagian : '$bagian • $prov';
   }
 
+  void _showAppearanceSettings(BuildContext context) {
+    final p = context.palette;
+    final themeScope = ThemeModeScope.maybeOf(context);
+    final fontScope = FontScaleScope.maybeOf(context);
+
+    showModalBottomSheet<void>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: p.surface,
+      shape: const RoundedRectangleBorder(
+        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+      ),
+      builder: (ctx) {
+        return StatefulBuilder(
+          builder: (context, setModalState) {
+            final currentMode = themeScope?.value ?? ThemeMode.light;
+            final currentFont = fontScope?.value ?? AppFontSize.normal;
+
+            return SafeArea(
+              child: SingleChildScrollView(
+                padding: const EdgeInsets.fromLTRB(20, 16, 20, 24),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        decoration: BoxDecoration(
+                          color: p.border,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 16),
+                    Text('Pengaturan Tampilan', style: AppText.headline(context)),
+                    const SizedBox(height: 4),
+                    Text(
+                      'Sesuaikan tema dan kenyamanan membaca teks aplikasi.',
+                      style: AppText.bodySm(context),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Selector Tema
+                    Text('TEMA APLIKASI', style: AppText.overline(context, color: p.icon)),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _ThemeOptionChip(
+                            label: 'Terang',
+                            icon: Icons.light_mode_rounded,
+                            isSelected: currentMode == ThemeMode.light,
+                            onTap: () {
+                              themeScope?.value = ThemeMode.light;
+                              setModalState(() {});
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _ThemeOptionChip(
+                            label: 'Gelap',
+                            icon: Icons.dark_mode_rounded,
+                            isSelected: currentMode == ThemeMode.dark,
+                            onTap: () {
+                              themeScope?.value = ThemeMode.dark;
+                              setModalState(() {});
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _ThemeOptionChip(
+                            label: 'Sistem',
+                            icon: Icons.settings_brightness_rounded,
+                            isSelected: currentMode == ThemeMode.system,
+                            onTap: () {
+                              themeScope?.value = ThemeMode.system;
+                              setModalState(() {});
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
+
+                    // Selector Ukuran Font
+                    Text('UKURAN HURUF', style: AppText.overline(context, color: p.icon)),
+                    const SizedBox(height: 10),
+                    Wrap(
+                      spacing: 8,
+                      runSpacing: 8,
+                      children: AppFontSize.values.map((size) {
+                        final isSelected = currentFont == size;
+                        return ChoiceChip(
+                          label: Text(
+                            size.label,
+                            style: AppText.bodySm(context).copyWith(
+                              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                              color: isSelected ? p.onPrimary : p.title,
+                            ),
+                          ),
+                          selected: isSelected,
+                          selectedColor: p.primary,
+                          backgroundColor: p.surfaceAlt,
+                          side: BorderSide(color: isSelected ? p.primary : p.border),
+                          onSelected: (selected) {
+                            if (selected && fontScope != null) {
+                              fontScope.value = size;
+                              setModalState(() {});
+                            }
+                          },
+                        );
+                      }).toList(),
+                    ),
+                    const SizedBox(height: 20),
+
+                    // Preview Kotak Teks
+                    Container(
+                      width: double.infinity,
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: p.surfaceAlt,
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(color: p.border),
+                      ),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text('Pratinjau Teks', style: AppText.title(context)),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Teks ini memperlihatkan bagaimana judul, isi, dan tombol berubah secara responsif.',
+                            style: AppText.body(context),
+                          ),
+                          const SizedBox(height: 12),
+                          FilledButton.icon(
+                            onPressed: () {},
+                            icon: const Icon(Icons.check, size: 16),
+                            label: const Text('Simpan & Terapkan'),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   List<_MenuItem> _getAccountItems(BuildContext context) {
     final p = context.palette;
     return [
+      _MenuItem(
+        icon: Icons.format_size_rounded,
+        iconColor: p.accent,
+        title: 'Ukuran Teks & Tema',
+        subtitle: 'Atur skala ukuran huruf dan tema tampilan',
+        onTap: () => _showAppearanceSettings(context),
+      ),
       _MenuItem(
         icon: Icons.badge_outlined,
         iconColor: p.accent,
         title: 'Edit Profil',
         subtitle: 'Ubah identitas, foto profil, dan kontak lahan',
         onTap: () {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const EditProfileScreen()));
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const EditProfileScreen()),
+          );
         },
       ),
       _MenuItem(
@@ -116,9 +374,7 @@ class _AkunScreenState extends State<AkunScreen> {
         onTap: () {
           ScaffoldMessenger.of(context).showSnackBar(
             const SnackBar(
-              content: Text(
-                'Pengaturan notifikasi mengikuti data BMKG per lahan.',
-              ),
+              content: Text('Pengaturan notifikasi mengikuti data BMKG per lahan.'),
             ),
           );
         },
@@ -132,15 +388,23 @@ class _AkunScreenState extends State<AkunScreen> {
 
     return [
       _MenuItem(
+        icon: Icons.auto_awesome,
+        iconColor: p.accent,
+        title: 'Lihat Tutorial',
+        subtitle: 'Buka kembali panduan utama Capsee kapan saja',
+        onTap: () {
+          _showTutorialPicker();
+        },
+      ),
+      _MenuItem(
         icon: Icons.menu_book,
-        // Biru lebih terang di mode gelap supaya tetap terbaca
         iconColor: isDark ? const Color(0xFF7DD3FC) : const Color(0xFF005B8C),
         title: 'Panduan & FAQ Petani',
         subtitle: 'Solusi penyakit cabai, dosis pupuk, & tutorial',
         onTap: () {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const BantuanFaqScreen()));
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const BantuanFaqScreen()),
+          );
         },
       ),
       _MenuItem(
@@ -149,9 +413,9 @@ class _AkunScreenState extends State<AkunScreen> {
         title: 'Syarat dan Ketentuan',
         subtitle: 'Ketentuan layanan aplikasi',
         onTap: () {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const SyaratScreen()));
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const SyaratScreen()),
+          );
         },
       ),
       _MenuItem(
@@ -160,9 +424,9 @@ class _AkunScreenState extends State<AkunScreen> {
         title: 'Kebijakan Privasi',
         subtitle: 'Privasi data agrikultur Anda',
         onTap: () {
-          Navigator.of(
-            context,
-          ).push(MaterialPageRoute(builder: (_) => const PrivasiScreen()));
+          Navigator.of(context).push(
+            MaterialPageRoute(builder: (_) => const PrivasiScreen()),
+          );
         },
       ),
       _MenuItem(
@@ -184,7 +448,6 @@ class _AkunScreenState extends State<AkunScreen> {
 
   @override
   Widget build(BuildContext context) {
-    final p = context.palette;
     if (_isLoading) {
       return Scaffold(
         backgroundColor: dashboardBackgroundColor(context),
@@ -193,6 +456,7 @@ class _AkunScreenState extends State<AkunScreen> {
       );
     }
 
+    final p = context.palette;
     return Scaffold(
       backgroundColor: dashboardBackgroundColor(context),
       appBar: _buildAppBar(),
@@ -206,25 +470,48 @@ class _AkunScreenState extends State<AkunScreen> {
         children: [
           _buildGreeting(),
           const SizedBox(height: 16),
-          _buildProfileCard(),
+          Showcase(
+            key: _profileTourKey,
+            title: 'Profil Anda',
+            description:
+                'Lihat ringkasan profil dan lokasi kebun yang digunakan aplikasi.',
+            child: _buildProfileCard(),
+          ),
           const SizedBox(height: 24),
           _buildSensorBanner(),
           const SizedBox(height: 24),
-          _buildSection(
-            'Pengaturan Akun',
-            'Preferensi',
-            p.subtitle,
-            _getAccountItems(context),
+          Showcase(
+            key: _accountSettingsTourKey,
+            title: 'Pengaturan akun',
+            description:
+                'Kelola profil, kata sandi, dan pengaturan akun dari bagian ini.',
+            child: _buildSection(
+              'Pengaturan Akun',
+              'Preferensi',
+              p.subtitle,
+              _getAccountItems(context),
+            ),
           ),
           const SizedBox(height: 24),
-          _buildSection(
-            'Bantuan & Informasi',
-            'Dukungan Lapangan',
-            p.accent,
-            _getHelpItems(context),
+          Showcase(
+            key: _helpTourKey,
+            title: 'Bantuan dan informasi',
+            description:
+                'Buka panduan, FAQ, syarat layanan, atau kebijakan privasi di sini.',
+            child: _buildSection(
+              'Bantuan & Informasi',
+              'Dukungan Lapangan',
+              p.accent,
+              _getHelpItems(context),
+            ),
           ),
           const SizedBox(height: 24),
-          _buildLogout(context),
+          Showcase(
+            key: _logoutTourKey,
+            title: 'Keluar akun',
+            description: 'Gunakan tombol ini jika ingin keluar dari akun Capsee.',
+            child: _buildLogout(context),
+          ),
           const SizedBox(height: 24),
           _buildBuildInfo(),
         ],
@@ -232,11 +519,10 @@ class _AkunScreenState extends State<AkunScreen> {
     );
   }
 
-  // ───────── Header ─────────
   PreferredSizeWidget _buildAppBar() {
     final canPop = Navigator.of(context).canPop();
     return PreferredSize(
-      preferredSize: const Size.fromHeight(54),
+      preferredSize: Size.fromHeight(AppText.scaledSize(context, 58)),
       child: SafeArea(
         bottom: false,
         child: DashboardHeader(
@@ -247,22 +533,18 @@ class _AkunScreenState extends State<AkunScreen> {
     );
   }
 
-  // ───────── Sapaan + badge terverifikasi ─────────
-  Widget _buildGreeting() {
-    final p = context.palette;
+  Widget _buildGreeting() => const SizedBox.shrink();
 
-    return Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: []);
-  }
+  Widget _buildSensorBanner() => const SizedBox.shrink();
 
-  // ───────── Kartu profil ─────────
   Widget _buildProfileCard() {
+    final p = context.palette;
     return CapseeCard(
       padding: EdgeInsets.zero,
       child: ClipRRect(
         borderRadius: BorderRadius.circular(AppSpace.radiusCard),
         child: Stack(
           children: [
-            // Aksen hijau samar di pojok kanan atas
             Positioned(
               top: -48,
               right: -48,
@@ -273,7 +555,7 @@ class _AkunScreenState extends State<AkunScreen> {
                     width: 144,
                     height: 144,
                     decoration: BoxDecoration(
-                      color: context.palette.accentSoft,
+                      color: p.accentSoft,
                       shape: BoxShape.circle,
                     ),
                   ),
@@ -285,6 +567,7 @@ class _AkunScreenState extends State<AkunScreen> {
               child: Column(
                 children: [
                   Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       _buildAvatar(),
                       const SizedBox(width: AppSpace.gapMd),
@@ -294,30 +577,28 @@ class _AkunScreenState extends State<AkunScreen> {
                           children: [
                             Text(
                               _profil?['nama'] ?? 'Pengguna',
+                              maxLines: 2,
                               overflow: TextOverflow.ellipsis,
                               style: AppText.headline(context),
                             ),
-                            const SizedBox(height: 2),
+                            const SizedBox(height: 4),
                             Row(
                               children: [
-                                Icon(
-                                  Icons.eco,
-                                  size: 15,
-                                  color: context.palette.accent,
-                                ),
+                                Icon(Icons.eco, size: 15, color: p.accent),
                                 const SizedBox(width: 4),
                                 Expanded(
                                   child: Text(
                                     _lokasiSingkat(),
+                                    maxLines: 2,
                                     overflow: TextOverflow.ellipsis,
-                                    style: AppText.bodySm(
-                                      context,
-                                    ).copyWith(fontWeight: FontWeight.w600),
+                                    style: AppText.bodySm(context).copyWith(
+                                      fontWeight: FontWeight.w600,
+                                    ),
                                   ),
                                 ),
                               ],
                             ),
-                            const SizedBox(height: 6),
+                            const SizedBox(height: 8),
                             const StatusBadge(
                               label: 'Petani Komersial',
                               kind: BadgeKind.success,
@@ -340,7 +621,6 @@ class _AkunScreenState extends State<AkunScreen> {
 
   Widget _buildAvatar() {
     final p = context.palette;
-
     return SizedBox(
       width: 64,
       height: 64,
@@ -363,25 +643,17 @@ class _AkunScreenState extends State<AkunScreen> {
           Positioned(
             bottom: -4,
             right: -4,
-            child: Semantics(
-              label: 'Ubah foto profil',
-              button: true,
-              child: Material(
-                color: p.primary,
-                shape: const CircleBorder(),
-                elevation: 3,
-                child: InkWell(
-                  customBorder: const CircleBorder(),
-                  onTap: () {},
-                  child: SizedBox(
-                    width: 24,
-                    height: 24,
-                    child: Icon(
-                      Icons.photo_camera,
-                      size: 13,
-                      color: p.onPrimary,
-                    ),
-                  ),
+            child: Material(
+              color: p.primary,
+              shape: const CircleBorder(),
+              elevation: 3,
+              child: InkWell(
+                customBorder: const CircleBorder(),
+                onTap: () {},
+                child: SizedBox(
+                  width: 24,
+                  height: 24,
+                  child: Icon(Icons.photo_camera, size: 13, color: p.onPrimary),
                 ),
               ),
             ),
@@ -393,9 +665,8 @@ class _AkunScreenState extends State<AkunScreen> {
 
   Widget _buildContactPanel() {
     final p = context.palette;
-
     return Container(
-      padding: const EdgeInsets.all(8),
+      padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
         color: p.surfaceAlt,
         borderRadius: BorderRadius.circular(AppSpace.radiusTile),
@@ -403,76 +674,59 @@ class _AkunScreenState extends State<AkunScreen> {
       child: Column(
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Icon(Icons.location_on, size: 18, color: p.accent),
+              const SizedBox(width: 8),
               Expanded(
-                child: Row(
-                  children: [
-                    Icon(Icons.location_on, size: 18, color: p.accent),
-                    const SizedBox(width: 8),
-                    Text(
-                      'Lahan Aktif',
-                      style: AppText.bodySm(
-                        context,
-                      ).copyWith(fontWeight: FontWeight.w600),
-                    ),
-                  ],
+                child: Text(
+                  'Lahan Aktif',
+                  style: AppText.bodySm(context).copyWith(fontWeight: FontWeight.w600),
                 ),
               ),
+              const SizedBox(width: 8),
               Text(
                 '2 Petak Terdaftar',
-                style: AppText.bodySm(
-                  context,
-                  color: p.title,
-                ).copyWith(fontWeight: FontWeight.w600),
+                style: AppText.bodySm(context, color: p.title).copyWith(
+                  fontWeight: FontWeight.w600,
+                ),
               ),
             ],
           ),
           const SizedBox(height: 8),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Icon(Icons.mail_outline, size: 18, color: p.icon),
+              const SizedBox(width: 8),
               Expanded(
-                child: Row(
-                  children: [
-                    Icon(Icons.mail_outline, size: 18, color: p.icon),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        (_profil?['email'] ?? '').toString().isEmpty
-                            ? '-'
-                            : (_profil?['email'] ?? '').toString(),
-                        overflow: TextOverflow.ellipsis,
-                        style: AppText.bodySm(context),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  (_profil?['email'] ?? '').toString().isEmpty
+                      ? '-'
+                      : (_profil?['email'] ?? '').toString(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.bodySm(context),
                 ),
               ),
+              const SizedBox(width: 6),
               Icon(Icons.check_circle, size: 16, color: p.accent),
             ],
           ),
           const SizedBox(height: 8),
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
+              Icon(Icons.phone_outlined, size: 18, color: p.icon),
+              const SizedBox(width: 8),
               Expanded(
-                child: Row(
-                  children: [
-                    Icon(Icons.phone_outlined, size: 18, color: p.icon),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: Text(
-                        (_profil?['nomor_hp'] ?? '').toString().isEmpty
-                            ? 'Belum diisi'
-                            : (_profil?['nomor_hp'] ?? '').toString(),
-                        overflow: TextOverflow.ellipsis,
-                        style: AppText.bodySm(context),
-                      ),
-                    ),
-                  ],
+                child: Text(
+                  (_profil?['nomor_hp'] ?? '').toString().isEmpty
+                      ? 'Belum diisi'
+                      : (_profil?['nomor_hp'] ?? '').toString(),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: AppText.bodySm(context),
                 ),
               ),
+              const SizedBox(width: 6),
               const StatusBadge(label: 'Aktif WA', kind: BadgeKind.success),
             ],
           ),
@@ -481,13 +735,6 @@ class _AkunScreenState extends State<AkunScreen> {
     );
   }
 
-  // ───────── Banner sensor ─────────
-  Widget _buildSensorBanner() {
-    final p = context.palette;
-    return Container();
-  }
-
-  // ───────── Section menu ─────────
   Widget _buildSection(
     String title,
     String trailing,
@@ -495,23 +742,20 @@ class _AkunScreenState extends State<AkunScreen> {
     List<_MenuItem> items,
   ) {
     final p = context.palette;
-
     return Column(
       crossAxisAlignment: CrossAxisAlignment.stretch,
       children: [
         Padding(
-          padding: const EdgeInsets.fromLTRB(4, 0, 4, 4),
+          padding: const EdgeInsets.fromLTRB(4, 0, 4, 6),
           child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                title.toUpperCase(),
-                style: AppText.overline(context, color: p.icon),
+              Expanded(
+                child: Text(
+                  title.toUpperCase(),
+                  style: AppText.overline(context, color: p.icon),
+                ),
               ),
-              Text(
-                trailing,
-                style: AppText.micro(context, color: trailingColor),
-              ),
+              Text(trailing, style: AppText.micro(context, color: trailingColor)),
             ],
           ),
         ),
@@ -526,9 +770,7 @@ class _AkunScreenState extends State<AkunScreen> {
                   if (i != items.length - 1)
                     Container(
                       height: 1,
-                      margin: const EdgeInsets.symmetric(
-                        horizontal: AppSpace.card,
-                      ),
+                      margin: const EdgeInsets.symmetric(horizontal: AppSpace.card),
                       color: p.border,
                     ),
                 ],
@@ -540,7 +782,6 @@ class _AkunScreenState extends State<AkunScreen> {
     );
   }
 
-  // ───────── Tombol keluar ─────────
   Widget _buildLogout(BuildContext context) {
     final p = context.palette;
     final isDark = Theme.of(context).brightness == Brightness.dark;
@@ -574,7 +815,6 @@ class _AkunScreenState extends State<AkunScreen> {
 
   void _confirmLogout(BuildContext context) {
     final p = context.palette;
-
     showDialog<void>(
       context: context,
       builder: (ctx) => AlertDialog(
@@ -589,10 +829,7 @@ class _AkunScreenState extends State<AkunScreen> {
             onPressed: () => Navigator.pop(ctx),
             child: Text(
               'Batal',
-              style: AppText.subtitle(
-                context,
-                color: p.subtitle,
-              ).copyWith(fontWeight: FontWeight.w600),
+              style: AppText.subtitle(context, color: p.subtitle),
             ),
           ),
           TextButton(
@@ -606,10 +843,7 @@ class _AkunScreenState extends State<AkunScreen> {
                 );
               }
             },
-            child: Text(
-              'Keluar',
-              style: AppText.subtitle(context, color: p.error),
-            ),
+            child: Text('Keluar', style: AppText.subtitle(context, color: p.error)),
           ),
         ],
       ),
@@ -618,7 +852,6 @@ class _AkunScreenState extends State<AkunScreen> {
 
   Widget _buildBuildInfo() {
     final p = context.palette;
-
     return Column(
       children: [
         Row(
@@ -626,27 +859,20 @@ class _AkunScreenState extends State<AkunScreen> {
           children: [
             Icon(Icons.psychology_outlined, size: 16, color: p.icon),
             const SizedBox(width: 6),
-            Text(
-              'CAPSEE PRECISION AGRI',
-              style: AppText.overline(context, color: p.icon),
-            ),
+            Text('CAPSEE PRECISION AGRI', style: AppText.overline(context, color: p.icon)),
           ],
         ),
         const SizedBox(height: 4),
         Text(
           'Versi 2.4.0 (Build 2024.11) • Sistem Terenkripsi',
           textAlign: TextAlign.center,
-          style: AppText.bodySm(
-            context,
-            color: p.subtitle.withValues(alpha: 0.8),
-          ),
+          style: AppText.bodySm(context, color: p.subtitle.withValues(alpha: 0.8)),
         ),
       ],
     );
   }
 }
 
-// ─────────────────────────── Item menu ───────────────────────────
 class _MenuTile extends StatelessWidget {
   final _MenuItem item;
   const _MenuTile({required this.item});
@@ -654,9 +880,8 @@ class _MenuTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     final p = context.palette;
-
     return InkWell(
-      onTap: item.onTap ?? () {},
+      onTap: item.onTap,
       child: Padding(
         padding: const EdgeInsets.all(AppSpace.card),
         child: Row(
@@ -677,13 +902,14 @@ class _MenuTile extends StatelessWidget {
                 children: [
                   Text(
                     item.title,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
-                    style: AppText.subtitle(
-                      context,
-                    ).copyWith(fontWeight: FontWeight.w600),
+                    style: AppText.subtitle(context).copyWith(fontWeight: FontWeight.w600),
                   ),
+                  const SizedBox(height: 2),
                   Text(
                     item.subtitle,
+                    maxLines: 2,
                     overflow: TextOverflow.ellipsis,
                     style: AppText.bodySm(context),
                   ),
@@ -699,37 +925,44 @@ class _MenuTile extends StatelessWidget {
   }
 }
 
-// ─────────────────────────── Titik berdenyut ───────────────────────────
-class _PulseDot extends StatefulWidget {
-  final Color color;
-  final double size;
-  const _PulseDot({required this.color, this.size = 8});
+class _ThemeOptionChip extends StatelessWidget {
+  final String label;
+  final IconData icon;
+  final bool isSelected;
+  final VoidCallback onTap;
 
-  @override
-  State<_PulseDot> createState() => _PulseDotState();
-}
-
-class _PulseDotState extends State<_PulseDot>
-    with SingleTickerProviderStateMixin {
-  late final AnimationController _c = AnimationController(
-    vsync: this,
-    duration: const Duration(seconds: 2),
-  )..repeat(reverse: true);
-
-  @override
-  void dispose() {
-    _c.dispose();
-    super.dispose();
-  }
+  const _ThemeOptionChip({
+    required this.label,
+    required this.icon,
+    required this.isSelected,
+    required this.onTap,
+  });
 
   @override
   Widget build(BuildContext context) {
-    return FadeTransition(
-      opacity: Tween<double>(begin: 1.0, end: 0.4).animate(_c),
-      child: Container(
-        width: widget.size,
-        height: widget.size,
-        decoration: BoxDecoration(color: widget.color, shape: BoxShape.circle),
+    final p = context.palette;
+    return Material(
+      color: isSelected ? p.primary : p.surfaceAlt,
+      borderRadius: BorderRadius.circular(12),
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Padding(
+          padding: const EdgeInsets.symmetric(vertical: 10),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Icon(icon, size: 20, color: isSelected ? p.onPrimary : p.icon),
+              const SizedBox(height: 4),
+              Text(
+                label,
+                style: AppText.micro(context, color: isSelected ? p.onPrimary : p.title).copyWith(
+                  fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
+                ),
+              ),
+            ],
+          ),
+        ),
       ),
     );
   }

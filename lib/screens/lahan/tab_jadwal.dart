@@ -1,6 +1,7 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import '../../core/app_colors.dart';
 import '../../core/app_text.dart';
@@ -8,6 +9,7 @@ import '../../core/app_theme.dart';
 import '../../services/services.dart';
 import '../../widgets/popup_notifikasi.dart';
 import '../../widgets/ui_kit.dart';
+import '../../widgets/feature_tour.dart';
 
 const _namaBulan = [
   'Januari',
@@ -71,6 +73,9 @@ class _TabJadwalState extends State<TabJadwal> {
   String? _backendError;
   List<Map<String, dynamic>> _siramList = [];
   List<Map<String, dynamic>> _pupukList = [];
+  final GlobalKey _scheduleTourKey = GlobalKey();
+  final GlobalKey _weatherScheduleTourKey = GlobalKey();
+  bool _scheduleTourScheduled = false;
 
   final Map<String, Map<String, String>> pupukData = {
     'npk': {
@@ -96,6 +101,7 @@ class _TabJadwalState extends State<TabJadwal> {
   @override
   void initState() {
     super.initState();
+    FeatureTour.register();
     _scheduleMidnightRefresh();
     _loadBackend();
   }
@@ -144,6 +150,7 @@ class _TabJadwalState extends State<TabJadwal> {
           ..addAll(kegiatan);
         _backendLoading = false;
       });
+      _scheduleTour();
     } catch (e) {
       if (!mounted) return;
       setState(() {
@@ -153,13 +160,26 @@ class _TabJadwalState extends State<TabJadwal> {
     }
   }
 
+  void _scheduleTour() {
+    if (_scheduleTourScheduled) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted) return;
+      _scheduleTourScheduled = true;
+      await FeatureTour.start(
+        pageKey: 'jadwal',
+        keys: [_weatherScheduleTourKey, _scheduleTourKey],
+      );
+    });
+  }
+
   @override
   void dispose() {
     _midnightTimer?.cancel();
     super.dispose();
   }
 
-  DateTime _dateOnly(DateTime date) => DateTime(date.year, date.month, date.day);
+  DateTime _dateOnly(DateTime date) =>
+      DateTime(date.year, date.month, date.day);
 
   void _scheduleMidnightRefresh() {
     final now = DateTime.now();
@@ -179,9 +199,21 @@ class _TabJadwalState extends State<TabJadwal> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           _plotInfo(),
-          _wateringSection(),
+          Showcase(
+            key: _weatherScheduleTourKey,
+            title: 'Cuaca dan jadwal mingguan',
+            description:
+                'Perhatikan informasi cuaca dan jadwal perawatan untuk menentukan kegiatan kebun.',
+            child: _wateringSection(),
+          ),
           const SizedBox(height: 16),
-          _backendSection(),
+          Showcase(
+            key: _scheduleTourKey,
+            title: 'Jadwal lahan',
+            description:
+                'Lihat jadwal penyiraman, pemupukan, dan kegiatan yang tersimpan untuk lahan ini.',
+            child: _backendSection(),
+          ),
           const SizedBox(height: 16),
           _actions(),
         ],
@@ -241,10 +273,7 @@ class _TabJadwalState extends State<TabJadwal> {
               'Penyiraman (${_siramList.where((e) => e['status'] != 'selesai').length} pending)',
             ),
             if (_siramList.isEmpty)
-              Text(
-                'Belum ada jadwal siram.',
-                style: AppText.bodySm(context),
-              ),
+              Text('Belum ada jadwal siram.', style: AppText.bodySm(context)),
             for (final j in _siramList.take(5))
               _backendTile(
                 icon: Icons.water_drop,
@@ -260,10 +289,7 @@ class _TabJadwalState extends State<TabJadwal> {
               'Pemupukan (${_pupukList.where((e) => e['status'] != 'selesai').length} pending)',
             ),
             if (_pupukList.isEmpty)
-              Text(
-                'Belum ada jadwal pupuk.',
-                style: AppText.bodySm(context),
-              ),
+              Text('Belum ada jadwal pupuk.', style: AppText.bodySm(context)),
             for (final j in _pupukList.take(5))
               _backendTile(
                 icon: Icons.science,
@@ -286,8 +312,7 @@ class _TabJadwalState extends State<TabJadwal> {
       padding: const EdgeInsets.only(bottom: 4, top: 4),
       child: Text(
         text,
-        style: AppText.caption(context)
-            .copyWith(fontWeight: FontWeight.w700),
+        style: AppText.caption(context).copyWith(fontWeight: FontWeight.w700),
       ),
     );
   }
@@ -317,26 +342,32 @@ class _TabJadwalState extends State<TabJadwal> {
               children: [
                 Text(
                   title,
-                  style: AppText.bodySm(context, color: p.title)
-                      .copyWith(fontWeight: FontWeight.w700),
+                  style: AppText.bodySm(
+                    context,
+                    color: p.title,
+                  ).copyWith(fontWeight: FontWeight.w700),
                 ),
-                Text(
-                  subtitle,
-                  style: AppText.caption(context),
-                ),
+                Text(subtitle, style: AppText.caption(context)),
               ],
             ),
           ),
           if (onSelesai != null)
-            TextButton(
+            FilledButton.tonalIcon(
               onPressed: onSelesai,
-              child: const Text('Selesai'),
+              style: FilledButton.styleFrom(
+                backgroundColor: p.accentSoft,
+                foregroundColor: p.onAccentSoft,
+                minimumSize: const Size(0, 38),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+                ),
+              ),
+              icon: const Icon(Icons.check_rounded, size: 16),
+              label: const Text('Selesai'),
             )
           else
-            const StatusBadge(
-              label: 'Selesai',
-              kind: BadgeKind.success,
-            ),
+            const StatusBadge(label: 'Selesai', kind: BadgeKind.success),
         ],
       ),
     );
@@ -379,9 +410,10 @@ class _TabJadwalState extends State<TabJadwal> {
               children: [
                 Text(
                   'Petak Rawit Blok A • Umur 3 Bln',
-                  style: AppText.bodySm(context,
-                          color: context.palette.title)
-                      .copyWith(fontWeight: FontWeight.w700),
+                  style: AppText.bodySm(
+                    context,
+                    color: context.palette.title,
+                  ).copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -395,6 +427,7 @@ class _TabJadwalState extends State<TabJadwal> {
       ),
     );
   }
+
   Widget _wateringSection() {
     final today = _dateOnly(DateTime.now());
     final weekStart = today.subtract(Duration(days: today.weekday - 1));
@@ -414,8 +447,7 @@ class _TabJadwalState extends State<TabJadwal> {
     ];
 
     final isDark = Theme.of(context).brightness == Brightness.dark;
-    final bmkgBg =
-        isDark ? const Color(0xFF0F2A3A) : AppColors.tertiaryFixed;
+    final bmkgBg = isDark ? const Color(0xFF0F2A3A) : AppColors.tertiaryFixed;
     final bmkgTitle = isDark ? const Color(0xFF7DD3FC) : AppColors.tertiary;
     final bmkgBody = isDark ? context.palette.title : const Color(0xFF1B2B34);
 
@@ -440,8 +472,10 @@ class _TabJadwalState extends State<TabJadwal> {
                     children: [
                       TextSpan(
                         text: 'SINKRONISASI BMKG AKTIF\n',
-                        style: AppText.bodySm(context, color: bmkgTitle)
-                            .copyWith(fontWeight: FontWeight.w800),
+                        style: AppText.bodySm(
+                          context,
+                          color: bmkgTitle,
+                        ).copyWith(fontWeight: FontWeight.w800),
                       ),
                       TextSpan(
                         text: 'Hujan lebat diprediksi terjadi ',
@@ -449,8 +483,10 @@ class _TabJadwalState extends State<TabJadwal> {
                       ),
                       TextSpan(
                         text: 'hari Rabu & Sabtu',
-                        style: AppText.bodySm(context, color: bmkgBody)
-                            .copyWith(fontWeight: FontWeight.w700),
+                        style: AppText.bodySm(
+                          context,
+                          color: bmkgBody,
+                        ).copyWith(fontWeight: FontWeight.w700),
                       ),
                     ],
                   ),
@@ -465,20 +501,25 @@ class _TabJadwalState extends State<TabJadwal> {
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              const SectionHeader(
+              SectionHeader(
                 icon: Icons.water_drop,
                 title: 'Jadwal Mingguan',
-              ),
-              const Divider(height: 20, thickness: 1),
-              Align(
-                alignment: Alignment.centerRight,
-                child: IconButton(
-                  tooltip: 'Tambah jadwal tambahan',
-                  visualDensity: VisualDensity.compact,
-                  icon: const Icon(Icons.add, color: AppColors.primary),
+                trailing: FilledButton.icon(
                   onPressed: _showAddScheduleDialog,
+                  style: FilledButton.styleFrom(
+                    backgroundColor: context.palette.primary,
+                    foregroundColor: context.palette.onPrimary,
+                    minimumSize: const Size(0, 40),
+                    padding: const EdgeInsets.symmetric(horizontal: 12),
+                    shape: RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+                    ),
+                  ),
+                  icon: const Icon(Icons.add_rounded, size: 18),
+                  label: const Text('Tambah Jadwal'),
                 ),
               ),
+              const Divider(height: 20, thickness: 1),
               for (var index = 0; index < scheduleDetails.length; index++)
                 _scheduleRow(
                   scheduledDate: weekStart.add(Duration(days: index)),
@@ -490,8 +531,9 @@ class _TabJadwalState extends State<TabJadwal> {
                 const SizedBox(height: 8),
                 Text(
                   'Jadwal tambahan mendekat',
-                  style: AppText.caption(context)
-                      .copyWith(fontWeight: FontWeight.w700),
+                  style: AppText.caption(
+                    context,
+                  ).copyWith(fontWeight: FontWeight.w700),
                 ),
                 for (final schedule in upcomingAdditionalSchedules)
                   _additionalScheduleTile(schedule),
@@ -534,8 +576,10 @@ class _TabJadwalState extends State<TabJadwal> {
               children: [
                 Text(
                   schedule.name,
-                  style: AppText.bodySm(context, color: p.title)
-                      .copyWith(fontWeight: FontWeight.w700),
+                  style: AppText.bodySm(
+                    context,
+                    color: p.title,
+                  ).copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -550,31 +594,36 @@ class _TabJadwalState extends State<TabJadwal> {
                   ),
                 ],
                 if (schedule.id != null && !isDone) ...[
-                  const SizedBox(height: 6),
+                  const SizedBox(height: 8),
                   Row(
                     children: [
-                      TextButton(
-                        style: TextButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                        ),
-                        onPressed: () => _selesaikanKegiatan(schedule.id!),
-                        child: Text(
-                          'Selesai',
-                          style:
-                              AppText.caption(context, color: p.primary),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: p.primary,
+                            side: BorderSide(color: p.primary),
+                            minimumSize: const Size.fromHeight(38),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                          ),
+                          onPressed: () => _selesaikanKegiatan(schedule.id!),
+                          icon: const Icon(Icons.check_rounded, size: 16),
+                          label: const Text('Selesai'),
                         ),
                       ),
-                      TextButton(
-                        style: TextButton.styleFrom(
-                          visualDensity: VisualDensity.compact,
-                          padding: const EdgeInsets.symmetric(horizontal: 8),
-                        ),
-                        onPressed: () => _hapusKegiatan(schedule.id!),
-                        child: Text(
-                          'Hapus',
-                          style: AppText.caption(context,
-                              color: context.palette.error),
+                      const SizedBox(width: 8),
+                      Expanded(
+                        child: OutlinedButton.icon(
+                          style: OutlinedButton.styleFrom(
+                            foregroundColor: p.error,
+                            side: BorderSide(
+                              color: p.error.withValues(alpha: 0.4),
+                            ),
+                            minimumSize: const Size.fromHeight(38),
+                            padding: const EdgeInsets.symmetric(horizontal: 8),
+                          ),
+                          onPressed: () => _hapusKegiatan(schedule.id!),
+                          icon: const Icon(Icons.delete_outline_rounded, size: 16),
+                          label: const Text('Hapus'),
                         ),
                       ),
                     ],
@@ -613,7 +662,8 @@ class _TabJadwalState extends State<TabJadwal> {
           ),
           FilledButton(
             style: FilledButton.styleFrom(
-                backgroundColor: context.palette.error),
+              backgroundColor: context.palette.error,
+            ),
             onPressed: () => Navigator.pop(ctx, true),
             child: const Text('Hapus'),
           ),
@@ -654,8 +704,8 @@ class _TabJadwalState extends State<TabJadwal> {
     ).every((done) => done);
     final status = isPast
         ? allActivitiesDone
-            ? 'selesai'
-            : 'terlewatkan'
+              ? 'selesai'
+              : 'terlewatkan'
         : activityStatuses[0] ?? 'belum';
     final isExpanded = _expandedScheduleDate == date;
     const dayLabels = ['SEN', 'SEL', 'RAB', 'KAM', 'JUM', 'SAB', 'MIN'];
@@ -677,24 +727,24 @@ class _TabJadwalState extends State<TabJadwal> {
                 height: 36,
                 decoration: BoxDecoration(
                   color: isToday ? p.primary : p.surfaceAlt,
-                  borderRadius:
-                      BorderRadius.circular(AppSpace.radiusTile),
+                  borderRadius: BorderRadius.circular(AppSpace.radiusTile),
                 ),
                 child: Column(
                   mainAxisAlignment: MainAxisAlignment.center,
                   children: [
                     Text(
                       dayLabels[date.weekday - 1],
-                      style: AppText.micro(context,
-                              color:
-                                  isToday ? p.onPrimary : p.subtitle)
-                          .copyWith(fontWeight: FontWeight.w700),
+                      style: AppText.micro(
+                        context,
+                        color: isToday ? p.onPrimary : p.subtitle,
+                      ).copyWith(fontWeight: FontWeight.w700),
                     ),
                     Text(
                       date.day.toString().padLeft(2, '0'),
-                      style: AppText.bodySm(context,
-                              color: isToday ? p.onPrimary : p.title)
-                          .copyWith(fontWeight: FontWeight.w800),
+                      style: AppText.bodySm(
+                        context,
+                        color: isToday ? p.onPrimary : p.title,
+                      ).copyWith(fontWeight: FontWeight.w800),
                     ),
                   ],
                 ),
@@ -706,16 +756,18 @@ class _TabJadwalState extends State<TabJadwal> {
                   children: [
                     Text(
                       title,
-                      style: AppText.bodySm(context,
-                              color: status == 'terlewatkan'
-                                  ? p.subtitle
-                                  : p.title)
-                          .copyWith(
-                        fontWeight: FontWeight.w700,
-                        decoration: status == 'terlewatkan'
-                            ? TextDecoration.lineThrough
-                            : null,
-                      ),
+                      style:
+                          AppText.bodySm(
+                            context,
+                            color: status == 'terlewatkan'
+                                ? p.subtitle
+                                : p.title,
+                          ).copyWith(
+                            fontWeight: FontWeight.w700,
+                            decoration: status == 'terlewatkan'
+                                ? TextDecoration.lineThrough
+                                : null,
+                          ),
                     ),
                   ],
                 ),
@@ -749,8 +801,10 @@ class _TabJadwalState extends State<TabJadwal> {
               children: [
                 Text(
                   'Keterangan kegiatan',
-                  style: AppText.micro(context, color: p.subtitle)
-                      .copyWith(fontWeight: FontWeight.w700),
+                  style: AppText.micro(
+                    context,
+                    color: p.subtitle,
+                  ).copyWith(fontWeight: FontWeight.w700),
                 ),
                 const SizedBox(height: 4),
                 for (var index = 0; index < activities.length; index++) ...[
@@ -798,29 +852,31 @@ class _TabJadwalState extends State<TabJadwal> {
       child: DropdownButton<String>(
         value: selectedStatus,
         isDense: true,
-        style: AppText.micro(context,
-            color: context.palette.title),
+        style: AppText.micro(context, color: context.palette.title),
         dropdownColor: context.palette.surface,
         iconSize: 18,
         borderRadius: BorderRadius.circular(AppSpace.radiusTile),
         items: [
           DropdownMenuItem(
             value: 'belum',
-            child: Text('Belum',
-                style: AppText.micro(context,
-                    color: context.palette.title)),
+            child: Text(
+              'Belum',
+              style: AppText.micro(context, color: context.palette.title),
+            ),
           ),
           DropdownMenuItem(
             value: 'proses',
-            child: Text('Proses',
-                style: AppText.micro(context,
-                    color: context.palette.title)),
+            child: Text(
+              'Proses',
+              style: AppText.micro(context, color: context.palette.title),
+            ),
           ),
           DropdownMenuItem(
             value: 'selesai',
-            child: Text('Selesai',
-                style: AppText.micro(context,
-                    color: context.palette.title)),
+            child: Text(
+              'Selesai',
+              style: AppText.micro(context, color: context.palette.title),
+            ),
           ),
         ],
         onChanged: (value) {
@@ -835,6 +891,7 @@ class _TabJadwalState extends State<TabJadwal> {
   }
 
   Widget _actions() {
+    final p = context.palette;
     return Column(
       children: [
         SizedBox(
@@ -853,45 +910,45 @@ class _TabJadwalState extends State<TabJadwal> {
                   : 'Catat Realisasi Pupuk / Siram',
             ),
             style: ElevatedButton.styleFrom(
-              backgroundColor: context.palette.primary,
-              foregroundColor: context.palette.onPrimary,
-              padding: const EdgeInsets.symmetric(vertical: 14),
+              backgroundColor: p.primary,
+              foregroundColor: p.onPrimary,
+              minimumSize: const Size.fromHeight(48),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             ),
           ),
         ),
-        const SizedBox(height: 16),
-        Row(
-          children: [
-            Expanded(
-              child: OutlinedButton.icon(
-                onPressed: syncing
-                    ? null
-                    : () async {
-                        setState(() => syncing = true);
-                        await Future.delayed(const Duration(milliseconds: 900));
-                        if (mounted) setState(() => syncing = false);
-                      },
-                icon: syncing
-                    ? const SizedBox(
-                        width: 17,
-                        height: 17,
-                        child: CircularProgressIndicator(strokeWidth: 2),
-                      )
-                    : const Icon(Icons.cloud_sync),
-                label: const Text('Sinkronkan Ulang BMKG'),
-              ),
+        const SizedBox(height: 12),
+        SizedBox(
+          width: double.infinity,
+          child: OutlinedButton.icon(
+            onPressed: syncing
+                ? null
+                : () async {
+                    setState(() => syncing = true);
+                    await Future.delayed(const Duration(milliseconds: 900));
+                    if (mounted) setState(() => syncing = false);
+                  },
+            style: OutlinedButton.styleFrom(
+              foregroundColor: p.title,
+              side: BorderSide(color: p.border),
+              minimumSize: const Size.fromHeight(48),
+              padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 16),
             ),
-          ],
+            icon: syncing
+                ? const SizedBox(
+                    width: 17,
+                    height: 17,
+                    child: CircularProgressIndicator(strokeWidth: 2),
+                  )
+                : const Icon(Icons.cloud_sync),
+            label: const Text('Sinkronkan Ulang BMKG'),
+          ),
         ),
       ],
     );
   }
 
-  Widget _iconBox(
-    IconData icon,
-    Color background, {
-    Color? iconColor,
-  }) {
+  Widget _iconBox(IconData icon, Color background, {Color? iconColor}) {
     return Container(
       width: 36,
       height: 36,
@@ -1018,3 +1075,4 @@ class _AddScheduleDialogState extends State<_AddScheduleDialog> {
     );
   }
 }
+

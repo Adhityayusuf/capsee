@@ -50,7 +50,6 @@ class LandCard extends StatelessWidget {
     final title = land['nama'] ?? 'Petak Lahan';
     final location = '${land['kecamatan'] ?? ''}, ${land['kota'] ?? ''}'.trim();
     final phase = '${land['umur_tanaman_bulan'] ?? 0} Bulan';
-    const category = 'BLOK HORTIKULTURA';
 
     // Status mengikuti hasil pemindaian terakhir lahan.
     final warning = land['status_kesehatan'] == 'tidak_sehat';
@@ -58,10 +57,28 @@ class LandCard extends StatelessWidget {
     final statusDetail = warning
         ? 'Ada Indikasi Penyakit'
         : 'Data Tersinkronisasi';
-    final notice = 'Siram tiap ${land['interval_siram_minggu'] ?? 1} minggu • Pupuk tiap ${land['interval_pupuk_minggu']} minggu.';
+    final notice =
+        'Siram tiap ${land['interval_siram_minggu'] ?? 1} minggu • '
+        'Pupuk tiap ${land['interval_pupuk_minggu'] ?? 1} minggu.';
 
     final color = warning ? p.error : p.accent;
     return CapseeCard(
+      border: Border.all(
+        color: color.withValues(alpha: .35),
+        width: 1.5,
+      ),
+      boxShadow: [
+        BoxShadow(
+          color: p.shadow,
+          blurRadius: 14,
+          offset: const Offset(0, 4),
+        ),
+        BoxShadow(
+          color: color.withValues(alpha: .06),
+          blurRadius: 8,
+          offset: const Offset(0, 2),
+        ),
+      ],
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
@@ -75,27 +92,58 @@ class LandCard extends StatelessWidget {
                   color: warning
                       ? p.error.withValues(alpha: 0.12)
                       : p.accentSoft,
-                  borderRadius: BorderRadius.circular(AppSpace.radiusTile),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(
+                    color: color.withValues(alpha: 0.3),
+                    width: 1.5,
+                  ),
                 ),
                 child: Icon(Icons.eco_rounded, color: color, size: 30),
               ),
-              const SizedBox(width: 10),
+              const SizedBox(width: 12),
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    Text(category, style: AppText.overline(context, color: color)),
-                    const SizedBox(height: 3),
                     Text(
                       title,
-                      maxLines: 1,
+                      maxLines: 2,
                       overflow: TextOverflow.ellipsis,
-                      style: AppText.subtitle(context),
+                      style: AppText.headline(context, color: p.title).copyWith(
+                        fontSize: 18,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: -0.2,
+                        height: 1.25,
+                      ),
                     ),
-                    Text(location, style: AppText.caption(context)),
-                    Text(
-                      phase,
-                      style: AppText.caption(context, color: p.title),
+                    const SizedBox(height: 3),
+                    if (location.isNotEmpty)
+                      Row(
+                        children: [
+                          Icon(Icons.location_on_outlined, size: 13, color: p.subtitle),
+                          const SizedBox(width: 3),
+                          Expanded(
+                            child: Text(
+                              location,
+                              maxLines: 1,
+                              overflow: TextOverflow.ellipsis,
+                              style: AppText.caption(context),
+                            ),
+                          ),
+                        ],
+                      ),
+                    const SizedBox(height: 2),
+                    Row(
+                      children: [
+                        Icon(Icons.calendar_today_outlined, size: 12, color: p.subtitle),
+                        const SizedBox(width: 4),
+                        Text(
+                          phase,
+                          style: AppText.caption(context, color: p.title).copyWith(
+                            fontWeight: FontWeight.w600,
+                          ),
+                        ),
+                      ],
                     ),
                   ],
                 ),

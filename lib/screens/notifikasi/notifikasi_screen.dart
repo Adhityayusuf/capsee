@@ -4,10 +4,12 @@
 // Dependensi: google_fonts.
 
 import 'package:flutter/material.dart';
+import 'package:showcaseview/showcaseview.dart';
 
 import '../../core/app_text.dart';
 import '../../core/app_theme.dart';
 import '../../services/services.dart';
+import '../../widgets/feature_tour.dart';
 import '../../widgets/ui_kit.dart';
 
 // ─────────────────────────── Model ───────────────────────────
@@ -61,13 +63,27 @@ class NotifItem {
 
 // ─────────────────────────── Layar ───────────────────────────
 class NotifikasiScreen extends StatefulWidget {
-  const NotifikasiScreen({super.key});
+  final bool isActive;
+  final String? tutorialPageRequest;
+  final int tutorialRequest;
+
+  const NotifikasiScreen({
+    super.key,
+    this.isActive = true,
+    this.tutorialPageRequest,
+    this.tutorialRequest = 0,
+  });
 
   @override
   State<NotifikasiScreen> createState() => _NotifikasiScreenState();
 }
 
 class _NotifikasiScreenState extends State<NotifikasiScreen> {
+  final GlobalKey _filterTourKey = GlobalKey();
+  final GlobalKey _markReadTourKey = GlobalKey();
+  final GlobalKey _listTourKey = GlobalKey();
+  bool _tourScheduled = false;
+
   NotifType? _selected; // null = Semua
 
   bool _isLoading = true;
@@ -76,7 +92,51 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
   @override
   void initState() {
     super.initState();
+    FeatureTour.register();
     _loadNotif();
+  }
+
+  @override
+  void didUpdateWidget(covariant NotifikasiScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) {
+      _tourScheduled = false;
+      _scheduleTour();
+    }
+    if (widget.tutorialRequest != oldWidget.tutorialRequest &&
+        widget.tutorialPageRequest == 'notifikasi' &&
+        widget.isActive) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        if (mounted) _replayTutorial();
+      });
+    }
+  }
+
+  Future<void> _replayTutorial() async {
+    await FeatureTour.replay(
+      pageKey: 'notifikasi',
+      keys: [
+        _filterTourKey,
+        _markReadTourKey,
+        if (_items.isNotEmpty) _listTourKey,
+      ],
+    );
+  }
+
+  void _scheduleTour() {
+    if (!widget.isActive || _tourScheduled) return;
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      if (!mounted || !widget.isActive || _isLoading) return;
+      _tourScheduled = true;
+      await FeatureTour.start(
+        pageKey: 'notifikasi',
+        keys: [
+          _filterTourKey,
+          _markReadTourKey,
+          if (_items.isNotEmpty) _listTourKey,
+        ],
+      );
+    });
   }
 
   Future<void> _loadNotif() async {
@@ -112,6 +172,7 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
           _items = mapped;
           _isLoading = false;
         });
+        _scheduleTour();
       }
     } catch (e) {
       if (mounted) setState(() => _isLoading = false);
@@ -174,10 +235,28 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                 crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   if (today.isNotEmpty)
-                    _buildSection('Hari Ini', '26 Okt 2024', today),
+                    Showcase(
+                      key: _listTourKey,
+                      title: 'Daftar notifikasi',
+                      description:
+                          'Baca pengingat cuaca, jadwal, dan kondisi tanaman dari daftar ini.',
+                      child: _buildSection('Hari Ini', '26 Okt 2024', today),
+                    )
+                  else if (earlier.isNotEmpty)
+                    Showcase(
+                      key: _listTourKey,
+                      title: 'Daftar notifikasi',
+                      description:
+                          'Baca pengingat cuaca, jadwal, dan kondisi tanaman dari daftar ini.',
+                      child: _buildSection(
+                        'Kemarin & Sebelumnya',
+                        'Riwayat Log',
+                        earlier,
+                      ),
+                    ),
                   if (today.isNotEmpty && earlier.isNotEmpty)
                     const SizedBox(height: 24),
-                  if (earlier.isNotEmpty)
+                  if (today.isNotEmpty && earlier.isNotEmpty)
                     _buildSection('Kemarin & Sebelumnya', 'Riwayat Log', earlier),
                   const SizedBox(height: 24),
                   _buildTelemetryCard(),
@@ -250,10 +329,25 @@ class _NotifikasiScreenState extends State<NotifikasiScreen> {
                       ],
                     ),
                   ),
-                  _roundIconButton(Icons.tune, 'Filter notifikasi', () {}),
+                  Showcase(
+                    key: _filterTourKey,
+                    title: 'Filter notifikasi',
+                    description:
+                        'Gunakan tombol ini untuk memfilter notifikasi berdasarkan kategorinya.',
+                    child: _roundIconButton(Icons.tune, 'Filter notifikasi', () {}),
+                  ),
                   const SizedBox(width: 6),
-                  _roundIconButton(
-                      Icons.done_all, 'Tandai semua dibaca', _markAllRead),
+                  Showcase(
+                    key: _markReadTourKey,
+                    title: 'Tandai sudah dibaca',
+                    description:
+                        'Tandai seluruh notifikasi sebagai sudah dibaca dengan tombol ini.',
+                    child: _roundIconButton(
+                      Icons.done_all,
+                      'Tandai semua dibaca',
+                      _markAllRead,
+                    ),
+                  ),
                 ],
               ),
             ),
